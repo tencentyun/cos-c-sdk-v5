@@ -2,9 +2,7 @@
 
 ### 相关资源
 
-[cos c sdk v5 github项目(to be updated)](https://github.com/tencentyun/cos-c-sdk-v5)
-
-[C SDK本地下载(to be updated)](https://mc.qcloudimg.com/static/archive/2549fea204187b28d05fb1ac470f49d4/cos-c-sdk-v5-master.zip)
+[cos c sdk v5 github项目](https://github.com/tencentyun/cos-c-sdk-v5)
 
 ### 开发环境
 
