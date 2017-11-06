@@ -4,7 +4,7 @@
 
 [cos c sdk v5 github项目](https://github.com/tencentyun/cos-c-sdk-v5)
 
-[C SDK Demo参考](https://github.com/tencentyun/cos-c-sdk-v5/cos_c_sdk_test/cos_demo.c)
+[C SDK Demo参考](https://github.com/tencentyun/cos-c-sdk-v5/blob/master/cos_c_sdk_test/cos_demo.c)
 
 ### 开发环境
 
