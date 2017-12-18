@@ -2,13 +2,14 @@
 #include "cos_api.h"
 #include "cos_log.h"
 #include <stdint.h>
+#include <sys/stat.h>
 
 
-static char TEST_COS_ENDPOINT[] = "http://cn-south.myqcloud.com";
+static char TEST_COS_ENDPOINT[] = "cn-south.myqcloud.com";
 static char TEST_ACCESS_KEY_ID[] = "AKIDasdfi3gwWasdiTTasdB93dfghzqRxE";
-static char TEST_ACCESS_KEY_SECRET[] = "B7pIVdfghXzIhjklNGulkljHPkpwerHkz";
-static char TEST_APPID[] = "1253666666";
-static char TEST_BUCKET_NAME[] = "mybucket";
+static char TEST_ACCESS_KEY_SECRET[] = "B7asddfghasdhjklNasdkljHasdwerHkz";
+static char TEST_APPID[] = "";
+static char TEST_BUCKET_NAME[] = "mybucket-1253666666";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
 static char TEST_OBJECT_NAME1[] = "test1.dat";
 static char TEST_OBJECT_NAME2[] = "test2.dat";
 static char TEST_OBJECT_NAME3[] = "test3.dat";
@@ -295,14 +296,12 @@ void test_object()
     cos_pool_destroy(p);
 }
 
-#if 0
 void test_object_restore()
 {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
     int is_cname = 0;
-    cos_table_t *headers = NULL;
     cos_table_t *resp_headers = NULL;
     cos_request_options_t *options = NULL;
     cos_status_t *s = NULL;
@@ -321,8 +320,6 @@ void test_object_restore()
 
     cos_pool_destroy(p);
 }
-#endif
-
 
 void progress_callback(int64_t consumed_bytes, int64_t total_bytes)
 {
@@ -747,8 +744,64 @@ void test_copy()
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_string_t object;
-    cos_string_t copy_source;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
     cos_table_t *resp_headers = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    cos_str_set(&src_bucket, "mybucket-1253685564");
+    cos_str_set(&src_endpoint, "cn-south.myqcloud.com");
+    cos_str_set(&src_object, "test.txt");
+
+    cos_copy_object_params_t *params = NULL;
+    params = cos_create_copy_object_params(p);
+    s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
+    log_status(s);
+
+    cos_pool_destroy(p);
+}
+
+void test_copy_mt()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    cos_str_set(&src_bucket, "mybucket-1253685564");
+    cos_str_set(&src_endpoint, "cn-south.myqcloud.com");
+    cos_str_set(&src_object, "test.txt");
+
+    s = cos_upload_object_by_part_copy_mt(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, 1024*1024, 8, NULL);
+    log_status(s);
+
+    cos_pool_destroy(p);
+}
+
+void test_copy_with_part_copy()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t copy_source;
    
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -757,13 +810,164 @@ void test_copy()
     cos_str_set(&object, "test_copy.txt");
     cos_str_set(&copy_source, "mybucket-1253685564.cn-south.myqcloud.com/test.txt");
 
-    cos_copy_object_params_t *params = NULL;
-    params = cos_create_copy_object_params(p);
-    s = cos_copy_object(options, &copy_source, &bucket, &object, NULL, params, &resp_headers);
+    s = cos_upload_object_by_part_copy(options, &copy_source, &bucket, &object, 1024*1024);
     log_status(s);
 
     cos_pool_destroy(p);
 }
+
+void make_rand_string(cos_pool_t *p, int len, cos_string_t *data)
+{
+    char *str = NULL;
+    int i = 0;
+    str = (char *)cos_palloc(p, len + 1);
+    for ( ; i < len; i++) {
+        str[i] = 'a' + rand() % 32;
+    }
+    str[len] = '\0';
+    cos_str_set(data, str);
+}
+
+unsigned long get_file_size(const char *file_path)
+{
+    unsigned long filesize = -1; 
+    struct stat statbuff;
+
+    if(stat(file_path, &statbuff) < 0){
+        return filesize;
+    } else {
+        filesize = statbuff.st_size;
+    }
+
+    return filesize;
+}
+
+void test_part_copy()
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    int is_cname = 0;
+    cos_string_t upload_id;
+    cos_list_upload_part_params_t *list_upload_part_params = NULL;
+    cos_upload_part_copy_params_t *upload_part_copy_params1 = NULL;
+    cos_upload_part_copy_params_t *upload_part_copy_params2 = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_table_t *list_part_resp_headers = NULL;
+    cos_list_t complete_part_list;
+    cos_list_part_content_t *part_content = NULL;
+    cos_complete_part_content_t *complete_content = NULL;
+    cos_table_t *complete_resp_headers = NULL;
+    cos_status_t *s = NULL;
+    int part1 = 1;
+    int part2 = 2;
+    char *local_filename = "test_upload_part_copy.file";
+    char *download_filename = "test_upload_part_copy.file.download";
+    char *source_object_name = "cos_test_upload_part_copy_source_object";
+    char *dest_object_name = "cos_test_upload_part_copy_dest_object";
+    FILE *fd = NULL;
+    cos_string_t download_file;
+    cos_string_t dest_bucket;
+    cos_string_t dest_object;
+    int64_t range_start1 = 0;
+    int64_t range_end1 = 6000000;
+    int64_t range_start2 = 6000001;
+    int64_t range_end2;
+    cos_string_t data;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+
+    // create multipart upload local file    
+    make_rand_string(p, 10 * 1024 * 1024, &data);
+    fd = fopen(local_filename, "w");
+    fwrite(data.data, sizeof(data.data[0]), data.len, fd);
+    fclose(fd);    
+
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, source_object_name);
+    cos_str_set(&file, local_filename);
+    s = cos_put_object_from_file(options, &bucket, &object, &file, NULL, &resp_headers);
+    log_status(s);
+
+    //init mulitipart
+    cos_str_set(&object, dest_object_name);
+    s = cos_init_multipart_upload(options, &bucket, &object, 
+                                  &upload_id, NULL, &resp_headers);
+    log_status(s);
+
+    //upload part copy 1
+    upload_part_copy_params1 = cos_create_upload_part_copy_params(p);
+    cos_str_set(&upload_part_copy_params1->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    cos_str_set(&upload_part_copy_params1->dest_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&upload_part_copy_params1->dest_object, dest_object_name);
+    cos_str_set(&upload_part_copy_params1->upload_id, upload_id.data);
+    upload_part_copy_params1->part_num = part1;
+    upload_part_copy_params1->range_start = range_start1;
+    upload_part_copy_params1->range_end = range_end1;
+    headers = cos_table_make(p, 0);
+    s = cos_upload_part_copy(options, upload_part_copy_params1, headers, &resp_headers);
+    log_status(s);
+    printf("last modified:%s, etag:%s\n", upload_part_copy_params1->rsp_content->last_modify.data, upload_part_copy_params1->rsp_content->etag.data);
+
+    //upload part copy 2
+    resp_headers = NULL;
+    range_end2 = get_file_size(local_filename) - 1;
+    upload_part_copy_params2 = cos_create_upload_part_copy_params(p);
+    cos_str_set(&upload_part_copy_params2->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    cos_str_set(&upload_part_copy_params2->dest_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&upload_part_copy_params2->dest_object, dest_object_name);
+    cos_str_set(&upload_part_copy_params2->upload_id, upload_id.data);
+    upload_part_copy_params2->part_num = part2;
+    upload_part_copy_params2->range_start = range_start2;
+    upload_part_copy_params2->range_end = range_end2;
+    headers = cos_table_make(p, 0);
+    s = cos_upload_part_copy(options, upload_part_copy_params2, headers, &resp_headers);
+    log_status(s);
+    printf("last modified:%s, etag:%s\n", upload_part_copy_params1->rsp_content->last_modify.data, upload_part_copy_params1->rsp_content->etag.data);
+
+    //list part
+    list_upload_part_params = cos_create_list_upload_part_params(p);
+    list_upload_part_params->max_ret = 10;
+    cos_list_init(&complete_part_list);
+        
+    cos_str_set(&dest_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&dest_object, dest_object_name);
+    s = cos_list_upload_part(options, &dest_bucket, &dest_object, &upload_id, 
+                             list_upload_part_params, &list_part_resp_headers);
+    log_status(s);
+    cos_list_for_each_entry(cos_list_part_content_t, part_content, &list_upload_part_params->part_list, node) {
+        complete_content = cos_create_complete_part_content(p);
+        cos_str_set(&complete_content->part_number, part_content->part_number.data);
+        cos_str_set(&complete_content->etag, part_content->etag.data);
+        cos_list_add_tail(&complete_content->node, &complete_part_list);
+    }
+     
+    //complete multipart
+    headers = cos_table_make(p, 0);
+    s = cos_complete_multipart_upload(options, &dest_bucket, &dest_object, 
+            &upload_id, &complete_part_list, headers, &complete_resp_headers);
+    log_status(s);
+    
+    //check upload copy part content equal to local file
+    headers = cos_table_make(p, 0);
+    cos_str_set(&download_file, download_filename);
+    s = cos_get_object_to_file(options, &dest_bucket, &dest_object, headers, 
+                               query_params, &download_file, &resp_headers);
+    log_status(s);
+    printf("local file len = %"APR_INT64_T_FMT", download file len = %"APR_INT64_T_FMT, get_file_size(local_filename), get_file_size(download_filename));
+    remove(download_filename);
+    remove(local_filename);
+    cos_pool_destroy(p);
+
+    printf("test part copy ok\n");
+}
+
 
 void test_cors()
 {
@@ -988,6 +1192,8 @@ int main(int argc, char *argv[])
     //test_cors();
     //test_versioning();
     //test_replication();
+    //test_part_copy();
+    //test_copy_with_part_copy();
     
     //cos_http_io_deinitialize last
     cos_http_io_deinitialize();
