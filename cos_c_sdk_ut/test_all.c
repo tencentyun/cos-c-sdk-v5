@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
                          TEST_ACCESS_KEY_ID : getenv("COS_TEST_ACCESS_KEY_ID");
     TEST_ACCESS_KEY_SECRET = TEST_ACCESS_KEY_SECRET != NULL ?
                              TEST_ACCESS_KEY_SECRET : getenv("COS_TEST_ACCESS_KEY_SECRET");
+    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
     TEST_BUCKET_NAME = TEST_BUCKET_NAME != NULL ?
                        TEST_BUCKET_NAME : getenv("COS_TEST_BUCKET");
     TEST_APPID = TEST_APPID != NULL ?

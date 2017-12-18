@@ -349,7 +349,6 @@ void test_multipart_upload_from_file(CuTest *tc)
     printf("test_multipart_upload_from_file ok\n");
 }
 
-#if 0
 void test_upload_part_copy(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -407,8 +406,7 @@ void test_upload_part_copy(CuTest *tc)
 
     //upload part copy 1
     upload_part_copy_params1 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params1->source_bucket, TEST_BUCKET_NAME);
-    cos_str_set(&upload_part_copy_params1->source_object, source_object_name);
+    cos_str_set(&upload_part_copy_params1->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
     cos_str_set(&upload_part_copy_params1->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params1->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params1->upload_id, upload_id.data);
@@ -425,8 +423,7 @@ void test_upload_part_copy(CuTest *tc)
     resp_headers = NULL;
     range_end2 = get_file_size(local_filename) - 1;
     upload_part_copy_params2 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params2->source_bucket, TEST_BUCKET_NAME);
-    cos_str_set(&upload_part_copy_params2->source_object, source_object_name);
+    cos_str_set(&upload_part_copy_params2->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
     cos_str_set(&upload_part_copy_params2->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params2->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params2->upload_id, upload_id.data);
@@ -478,7 +475,6 @@ void test_upload_part_copy(CuTest *tc)
 
     printf("test_upload_part_copy ok\n");
 }
-#endif
 
 void test_upload_file_failed_without_uploadid(CuTest *tc) 
 {

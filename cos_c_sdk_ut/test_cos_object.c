@@ -711,21 +711,23 @@ void test_object_copy(CuTest *tc)
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_string_t object;
-    cos_string_t copy_source;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
     cos_table_t *resp_headers = NULL;
-    char src_obj[256] = {0};
-   
+    
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test_copy.txt");
-    apr_snprintf(src_obj, sizeof(src_obj), "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, options->config->appid.data, options->config->endpoint.data);
-    cos_str_set(&copy_source, src_obj);
+    cos_str_set(&src_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&src_object, "cos_test_put_object.ts");
+    cos_str_set(&src_endpoint, options->config->endpoint.data);
 
     cos_copy_object_params_t *params = NULL;
     params = cos_create_copy_object_params(p);
-    s = cos_copy_object(options, &copy_source, &bucket, &object, NULL, params, &resp_headers);
+    s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertIntEquals(tc, 1, 0 != strcmp(params->etag.data, ""));
 
