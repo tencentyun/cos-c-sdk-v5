@@ -138,6 +138,39 @@ void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part
     }
 }
 
+void cos_build_copy_thread_params(cos_upload_copy_thread_params_t *thr_params, int part_num, 
+                             cos_pool_t *parent_pool, cos_request_options_t *options, 
+                             cos_string_t *bucket, cos_string_t *object, cos_string_t *copy_source,
+                             cos_string_t *upload_id, cos_checkpoint_part_t *parts,
+                             cos_part_task_result_t *result) 
+{
+    int i = 0;
+    cos_pool_t *subpool = NULL;
+    cos_config_t *config = NULL;
+    cos_http_controller_t *ctl;
+    for (; i < part_num; i++) {
+        cos_pool_create(&subpool, parent_pool); 
+        config = cos_config_create(subpool);
+        cos_str_set(&config->endpoint, options->config->endpoint.data);
+        cos_str_set(&config->access_key_id, options->config->access_key_id.data);
+        cos_str_set(&config->access_key_secret, options->config->access_key_secret.data);
+        cos_str_set(&config->appid, options->config->appid.data);
+        config->is_cname = options->config->is_cname;
+        ctl = cos_http_controller_create(subpool, 0);
+        thr_params[i].options.config = config;
+        thr_params[i].options.ctl = ctl;
+        thr_params[i].options.pool = subpool;
+        thr_params[i].bucket = bucket;
+        thr_params[i].object = object;
+        thr_params[i].copy_source = copy_source;
+        thr_params[i].upload_id = upload_id;
+        thr_params[i].part = parts + i;
+        thr_params[i].result = result + i;
+        thr_params[i].result->part = thr_params[i].part;
+    }
+}
+
+
 void cos_destroy_thread_pool(cos_transport_thread_params_t *thr_params, int part_num) 
 {
     int i = 0;
@@ -146,7 +179,29 @@ void cos_destroy_thread_pool(cos_transport_thread_params_t *thr_params, int part
     }
 }
 
+void cos_destroy_copy_thread_pool(cos_upload_copy_thread_params_t *thr_params, int part_num) 
+{
+    int i = 0;
+    for (; i < part_num; i++) {
+        cos_pool_destroy(thr_params[i].options.pool);
+    }
+}
+
 void cos_set_task_tracker(cos_transport_thread_params_t *thr_params, int part_num, 
+                          apr_uint32_t *launched, apr_uint32_t *failed, apr_uint32_t *completed,
+                          apr_queue_t *failed_parts, apr_queue_t *completed_parts) 
+{
+    int i = 0;
+    for (; i < part_num; i++) {
+        thr_params[i].launched = launched;
+        thr_params[i].failed = failed;
+        thr_params[i].completed = completed;
+        thr_params[i].failed_parts = failed_parts;
+        thr_params[i].completed_parts = completed_parts;
+    }
+}
+
+void cos_set_copy_task_tracker(cos_upload_copy_thread_params_t *thr_params, int part_num, 
                           apr_uint32_t *launched, apr_uint32_t *failed, apr_uint32_t *completed,
                           apr_queue_t *failed_parts, apr_queue_t *completed_parts) 
 {
@@ -738,6 +793,227 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
     }
 
     cos_pool_destroy(sub_pool);
+    return s;
+}
+
+void * APR_THREAD_FUNC upload_part_copy(apr_thread_t *thd, void *data) 
+{
+    cos_status_t *s = NULL;
+    cos_upload_copy_thread_params_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    char *etag;
+    
+    params = (cos_upload_copy_thread_params_t *)data;
+    if (apr_atomic_read32(params->failed) > 0) {
+        apr_atomic_inc32(params->launched);
+        return NULL;
+    }
+
+    cos_upload_part_copy_params_t *upload_part_copy_params = cos_create_upload_part_copy_params(params->options.pool);
+    cos_str_set(&upload_part_copy_params->copy_source, params->copy_source->data);
+    cos_str_set(&upload_part_copy_params->dest_bucket, params->bucket->data);
+    cos_str_set(&upload_part_copy_params->dest_object, params->object->data);
+    cos_str_set(&upload_part_copy_params->upload_id, params->upload_id->data);
+    upload_part_copy_params->range_start = params->part->offset;
+    upload_part_copy_params->range_end = params->part->offset + params->part->size - 1;
+    upload_part_copy_params->part_num = params->part->index + 1;
+
+    s = cos_upload_part_copy(&params->options, upload_part_copy_params, NULL, &resp_headers);
+    if (!cos_status_is_ok(s)) {
+        apr_atomic_inc32(params->failed);
+        params->result->s = s;
+        apr_queue_push(params->failed_parts, params->result);
+        return s;
+    }
+
+    etag = apr_pstrdup(params->options.pool, (char*)upload_part_copy_params->rsp_content->etag.data);
+    cos_str_set(&params->result->etag, etag);
+    apr_atomic_inc32(params->completed);
+    apr_queue_push(params->completed_parts, params->result);
+    return NULL;
+}
+
+cos_status_t *cos_upload_object_by_part_copy_mt
+(
+        cos_request_options_t *options,
+        cos_string_t *src_bucket,
+        cos_string_t *src_object,
+        cos_string_t *src_endpoint,
+        cos_string_t *dest_bucket, 
+        cos_string_t *dest_object,
+        int64_t part_size,
+        int32_t thread_num,
+        cos_progress_callback progress_callback
+)
+{
+    cos_pool_t *subpool = NULL;
+    cos_pool_t *parent_pool = NULL;
+    cos_status_t *s = NULL;
+    cos_status_t *ret = NULL;
+    char *part_num_str = NULL;
+    char *etag = NULL;
+    cos_list_t completed_part_list;
+    cos_complete_part_content_t *complete_content = NULL;
+    int64_t total_size = 0;
+    int part_num = 0;
+    cos_string_t upload_id;
+    cos_checkpoint_part_t *parts;
+    cos_part_task_result_t *results;
+    cos_part_task_result_t *task_res;
+    cos_upload_copy_thread_params_t *thr_params;
+    cos_table_t *cb_headers = NULL;
+    apr_thread_pool_t *thrp;
+    apr_uint32_t launched = 0;
+    apr_uint32_t failed = 0;
+    apr_uint32_t completed = 0;
+    apr_uint32_t total_num = 0;
+    apr_queue_t *failed_parts;
+    apr_queue_t *completed_parts;
+    int64_t consume_bytes = 0;
+    void *task_result;
+    int i = 0;
+    int rv;
+    cos_string_t copy_source;
+    char *copy_source_str = NULL;
+
+    copy_source_str = apr_psprintf(options->pool, "%.*s.%.*s/%.*s", 
+                                   src_bucket->len, src_bucket->data,
+                                   src_endpoint->len, src_endpoint->data,
+                                   src_object->len, src_object->data);
+    cos_str_set(&copy_source, copy_source_str);
+
+    cos_list_init(&completed_part_list);
+    parent_pool = options->pool;
+    cos_pool_create(&subpool, options->pool);
+    options->pool = subpool;
+
+    //get object size
+    cos_table_t *head_resp_headers = NULL;
+    cos_request_options_t *head_options = cos_request_options_create(subpool);
+    head_options->config = cos_config_create(subpool);
+    cos_str_set(&head_options->config->endpoint, src_endpoint->data);
+    cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
+    cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
+    cos_str_set(&head_options->config->appid, "");
+    head_options->ctl = cos_http_controller_create(subpool, 0);
+    s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        ret = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return ret;
+    }
+    total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
+    options->pool = parent_pool;
+    cos_pool_destroy(subpool);
+
+    // prepare
+    ret = cos_status_create(parent_pool);
+    part_num = cos_get_part_num(total_size, part_size);
+    parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
+    cos_build_parts(total_size, part_size, parts);
+    results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
+    thr_params = (cos_upload_copy_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_upload_copy_thread_params_t) * part_num);
+    cos_build_copy_thread_params(thr_params, part_num, parent_pool, options, dest_bucket, dest_object, &copy_source, &upload_id, parts, results);
+
+    // init upload
+    cos_pool_create(&subpool, parent_pool);
+    options->pool = subpool;
+    cos_table_t *init_multipart_headers = NULL;
+    cos_table_t *init_multipart_resp_headers = NULL;
+    s = cos_init_multipart_upload(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        s = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return s;
+    }
+    cos_str_set(&upload_id, apr_pstrdup(parent_pool, upload_id.data));
+    options->pool = parent_pool;
+    cos_pool_destroy(subpool);
+
+    // upload parts    
+    rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_THREAD_POOL_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    rv = apr_queue_create(&failed_parts, part_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_QUEUE_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    rv = apr_queue_create(&completed_parts, part_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_QUEUE_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    // launch
+    cos_set_copy_task_tracker(thr_params, part_num, &launched, &failed, &completed, failed_parts, completed_parts);
+    for (i = 0; i < part_num; i++) {
+        apr_thread_pool_push(thrp, upload_part_copy, thr_params + i, 0, NULL);
+    }
+
+    // wait until all tasks exit
+    total_num = apr_atomic_read32(&launched) + apr_atomic_read32(&failed) + apr_atomic_read32(&completed);
+    for ( ; total_num < (apr_uint32_t)part_num; ) {
+        rv = apr_queue_trypop(completed_parts, &task_result);
+        if (rv == APR_EINTR || rv == APR_EAGAIN) {
+            apr_sleep(1000);
+        } else if(rv == APR_EOF) {
+            break;
+        } else if(rv == APR_SUCCESS) {
+            task_res = (cos_part_task_result_t*)task_result;
+            if (NULL != progress_callback) {
+                consume_bytes += task_res->part->size;
+                progress_callback(consume_bytes, total_size);
+            }
+        }
+        total_num = apr_atomic_read32(&launched) + apr_atomic_read32(&failed) + apr_atomic_read32(&completed);
+    }
+
+    // deal with left successful parts
+    while(APR_SUCCESS == apr_queue_trypop(completed_parts, &task_result)) {
+        task_res = (cos_part_task_result_t*)task_result;
+        if (NULL != progress_callback) {
+            consume_bytes += task_res->part->size;
+            progress_callback(consume_bytes, total_size);
+        }
+    }
+
+    // failed
+    if (apr_atomic_read32(&failed) > 0) {
+        apr_queue_pop(failed_parts, &task_result);
+        task_res = (cos_part_task_result_t*)task_result;
+        s = cos_status_dup(parent_pool, task_res->s);
+        cos_destroy_copy_thread_pool(thr_params, part_num);
+        return s;
+    }
+
+    // successful
+    cos_pool_create(&subpool, parent_pool);
+    cos_list_init(&completed_part_list);
+    for (i = 0; i < part_num; i++) {
+        complete_content = cos_create_complete_part_content(subpool);
+        part_num_str = apr_psprintf(subpool, "%d", thr_params[i].part->index + 1);
+        cos_str_set(&complete_content->part_number, part_num_str);
+        etag = apr_pstrdup(subpool, thr_params[i].result->etag.data);
+        cos_str_set(&complete_content->etag, etag);
+        cos_list_add_tail(&complete_content->node, &completed_part_list);
+    }
+    cos_destroy_copy_thread_pool(thr_params, part_num);
+
+    // complete upload
+    options->pool = subpool;
+    s = cos_do_complete_multipart_upload(options, dest_bucket, dest_object, &upload_id, 
+        &completed_part_list, cb_headers, NULL, NULL, NULL);
+    s = cos_status_dup(parent_pool, s);
+    cos_pool_destroy(subpool);
+    options->pool = parent_pool;
+
     return s;
 }
 

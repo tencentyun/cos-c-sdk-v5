@@ -508,7 +508,9 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
 }
 
 cos_status_t *cos_copy_object(const cos_request_options_t *options,
-                              const cos_string_t *copy_source, 
+                              const cos_string_t *src_bucket,
+                              const cos_string_t *src_object,
+                              const cos_string_t *src_endpoint,
                               const cos_string_t *dest_bucket, 
                               const cos_string_t *dest_object,
                               cos_table_t *headers,
@@ -520,6 +522,7 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     cos_table_t *query_params = NULL;
+    char *copy_source = NULL;
 
     s = cos_status_create(options->pool);
 
@@ -527,7 +530,11 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 0);
 
     /* init headers */
-    apr_table_add(headers, COS_CANNONICALIZED_HEADER_COPY_SOURCE, copy_source->data);
+    copy_source = apr_psprintf(options->pool, "%.*s.%.*s/%.*s", 
+                               src_bucket->len, src_bucket->data,
+                               src_endpoint->len, src_endpoint->data,
+                               src_object->len, src_object->data);
+    apr_table_add(headers, COS_CANNONICALIZED_HEADER_COPY_SOURCE, copy_source);
     set_content_type(NULL, dest_object->data, headers);
 
     cos_init_object_request(options, dest_bucket, dest_object, HTTP_PUT, 
@@ -547,8 +554,125 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     return s;
 }
 
-
 #if 0
+cos_status_t *cos_copy_obj
+(
+    cos_request_options_t *options,
+    const cos_string_t *copy_source, 
+    const cos_string_t *dest_bucket, 
+    const cos_string_t *dest_object
+)
+{
+    cos_pool_t *subpool = NULL;
+    cos_pool_t *parent_pool = NULL;
+    cos_status_t *s = NULL;
+    cos_status_t *ret = NULL;
+    int64_t total_size = 0;
+
+    parent_pool = options->pool;
+    cos_pool_create(&subpool, options->pool);
+    options->pool = subpool;
+
+    //get object size
+    cos_table_t *head_resp_headers = NULL;
+    s = cos_head_object(options, dest_bucket, dest_object, NULL, &head_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        ret = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return ret;
+    }
+    total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
+
+    //use part copy if the object is larger than 5G
+    if (total_size > (int64_t)5*1024*1024*1024) {
+        s = cos_upload_object_by_part_copy(options, copy_source, dest_bucket, dest_object, (int64_t)5*1024*1024*1024);
+    }
+    //use object copy if the object is no larger than 5G
+    else {
+        cos_copy_object_params_t *params = NULL;
+        params = cos_create_copy_object_params(options->pool);
+        s = cos_copy_object(options, copy_source, dest_bucket, dest_object, NULL, params, NULL);
+    }
+
+    ret = cos_status_dup(parent_pool, s);
+    cos_pool_destroy(subpool);
+    options->pool = parent_pool;
+    return ret;
+}
+#endif
+
+cos_status_t *copy
+(
+    cos_request_options_t *options,
+    const cos_string_t *src_bucket,
+    const cos_string_t *src_object,
+    const cos_string_t *src_endpoint,
+    const cos_string_t *dest_bucket, 
+    const cos_string_t *dest_object,
+    int32_t thread_num
+)
+{
+    cos_pool_t *subpool = NULL;
+    cos_pool_t *parent_pool = NULL;
+    cos_status_t *s = NULL;
+    cos_status_t *ret = NULL;
+    int64_t total_size = 0;
+    int64_t part_size = 0;
+
+    parent_pool = options->pool;
+    cos_pool_create(&subpool, options->pool);
+    options->pool = subpool;
+
+    //get object size
+    cos_table_t *head_resp_headers = NULL;
+    cos_request_options_t *head_options = cos_request_options_create(subpool);
+    head_options->config = cos_config_create(subpool);
+    cos_str_set(&head_options->config->endpoint, src_endpoint->data);
+    cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
+    cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
+    cos_str_set(&head_options->config->appid, "");
+    head_options->ctl = cos_http_controller_create(subpool, 0);
+    s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        ret = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return ret;
+    }
+    total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
+    options->pool = parent_pool;
+    cos_pool_destroy(subpool);
+
+    if (thread_num < 1) {
+        thread_num = 1;
+    }
+
+    part_size = 5*1024*1024;
+    while (part_size * 10000 < total_size) {
+        part_size *= 2;
+    }
+    if (part_size > (int64_t)5*1024*1024*1024) {
+        part_size = (int64_t)5*1024*1024*1024;
+    }
+
+    //use part copy if the object is larger than 5G
+    if (total_size > (int64_t)5*1024*1024*1024 && 0 != strcmp(src_endpoint->data, options->config->endpoint.data)) {
+        s = cos_upload_object_by_part_copy_mt(options, (cos_string_t *)src_bucket, (cos_string_t *)src_object, (cos_string_t *)src_endpoint, (cos_string_t *)dest_bucket, (cos_string_t *)dest_object, part_size, thread_num, NULL);
+    }
+    //use object copy if the object is no larger than 5G
+    else {
+        cos_copy_object_params_t *params = NULL;
+        params = cos_create_copy_object_params(options->pool);
+        s = cos_copy_object(options, (cos_string_t *)src_bucket, (cos_string_t *)src_object, (cos_string_t *)src_endpoint, dest_bucket, dest_object, NULL, params, NULL);
+    }
+
+    ret = cos_status_dup(parent_pool, s);
+    cos_pool_destroy(subpool);
+    options->pool = parent_pool;
+    return ret;
+}
+
 cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
                                             const cos_string_t *bucket, 
                                             const cos_string_t *object,
@@ -596,8 +720,7 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     return s;
 }
 
-
-
+#if 0
 char *cos_gen_signed_url(const cos_request_options_t *options,
                          const cos_string_t *bucket, 
                          const cos_string_t *object,

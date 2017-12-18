@@ -239,14 +239,14 @@ typedef struct {
 } cos_list_multipart_upload_params_t;
 
 typedef struct {
-    cos_string_t source_bucket;
-    cos_string_t source_object;
+    cos_string_t copy_source;
     cos_string_t dest_bucket;
     cos_string_t dest_object;
     cos_string_t upload_id;
     int part_num;
     int64_t range_start;
     int64_t range_end;
+    cos_copy_object_params_t *rsp_content;
 } cos_upload_part_copy_params_t;
 
 typedef struct {

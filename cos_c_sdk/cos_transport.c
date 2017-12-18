@@ -394,7 +394,7 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
     curl_easy_setopt_safe(CURLOPT_DNS_CACHE_TIMEOUT, t->controller->options->dns_cache_timeout);
     curl_easy_setopt_safe(CURLOPT_CONNECTTIMEOUT, t->controller->options->connect_timeout);
     curl_easy_setopt_safe(CURLOPT_LOW_SPEED_LIMIT, t->controller->options->speed_limit);
-    curl_easy_setopt_safe(CURLOPT_LOW_SPEED_TIME, t->controller->options->speed_time);
+    //curl_easy_setopt_safe(CURLOPT_LOW_SPEED_TIME, t->controller->options->speed_time);
 
     cos_init_curl_headers(t);
     curl_easy_setopt_safe(CURLOPT_HTTPHEADER, t->headers);

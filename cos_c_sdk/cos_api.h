@@ -13,7 +13,7 @@ COS_CPP_START
 /*
  * @brief  create cos bucket
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   cos_acl       the cos bucket acl
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -26,7 +26,7 @@ cos_status_t *cos_create_bucket(const cos_request_options_t *options,
 /*
  * @brief  create cos bucket
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   cos_acl       the cos bucket acl
  * @param[in]   headers       the headers for request
  * @param[out]  resp_headers  cos server response headers
@@ -41,7 +41,7 @@ cos_status_t *cos_do_create_bucket(const cos_request_options_t *options,
 /*
  * @brief  delete cos bucket
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -52,7 +52,7 @@ cos_status_t *cos_delete_bucket(const cos_request_options_t *options,
 /*
  * @brief  delete cos bucket
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   headers       the headers for request
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -67,7 +67,7 @@ cos_status_t *cos_do_delete_bucket(const cos_request_options_t *options,
 /*
  * @brief  put cos bucket acl
  * @param[in]   options         the cos request options
- * @param[in]   bucket          the cos bucket name
+ * @param[in]   bucket          the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   cos_acl         the cos bucket acl
  * @param[in]   grant_read      account granted read
  * @param[in]   grant_write     account granted write
@@ -86,7 +86,7 @@ cos_status_t *cos_put_bucket_acl(const cos_request_options_t *options,
 /*
  * @brief  get cos bucket acl
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  acl_param     the cos bucket acl param
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -99,7 +99,7 @@ cos_status_t *cos_get_bucket_acl(const cos_request_options_t *options,
 /*
  * @brief  put cos bucket cors
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   cors_rule_list      the cos bucket cors list
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -112,7 +112,7 @@ cos_status_t *cos_put_bucket_cors(const cos_request_options_t *options,
 /*
  * @brief  get cos bucket cors
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  cors_rule_list      the cos bucket cors list
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -125,7 +125,7 @@ cos_status_t *cos_get_bucket_cors(const cos_request_options_t *options,
 /*
  * @brief  delete cos bucket cors
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -137,7 +137,7 @@ cos_status_t *cos_delete_bucket_cors(const cos_request_options_t *options,
 /*
  * @brief  put cos bucket versioning
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   versioning          the cos bucket versioning parameter
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -153,7 +153,7 @@ cos_status_t *cos_put_bucket_versioning
 /*
  * @brief  get cos bucket versioning
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  versioning          the cos bucket versioning parameter
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -169,7 +169,7 @@ cos_status_t *cos_get_bucket_versioning
 /*
  * @brief  put cos bucket replication
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   replication_param   the cos bucket replication parameter
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -185,7 +185,7 @@ cos_status_t *cos_put_bucket_replication
 /*
  * @brief  get cos bucket replication
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  replication_param   the cos bucket replication parameter
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -201,7 +201,7 @@ cos_status_t *cos_get_bucket_replication
 /*
  * @brief  delete cos bucket replication
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -215,7 +215,7 @@ cos_status_t *cos_delete_bucket_replication
 /*
  * @brief  put cos bucket lifecycle
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   lifecycle_rule_list the cos bucket lifecycle list
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -228,7 +228,7 @@ cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
 /*
  * @brief  get cos bucket lifecycle
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  lifecycle_rule_list the cos bucket lifecycle list
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -241,7 +241,7 @@ cos_status_t *cos_get_bucket_lifecycle(const cos_request_options_t *options,
 /*
  * @brief  delete cos bucket lifecycle
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -269,7 +269,7 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
 /*
  * @brief  list cos objects
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   params        input params for list object request,
                               including prefix, marker, delimiter, max_ret
  * @param[out]  params        output params for list object response,
@@ -285,7 +285,7 @@ cos_status_t *cos_list_object(const cos_request_options_t *options,
 /*
  * @brief  list cos objects
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   headers       the headers for request
  * @param[in]   params        input params for list object request,
                               including prefix, marker, delimiter, max_ret
@@ -303,7 +303,7 @@ cos_status_t *cos_do_list_object(const cos_request_options_t *options,
 /*
  * @brief  put cos object from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   buffer              the buffer containing object content
  * @param[in]   headers             the headers for request
@@ -320,7 +320,7 @@ cos_status_t *cos_put_object_from_buffer(const cos_request_options_t *options,
 /*
  * @brief  put cos object from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   filename            the filename to put
  * @param[in]   headers             the headers for request
@@ -337,7 +337,7 @@ cos_status_t *cos_put_object_from_file(const cos_request_options_t *options,
 /*
  * @brief  put cos object from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   buffer              the buffer containing object content
  * @param[in]   headers             the headers for request
@@ -360,7 +360,7 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
 /*
  * @brief  put cos object from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   filename            the filename to put
  * @param[in]   headers             the headers for request
@@ -383,7 +383,7 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
 /*
  * @brief  get cos object to buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -402,7 +402,7 @@ cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options,
 /*
  * @brief  get cos object to buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -423,7 +423,7 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
 /*
  * @brief  get cos object to file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -442,7 +442,7 @@ cos_status_t *cos_get_object_to_file(const cos_request_options_t *options,
 /*
  * @brief  get cos object to file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -463,7 +463,7 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
 /*
  * @brief  head cos object
  * @param[in]   options          the cos request options
- * @param[in]   bucket           the cos bucket name
+ * @param[in]   bucket           the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object           the cos object name
  * @param[in]   headers          the headers for request
  * @param[out]  resp_headers     cos server response headers containing object meta
@@ -478,7 +478,7 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
 /*
  * @brief  delete cos object
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -491,7 +491,7 @@ cos_status_t *cos_delete_object(const cos_request_options_t *options,
 /*
  * @brief  delete cos object
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   headers             the headers for request
  * @param[out]  resp_headers        cos server response headers
@@ -506,7 +506,7 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
 /*
  * @brief  delete cos objects
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object_list         the cos object list name
  * @param[in]   is_quiet            is quiet or verbose
  * @param[out]  resp_headers        cos server response headers
@@ -523,7 +523,7 @@ cos_status_t *cos_delete_objects(const cos_request_options_t *options,
 /*
  * @brief  delete cos objects
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object_list         the cos object list name
  * @param[in]   is_quiet            is quiet or verbose
  * @param[in]   headers             the headers for request
@@ -542,7 +542,7 @@ cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
 /*
  * @brief  delete cos objects by prefix
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   prefix              prefix of delete objects
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -554,7 +554,7 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
 /*
  * @brief  append cos object from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
  * @param[in]   buffer              the buffer containing object content
@@ -573,10 +573,10 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
 /*
  * @brief  append cos object from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
- * @param[in]   init_crc             the initial crc value
+ * @param[in]   init_crc            the initial crc value
  * @param[in]   buffer              the buffer containing object content
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -600,7 +600,7 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
 /*
  * @brief  append cos object from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
  * @param[in]   append_file         the file containing appending content 
@@ -619,10 +619,10 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
 /*
  * @brief  append cos object from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
- * @param[in]   init_crc             the initial crc value
+ * @param[in]   init_crc            the initial crc value
  * @param[in]   append_file         the file containing appending content 
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
@@ -644,28 +644,53 @@ cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *option
                                              cos_list_t *resp_body);
 
 /*
- * @brief  copy cos objects
+ * @brief  copy cos object
  * @param[in]   options             the cos request options
- * @param[in]   copy_source         the cos copy source
- * @param[in]   dest_bucket         the cos dest bucket name
- * @param[in]   dest_list           the cos dest object list name
+ * @param[in]   src_bucket          the cos copy source bucket, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   src_object          the cos source object name
+ * @param[in]   src_endpoint        the cos source endpoint
+ * @param[in]   dest_bucket         the cos dest bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   dest_object         the cos dest object name
  * @param[in]   headers             the headers for request
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_copy_object(const cos_request_options_t *options,
-                              const cos_string_t *copy_source, 
+                              const cos_string_t *src_bucket,
+                              const cos_string_t *src_object,
+                              const cos_string_t *src_endpoint,
                               const cos_string_t *dest_bucket, 
                               const cos_string_t *dest_object,
                               cos_table_t *headers,
                               cos_copy_object_params_t *copy_object_param,
                               cos_table_t **resp_headers);
 
-#if 0
+/*
+ * @brief  copy cos object, this api support object larger than 5G using multi-thread upload
+ * @param[in]   options             the cos request options
+ * @param[in]   src_bucket          the cos copy source bucket, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   src_object          the cos source object name
+ * @param[in]   src_endpoint        the cos source endpoint
+ * @param[in]   dest_bucket         the cos dest bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   dest_object         the cos dest object name
+ * @param[in]   thread_num          thread count used to copy object
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *copy
+(
+    cos_request_options_t *options,
+    const cos_string_t *src_bucket,
+    const cos_string_t *src_object,
+    const cos_string_t *src_endpoint,
+    const cos_string_t *dest_bucket, 
+    const cos_string_t *dest_object,
+    int32_t thread_num
+);
+
 /*
  * @brief  post object restore from archive
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   cos_post_object_restore    the params for restore operation
  * @param[in]   headers             the headers for request
@@ -681,11 +706,11 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
                                             cos_table_t *params,
                                             cos_table_t **resp_headers);
 
-
+#if 0
 /*
  * @brief  gen signed url for cos object api
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   expires             the end expire time for signed url
  * @param[in]   req                 the cos http request
@@ -778,7 +803,7 @@ cos_status_t *cos_head_object_by_url(const cos_request_options_t *options,
 /*
  * @brief  cos init multipart upload
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   headers             the headers for request
@@ -795,7 +820,7 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
 /*
  * @brief  cos upload part from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_num            the upload part number
@@ -814,7 +839,7 @@ cos_status_t *cos_upload_part_from_buffer(const cos_request_options_t *options,
 /*
  * @brief  cos upload part from buffer
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_num            the upload part number
@@ -841,7 +866,7 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
 /*
  * @brief  cos upload part from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_num            the upload part number
@@ -860,7 +885,7 @@ cos_status_t *cos_upload_part_from_file(const cos_request_options_t *options,
 /*
  * @brief  cos upload part from file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_num            the upload part number
@@ -887,7 +912,7 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
 /*
  * @brief  cos abort multipart upload
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[out]  resp_headers        cos server response headers
@@ -903,7 +928,7 @@ cos_status_t *cos_abort_multipart_upload(const cos_request_options_t *options,
 /*
  * @brief  cos complete multipart upload
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_list           the uploaded part list to complete
@@ -922,7 +947,7 @@ cos_status_t *cos_complete_multipart_upload(const cos_request_options_t *options
 /*
  * @brief  cos complete multipart upload
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   part_list           the uploaded part list to complete
@@ -945,7 +970,7 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
 /*
  * @brief  cos list upload part with specific upload_id for object
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   params              the input list upload part parameters,
@@ -965,7 +990,7 @@ cos_status_t *cos_list_upload_part(const cos_request_options_t *options,
 /*
  * @brief  cos list multipart upload for bucket
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   params              the input list multipart upload parameters
  * @param[out]  params              the output params including next_key_marker, next_upload_id_markert, upload_list etc
  * @param[out]  resp_headers        cos server response headers
@@ -976,11 +1001,11 @@ cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options,
                                         cos_list_multipart_upload_params_t *params, 
                                         cos_table_t **resp_headers);
 
-#if 0
+
 /*
  * @brief  cos copy large object using upload part copy
  * @param[in]   options             the cos request options
- * @param[in]   paramsthe           upload part copy parameters
+ * @param[in]   params              upload part copy parameters
  * @param[in]   headers             the headers for request
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -989,12 +1014,12 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
                                    cos_upload_part_copy_params_t *params, 
                                    cos_table_t *headers, 
                                    cos_table_t **resp_headers);
-#endif
+
 
 /*
  * @brief  cos upload file using multipart upload
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   upload_id           the upload id to upload if has
  * @param[in]   filename            the filename containing object content
@@ -1011,9 +1036,27 @@ cos_status_t *cos_upload_file(cos_request_options_t *options,
                               cos_table_t *headers);
 
 /*
+ * @brief  cos upload object using part copy
+ * @param[in]   options             the cos request options
+ * @param[in]   copy_source         the cos copy source
+ * @param[in]   dest_bucket         the cos dest bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   dest_object         the cos dest object name
+ * @param[in]   part_size           the part size for multipart upload
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_upload_object_by_part_copy
+(
+        cos_request_options_t *options,
+        const cos_string_t *copy_source, 
+        const cos_string_t *dest_bucket, 
+        const cos_string_t *dest_object,
+        int64_t part_size
+);
+
+/*
  * @brief  cos download part to file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   download_file       the file with a specified part range to save the download content from cos object
  * @param[out]  resp_headers        cos server response headers
@@ -1028,7 +1071,7 @@ cos_status_t *cos_download_part_to_file(const cos_request_options_t *options,
 /*
  * @brief  cos download part to file
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   download_file       the file with a specified part range to save the download content from cos object
  * @param[in]   progress_callback   the progress callback function
@@ -1049,7 +1092,7 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
 /*
  * @brief  cos upload file with mulit-thread and resumable
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   filename            the filename containing object content
  * @param[in]   headers             the headers for request    
@@ -1073,7 +1116,7 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
 /*
  * @brief  cos create live channel
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   config              the cos live channel configuration
  * @param[in]   publish_url_list    the publish url list
  * @param[in]   play_url_list       the play url list
@@ -1090,7 +1133,7 @@ cos_status_t *cos_create_live_channel(const cos_request_options_t *options,
 /*
  * @brief  cos set live channel status
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[in]   live_channel_status the cos live channel status, enabled or disabled
  * @param[out]  resp_headers        cos server response headers
@@ -1105,7 +1148,7 @@ cos_status_t *cos_put_live_channel_status(const cos_request_options_t *options,
 /*
  * @brief  cos get live channel information
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[out]  info                the cos live channel information
  * @param[out]  resp_headers        cos server response headers
@@ -1120,7 +1163,7 @@ cos_status_t *cos_get_live_channel_info(const cos_request_options_t *options,
 /*
  * @brief  cos get live channel stat
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[out]  stat                the cos live channel stat
  * @param[out]  resp_headers        cos server response headers
@@ -1135,7 +1178,7 @@ cos_status_t *cos_get_live_channel_stat(const cos_request_options_t *options,
 /*
  * @brief  delete cos live channel
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
@@ -1148,7 +1191,7 @@ cos_status_t *cos_delete_live_channel(const cos_request_options_t *options,
 /*
  * @brief  list cos live channels
  * @param[in]   options       the cos request options
- * @param[in]   bucket        the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   params        input params for list live channel request,
                               including prefix, marker, max_key
  * @param[out]  params        output params for list object response,
@@ -1164,7 +1207,7 @@ cos_status_t *cos_list_live_channel(const cos_request_options_t *options,
 /*
  * @brief  cos get live record history of live channel
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[out]  live_record_list    the cos live records of live channel
  * @param[out]  resp_headers        cos server response headers
@@ -1179,7 +1222,7 @@ cos_status_t *cos_get_live_channel_history(const cos_request_options_t *options,
 /*
  * @brief  generate vod play list for a period of time
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[in]   play_list_name      the cos live channel play list name
  * @param[in]   start_time          the start epoch time of play list, such as 1459922368
@@ -1198,7 +1241,7 @@ cos_status_t *cos_gen_vod_play_list(const cos_request_options_t *options,
 /*
  * @brief  gen signed url for put rtmp stream
  * @param[in]   options             the cos request options
- * @param[in]   bucket              the cos bucket name
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   live_channel        the cos live channel name
  * @param[in]   play_list_name      the cos live channel play list name
  * @param[in]   expires             the end expire time for signed url

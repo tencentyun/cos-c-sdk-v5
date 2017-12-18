@@ -324,7 +324,6 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
     return s;
 }
 
-#if 0
 cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
                                    cos_upload_part_copy_params_t *params, 
                                    cos_table_t *headers, 
@@ -334,8 +333,8 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     cos_table_t *query_params = NULL;
-    char *copy_source = NULL;
     char *copy_source_range = NULL;
+    int res;
 
     s = cos_status_create(options->pool);
 
@@ -346,24 +345,32 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
 
     //init headers
     headers = cos_table_create_if_null(options, headers, 2);
-    copy_source = apr_psprintf(options->pool, "/%.*s/%.*s", 
-        params->source_bucket.len, params->source_bucket.data, 
-        params->source_object.len, params->source_object.data);
-    apr_table_add(headers, COS_COPY_SOURCE, copy_source);
-    copy_source_range = apr_psprintf(options->pool, 
-            "bytes=%" APR_INT64_T_FMT "-%" APR_INT64_T_FMT,
-            params->range_start, params->range_end);
-    apr_table_add(headers, COS_COPY_SOURCE_RANGE, copy_source_range);
+    apr_table_add(headers, COS_COPY_SOURCE, params->copy_source.data);
+    if (-1 != params->range_start && -1 != params->range_end) {
+        copy_source_range = apr_psprintf(options->pool, 
+                "bytes=%" APR_INT64_T_FMT "-%" APR_INT64_T_FMT,
+                params->range_start, params->range_end);
+        apr_table_add(headers, COS_COPY_SOURCE_RANGE, copy_source_range);
+    }
 
     cos_init_object_request(options, &params->dest_bucket, &params->dest_object, 
                             HTTP_PUT, &req, query_params, headers, NULL, 0, &resp);
 
     s = cos_process_request(options, req, resp);
     cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    if (NULL != params->rsp_content) {
+        res = cos_copy_object_parse_from_body(options->pool, &resp->body, params->rsp_content);
+        if (res != COSE_OK) {
+            cos_xml_error_status_set(s, res);
+        }
+    }
 
     return s;
 }
-#endif
 
 cos_status_t *cos_get_sorted_uploaded_part(cos_request_options_t *options,
                                            const cos_string_t *bucket, 
@@ -553,6 +560,103 @@ cos_status_t *cos_upload_file(cos_request_options_t *options,
 
     s = cos_complete_multipart_upload(options, bucket, object, upload_id,
             &complete_part_list, headers, &complete_resp_headers);
+    ret = cos_status_dup(parent_pool, s);
+    cos_pool_destroy(subpool);
+    options->pool = parent_pool;
+    return ret;
+}
+
+cos_status_t *cos_upload_object_by_part_copy
+(
+        cos_request_options_t *options,
+        const cos_string_t *copy_source, 
+        const cos_string_t *dest_bucket, 
+        const cos_string_t *dest_object,
+        int64_t part_size
+)
+{
+    cos_pool_t *subpool = NULL;
+    cos_pool_t *parent_pool = NULL;
+    cos_status_t *s = NULL;
+    cos_status_t *ret = NULL;
+    char *part_num_str = NULL;
+    char *etag = NULL;
+    cos_list_t complete_part_list;
+    cos_complete_part_content_t *complete_content = NULL;
+    int64_t total_size = 0;
+
+    cos_list_init(&complete_part_list);
+    parent_pool = options->pool;
+    cos_pool_create(&subpool, options->pool);
+    options->pool = subpool;
+
+    //get object size
+    cos_table_t *head_resp_headers = NULL;
+    s = cos_head_object(options, dest_bucket, dest_object, NULL, &head_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        ret = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return ret;
+    }
+    total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
+
+    //set part copy param
+    cos_upload_part_copy_params_t *upload_part_copy_params = cos_create_upload_part_copy_params(parent_pool);
+    cos_str_set(&upload_part_copy_params->copy_source, copy_source->data);
+    cos_str_set(&upload_part_copy_params->dest_bucket, dest_bucket->data);
+    cos_str_set(&upload_part_copy_params->dest_object, dest_object->data);
+    upload_part_copy_params->range_start = 0;
+    upload_part_copy_params->range_end = 0;
+    upload_part_copy_params->part_num = 1;
+
+    //get upload_id
+    cos_table_t *init_multipart_headers = NULL;
+    cos_table_t *init_multipart_resp_headers = NULL;
+    cos_string_t upload_id;
+    init_multipart_headers = cos_table_make(subpool, 0);
+    s = cos_init_multipart_upload(options, dest_bucket, dest_object, 
+            &upload_id, init_multipart_headers, &init_multipart_resp_headers);
+    if (!cos_status_is_ok(s)) {
+        ret = cos_status_dup(parent_pool, s);
+        cos_pool_destroy(subpool);
+        options->pool = parent_pool;
+        return ret;
+    }
+    cos_str_set(&upload_part_copy_params->upload_id, apr_pstrdup(parent_pool, upload_id.data));
+    cos_pool_destroy(subpool);
+
+    //upload part by copy
+    while (1) {
+        cos_pool_create(&subpool, parent_pool);
+        options->pool = subpool;
+        upload_part_copy_params->range_end = cos_min(upload_part_copy_params->range_start + part_size - 1, total_size - 1);
+        s = cos_upload_part_copy(options, upload_part_copy_params, NULL, NULL);
+        if (!cos_status_is_ok(s)) {
+            ret = cos_status_dup(parent_pool, s);
+            cos_pool_destroy(subpool);
+            options->pool = parent_pool;
+            return ret;
+        }
+        complete_content = cos_create_complete_part_content(parent_pool);
+        part_num_str = apr_psprintf(parent_pool, "%d", upload_part_copy_params->part_num);
+        cos_str_set(&complete_content->part_number, part_num_str);
+        etag = apr_pstrdup(parent_pool, upload_part_copy_params->rsp_content->etag.data);
+        cos_str_set(&complete_content->etag, etag);
+        cos_list_add_tail(&complete_content->node, &complete_part_list);
+        cos_pool_destroy(subpool);
+        if (upload_part_copy_params->range_end + 1 >= total_size) {
+            break;
+        }
+        upload_part_copy_params->range_start += part_size;
+        upload_part_copy_params->part_num++;
+    }
+
+    //complete multipart
+    cos_pool_create(&subpool, parent_pool);
+    options->pool = subpool;
+    s = cos_complete_multipart_upload(options, dest_bucket, dest_object, &upload_part_copy_params->upload_id,
+            &complete_part_list, NULL, NULL);
     ret = cos_status_dup(parent_pool, s);
     cos_pool_destroy(subpool);
     options->pool = parent_pool;

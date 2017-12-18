@@ -203,6 +203,7 @@ void cos_get_object_uri(const cos_request_options_t *options,
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
+    int32_t bucket_has_appid = 0;
 
     generate_proto(options, req);
 
@@ -213,14 +214,33 @@ void cos_get_object_uri(const cos_request_options_t *options,
    
     req->resource = apr_psprintf(options->pool, "%.*s", 
                                  object->len, object->data);
-    if (options->config->is_cname || is_valid_ip(raw_endpoint_str)) {
-        req->host = apr_psprintf(options->pool, "%.*s",
+    if (options->config->is_cname || 
+        is_valid_ip(raw_endpoint_str))
+    {
+        req->host = apr_psprintf(options->pool, "%.*s", 
                                 raw_endpoint.len, raw_endpoint.data);
     } else {
-        req->host = apr_psprintf(options->pool, "%.*s-%.*s.%.*s", 
-                                bucket->len, bucket->data,
-                                options->config->appid.len, options->config->appid.data,
-                                raw_endpoint.len, raw_endpoint.data);
+        if (options->config->appid.len == 0 || strcmp(options->config->appid.data, "") == 0) {
+            bucket_has_appid = 1;
+        }
+        else {
+            if (cos_ends_with(bucket, &options->config->appid) && bucket->len > options->config->appid.len) {
+                if (bucket->data[bucket->len - options->config->appid.len - 1] == '-') {
+                    bucket_has_appid = 1;
+                }
+            }
+        }
+        if (bucket_has_appid) {
+            req->host = apr_psprintf(options->pool, "%.*s.%.*s", 
+                                     bucket->len, bucket->data,
+                                     raw_endpoint.len, raw_endpoint.data);
+        }
+        else {
+            req->host = apr_psprintf(options->pool, "%.*s-%.*s.%.*s", 
+                                     bucket->len, bucket->data,
+                                     options->config->appid.len, options->config->appid.data,
+                                     raw_endpoint.len, raw_endpoint.data);
+        }
     }
     req->uri = apr_psprintf(options->pool, "%.*s",
                             object->len, object->data);
@@ -234,6 +254,7 @@ void cos_get_bucket_uri(const cos_request_options_t *options,
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
+    int32_t bucket_has_appid = 0;
 
     generate_proto(options, req);
 
@@ -250,10 +271,27 @@ void cos_get_bucket_uri(const cos_request_options_t *options,
         req->host = apr_psprintf(options->pool, "%.*s", 
                                 raw_endpoint.len, raw_endpoint.data);
     } else {
-        req->host = apr_psprintf(options->pool, "%.*s-%.*s.%.*s", 
-                                bucket->len, bucket->data,
-                                options->config->appid.len, options->config->appid.data,
-                                raw_endpoint.len, raw_endpoint.data);
+        if (options->config->appid.len == 0 || strcmp(options->config->appid.data, "") == 0) {
+            bucket_has_appid = 1;
+        }
+        else {
+            if (cos_ends_with(bucket, &options->config->appid) && bucket->len > options->config->appid.len) {
+                if (bucket->data[bucket->len - options->config->appid.len - 1] == '-') {
+                    bucket_has_appid = 1;
+                }
+            }
+        }
+        if (bucket_has_appid) {
+            req->host = apr_psprintf(options->pool, "%.*s.%.*s", 
+                                     bucket->len, bucket->data,
+                                     raw_endpoint.len, raw_endpoint.data);
+        }
+        else {
+            req->host = apr_psprintf(options->pool, "%.*s-%.*s.%.*s", 
+                                     bucket->len, bucket->data,
+                                     options->config->appid.len, options->config->appid.data,
+                                     raw_endpoint.len, raw_endpoint.data);
+        }
     }
     req->uri = apr_psprintf(options->pool, "%s", "");
 }
@@ -529,8 +567,17 @@ cos_list_multipart_upload_params_t *cos_create_list_multipart_upload_params(cos_
 
 cos_upload_part_copy_params_t *cos_create_upload_part_copy_params(cos_pool_t *p)
 {
-    return (cos_upload_part_copy_params_t *)cos_pcalloc(
-            p, sizeof(cos_upload_part_copy_params_t));
+    cos_upload_part_copy_params_t *copy_param;
+    copy_param = (cos_upload_part_copy_params_t *)cos_pcalloc(p, sizeof(cos_upload_part_copy_params_t));
+    cos_str_set(&copy_param->copy_source, "");
+    cos_str_set(&copy_param->dest_bucket, "");
+    cos_str_set(&copy_param->dest_object, "");
+    cos_str_set(&copy_param->upload_id, "");
+    copy_param->part_num = 0;
+    copy_param->range_start = -1;
+    copy_param->range_end = -1;
+    copy_param->rsp_content = cos_create_copy_object_params(p);
+    return copy_param;
 }
 
 cos_lifecycle_rule_content_t *cos_create_lifecycle_rule_content(cos_pool_t *p)
@@ -593,7 +640,6 @@ cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *
     return rule;
 }
 
-#if 0
 cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
 {
     cos_object_restore_params_t *params;
@@ -603,8 +649,6 @@ cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
     params->days = INT_MAX;
     return params;
 }
-#endif
-
 
 cos_upload_file_t *cos_create_upload_file(cos_pool_t *p)
 {

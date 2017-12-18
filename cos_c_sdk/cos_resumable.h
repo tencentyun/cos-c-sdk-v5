@@ -63,6 +63,23 @@ typedef struct {
     apr_queue_t  *completed_parts; // the queue of completed parts tasks, thread safe
 } cos_upload_thread_params_t;
 
+typedef struct {
+    cos_request_options_t options;
+    cos_string_t *bucket;
+    cos_string_t *object; 
+    cos_string_t *upload_id;
+    cos_string_t *copy_source;
+    cos_checkpoint_part_t *part;
+    cos_part_task_result_t *result;
+
+    apr_uint32_t *launched;        // the number of launched part tasks, use atomic
+    apr_uint32_t *failed;          // the number of failed part tasks, use atomic
+    apr_uint32_t *completed;       // the number of completed part tasks, use atomic
+    apr_queue_t  *failed_parts;    // the queue of failed parts tasks, thread safe
+    apr_queue_t  *completed_parts; // the queue of completed parts tasks, thread safe
+} cos_upload_copy_thread_params_t;
+
+
 typedef cos_upload_thread_params_t cos_transport_thread_params_t;
 
 int32_t cos_get_thread_num(cos_resumable_clt_params_t *clt_params);
@@ -87,6 +104,13 @@ void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part
                              cos_string_t *bucket, cos_string_t *object, cos_string_t *filepath,
                              cos_string_t *upload_id, cos_checkpoint_part_t *parts,
                              cos_part_task_result_t *result);
+
+void cos_build_copy_thread_params(cos_upload_copy_thread_params_t *thr_params, int part_num, 
+                             cos_pool_t *parent_pool, cos_request_options_t *options, 
+                             cos_string_t *bucket, cos_string_t *object, cos_string_t *copy_source,
+                             cos_string_t *upload_id, cos_checkpoint_part_t *parts,
+                             cos_part_task_result_t *result);
+
 
 void cos_destroy_thread_pool(cos_transport_thread_params_t *thr_params, int part_num);
 
@@ -137,6 +161,21 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
                                                 cos_progress_callback progress_callback,
                                                 cos_table_t **resp_headers,
                                                 cos_list_t *resp_body);
+
+void * APR_THREAD_FUNC upload_part_copy(apr_thread_t *thd, void *data);
+
+cos_status_t *cos_upload_object_by_part_copy_mt
+(
+        cos_request_options_t *options,
+        cos_string_t *src_bucket,
+        cos_string_t *src_object,
+        cos_string_t *src_endpoint,
+        cos_string_t *dest_bucket, 
+        cos_string_t *dest_object,
+        int64_t part_size,
+        int32_t thread_num,
+        cos_progress_callback progress_callback
+);
 
 void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data);
 

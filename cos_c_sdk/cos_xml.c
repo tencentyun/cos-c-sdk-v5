@@ -915,7 +915,6 @@ void build_replication_body(cos_pool_t *p, cos_replication_params_t *replication
     cos_list_add_tail(&b->node, body);
 }
 
-#if 0
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body)
 {
     cos_buf_t *b;
@@ -955,7 +954,6 @@ void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *param
     free(xml_buff);
     mxmlDelete(doc);
 }
-#endif
 
 int cos_versioning_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_versioning_content_t *versioning)
 {
