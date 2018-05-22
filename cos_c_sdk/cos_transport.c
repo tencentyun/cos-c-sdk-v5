@@ -88,7 +88,7 @@ static int cos_init_curl_url(cos_curl_http_transport_t *t)
                               querystr.len,
                               querystr.data);
     }
-    cos_warn_log("url:%s", t->url);
+    cos_info_log("url:%s", t->url);
 
     return COSE_OK;
 }

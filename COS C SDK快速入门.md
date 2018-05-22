@@ -52,6 +52,9 @@ int main(int argc, char *argv[])
  ? ?if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);
     }
+    
+	/* 设置日志级别 */
+    cos_log_set_level(COS_LOG_WARN);
 
     /* 调用 COS SDK 的接口上传或下载文件 */
     /* ... 用户逻辑代码，这里省略 */

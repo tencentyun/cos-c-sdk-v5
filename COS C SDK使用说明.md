@@ -386,10 +386,10 @@ cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
   | expire | 规则过期属性。|Struct|  
     | days |指明多少天后执行删除操作。 |Int|  
     | date | 指明在何时执行删除操作。|String|  
-  | transition | 规则转换属性，对象何时转换被转换为 Standard_IA 或Nearline。|Struct|  
+  | transition | 规则转换属性，对象何时转换被转换为 Standard_IA。|Struct|  
     | days | 指明多少天后执行转换操作。|Int|  
     | date | 指明在何时执行转换操作。|String|  
-    | storage_class | 指定 Object 转储到的目标存储类型，枚举值：Standard_IA，Nearline。 |String|  
+    | storage_class | 指定 Object 转储到的目标存储类型，枚举值：Standard_IA。 |String|  
   | abort | 设置允许分块上传保持运行的最长时间。|Struct|  
     | days |指明分块上传开始后多少天内必须完成上传。 |Int|  
 | resp_headers | 返回 HTTP 响应消息的头域。|Struct|
@@ -442,7 +442,7 @@ cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
     cos_str_set(&rule_content->id, "testrule2");
     cos_str_set(&rule_content->prefix, "efg/");
     cos_str_set(&rule_content->status, "Disabled");
-    cos_str_set(&rule_content->transition.storage_class, "Nearline");
+    cos_str_set(&rule_content->transition.storage_class, "Standard_IA");
     rule_content->transition.days = 30;
     cos_list_add_tail(&rule_content->node, &rule_list);
 
@@ -488,10 +488,10 @@ cos_status_t *cos_get_bucket_lifecycle(const cos_request_options_t *options,
   | expire | 规则过期属性。|Struct|  
     | days |指明多少天后执行删除操作。 |Int|  
     | date | 指明在何时执行删除操作。|String|  
-  | transition | 规则转换属性，对象何时转换被转换为 Standard_IA 或 Nearline。|Struct|  
+  | transition | 规则转换属性，对象何时转换被转换为 Standard_IA。|Struct|  
     | days | 指明多少天后执行转换操作。|Int|  
     | date | 指明在何时执行转换操作。|String|  
-    | storage_class | 指定 Object 转储到的目标存储类型，枚举值：Standard_IA，Nearline。|String|  
+    | storage_class | 指定 Object 转储到的目标存储类型，枚举值：Standard_IA。|String|  
   | abort | 设置允许分块上传保持运行的最长时间。|Struct|  
     | days | 指明分块上传开始后多少天内必须完成上传。|Int|  
 | resp_headers |返回 HTTP 响应消息的头域。 |Struct| 
@@ -1005,7 +1005,7 @@ cos_status_t *cos_put_bucket_replication(const cos_request_options_t *options,
     | status | 标识规则是否生效，枚举值：Enabled，Disabled。|String|  
     | prefix | 匹配前缀。不可重叠，重叠返回错误。|String|  
     | dst_bucket | 目的存储桶标识，格式为：资源标识符 qcs:id/0:cos:[Region]:appid/[APPID]:[Bucketname]。|String|  
-    | storage_class | 存储类别，枚举值：Standard，Standard_IA，Nearline。<br>默认值原存储桶级别。|String|  
+    | storage_class | 存储类别，枚举值：Standard，Standard_IA。<br>默认值原存储桶级别。|String|  
 | resp_headers | 返回 HTTP 响应消息的头域。|Struct|  
 
 #### 返回结果说明
@@ -1065,7 +1065,7 @@ cos_status_t *cos_put_bucket_replication(const cos_request_options_t *options,
     cos_str_set(&rule->id, "Rule_03");
     cos_str_set(&rule->status, "Enabled");
     cos_str_set(&rule->prefix, "test3");
-    cos_str_set(&rule->storage_class, "Nearline");
+    cos_str_set(&rule->storage_class, "Standard_IA");
     cos_str_set(&rule->dst_bucket, "qcs:id/0:cos:cn-east:appid/1253686666:replicationtest");
     cos_list_add_tail(&rule->node, &replication_param->rule_list);
     
@@ -1105,7 +1105,7 @@ cos_status_t *cos_get_bucket_replication(const cos_request_options_t *options,
     | status | 标识规则是否生效，枚举值：Enabled，Disabled。|String|  
     | prefix | 匹配前缀。不可重叠，重叠返回错误。|String|  
     | dst_bucket | 目的存储桶标识，格式为：资源标识符 qcs:id/0:cos:[Region]:appid/[APPID]:[Bucketname]。|String|  
-    | storage_class | 存储类别，枚举值：Standard，Standard_IA，Nearline。<br>默认值原存储桶级别。|String|  
+    | storage_class | 存储类别，枚举值：Standard，Standard_IA。<br>默认值原存储桶级别。|String|  
 | resp_headers | 返回 HTTP 响应消息的头域。|Struct|  
 
 #### 返回结果说明

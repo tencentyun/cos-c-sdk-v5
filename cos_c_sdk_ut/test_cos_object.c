@@ -734,6 +734,28 @@ void test_object_copy(CuTest *tc)
     cos_pool_destroy(p);
 }
 
+void test_presigned_url(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t presigned_url;
+    int res;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.dat");
+
+    res = cos_gen_presigned_url(options, &bucket, &object, 300, HTTP_GET, &presigned_url);
+    CuAssertIntEquals(tc, 0, res);
+    
+    cos_pool_destroy(p);
+    
+}
 
 CuSuite *test_cos_object()
 {
@@ -756,6 +778,7 @@ CuSuite *test_cos_object()
     SUITE_ADD_TEST(suite, test_delete_object);
     SUITE_ADD_TEST(suite, test_append_object_from_buffer);
     SUITE_ADD_TEST(suite, test_append_object_from_file);
+    SUITE_ADD_TEST(suite, test_presigned_url);
     SUITE_ADD_TEST(suite, test_object_cleanup); 
     
     return suite;

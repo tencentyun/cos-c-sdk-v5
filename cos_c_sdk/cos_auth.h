@@ -26,7 +26,8 @@ int cos_get_string_to_sign(cos_pool_t *p,
                            const cos_string_t *secret_key,
                            const cos_string_t *canon_res,
                            const cos_table_t *headers, 
-                           const cos_table_t *params, 
+                           const cos_table_t *params,
+                           const int64_t expire,
                            cos_string_t *signstr);
 
 /**

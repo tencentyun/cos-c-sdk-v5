@@ -720,6 +720,94 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     return s;
 }
 
+int cos_gen_sign_string(const cos_request_options_t *options,
+                        const cos_string_t *bucket, 
+                        const cos_string_t *object,
+                        const int64_t expire, 
+                        cos_http_request_t *req,
+                        cos_string_t *signstr)
+{
+    char canon_buf[COS_MAX_URI_LEN];
+    cos_string_t canon_res;
+    int res;
+    int len;
+
+    len = strlen(req->resource);
+    if (len >= COS_MAX_URI_LEN - 1) {
+        cos_error_log("http resource too long, %s.", req->resource);
+        return COSE_INVALID_ARGUMENT;
+    }
+
+    canon_res.data = canon_buf;
+    canon_res.len = apr_snprintf(canon_buf, sizeof(canon_buf), "/%s", req->resource);
+
+    res = cos_get_string_to_sign(options->pool, req->method, &options->config->access_key_id, &options->config->access_key_secret, &canon_res, 
+                                 req->headers, req->query_params, expire, signstr);
+    
+    if (res != COSE_OK) {
+        return res;
+    }
+    
+    return COSE_OK;
+}
+
+int cos_gen_presigned_url(const cos_request_options_t *options,
+                          const cos_string_t *bucket, 
+                          const cos_string_t *object,
+                          const int64_t expire,
+                          http_method_e method,
+                          cos_string_t *presigned_url)
+{
+    cos_string_t signstr;
+    int res;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    char uristr[3*COS_MAX_URI_LEN+1];
+    char param[3*COS_MAX_QUERY_ARG_LEN+1];
+    char *url = NULL;
+    const char *proto;
+
+    uristr[0] = '\0';
+    param[0] = '\0';
+    cos_str_null(&signstr);
+
+    cos_init_object_request(options, bucket, object, method, 
+                            &req, cos_table_make(options->pool, 1), cos_table_make(options->pool, 1), NULL, 0, &resp);
+    if (req->host) {
+        apr_table_set(req->headers, COS_HOST, req->host);
+    }
+    res = cos_gen_sign_string(options, bucket, object, expire, req, &signstr);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_gen_sign_string, res=%d", res);
+        return res;
+    }
+
+    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_url_encode, res=%d", res);
+        return res;
+    }
+
+    res = cos_url_encode(param, signstr.data, COS_MAX_QUERY_ARG_LEN);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_url_encode, res=%d", res);
+        return res;
+    }
+
+    proto = req->proto != NULL && strlen(req->proto) != 0 ? req->proto : COS_HTTP_PREFIX;
+
+    url = apr_psprintf(options->pool, "%s%s/%s?sign=%s",
+                       proto,
+                       req->host,
+                       uristr,
+                       param);
+    cos_str_set(presigned_url, url);
+
+    return COSE_OK;    
+}
+
+
+
 #if 0
 char *cos_gen_signed_url(const cos_request_options_t *options,
                          const cos_string_t *bucket, 

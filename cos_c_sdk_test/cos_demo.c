@@ -176,7 +176,7 @@ void test_bucket_lifecycle()
     cos_str_set(&rule_content->id, "testrule2");
     cos_str_set(&rule_content->prefix, "efg/");
     cos_str_set(&rule_content->status, "Disabled");
-    cos_str_set(&rule_content->transition.storage_class, "Nearline");
+    cos_str_set(&rule_content->transition.storage_class, "Standard_IA");
     rule_content->transition.days = 999;
     cos_list_add_tail(&rule_content->node, &rule_list);
 
@@ -1124,7 +1124,7 @@ void test_replication()
     cos_str_set(&rule->id, "Rule_03");
     cos_str_set(&rule->status, "Enabled");
     cos_str_set(&rule->prefix, "test3");
-    cos_str_set(&rule->storage_class, "Nearline");
+    cos_str_set(&rule->storage_class, "Standard_IA");
     cos_str_set(&rule->dst_bucket, "qcs:id/0:cos:cn-east:appid/1253686666:replicationtest");
     cos_list_add_tail(&rule->node, &replication_param->rule_list);
     
@@ -1157,6 +1157,29 @@ void test_replication()
     
     cos_pool_destroy(p);
 
+}
+
+void test_presigned_url()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t presigned_url;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    cos_gen_presigned_url(options, &bucket, &object, 300, HTTP_GET, &presigned_url);
+
+    printf("presigned url: %s\n", presigned_url.data);
+
+    cos_pool_destroy(p);
+    
 }
 
 int main(int argc, char *argv[])

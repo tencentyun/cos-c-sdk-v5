@@ -36,7 +36,8 @@ int cos_get_string_to_sign(cos_pool_t *p,
                            const cos_string_t *secret_key,
                            const cos_string_t *canon_res,
                            const cos_table_t *headers, 
-                           const cos_table_t *params, 
+                           const cos_table_t *params,
+                           const int64_t expire,
                            cos_string_t *signstr)
 {
     cos_buf_t *fmt_str;
@@ -76,7 +77,7 @@ int cos_get_string_to_sign(cos_pool_t *p,
     
     // Host
     cos_buf_append_string(p, fmt_str, "host=", sizeof("host=")-1);
-    if ((value = apr_table_get(headers, COS_HOST)) != NULL) {            
+    if (headers != NULL && (value = apr_table_get(headers, COS_HOST)) != NULL) {            
         cos_buf_append_string(p, fmt_str, value, strlen(value));    
     }                                                               
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);  
@@ -87,7 +88,7 @@ int cos_get_string_to_sign(cos_pool_t *p,
     // construct the string to sign
     cos_buf_append_string(p, sign_str, "sha1\n", sizeof("sha1\n")-1);
     now = apr_time_sec(apr_time_now());
-    time_str_len = apr_snprintf((char*)time_str, 64, "%"APR_INT64_T_FMT";%"APR_INT64_T_FMT, now, now+COS_AUTH_EXPIRE_DEFAULT);
+    time_str_len = apr_snprintf((char*)time_str, 64, "%"APR_INT64_T_FMT";%"APR_INT64_T_FMT, now, now + expire);
     cos_buf_append_string(p, sign_str, (char*)time_str, time_str_len);
     cos_buf_append_string(p, sign_str, "\n", sizeof("\n")-1);
     cos_buf_append_string(p, sign_str, (const char*)hexdigest, sizeof(hexdigest));
@@ -130,7 +131,7 @@ int cos_get_signed_headers(cos_pool_t *p,
     cos_string_t signstr;
 
     res = cos_get_string_to_sign(p, req->method, access_key_id, access_key_secret, canon_res, 
-                                 req->headers, req->query_params, &signstr);
+                                 req->headers, req->query_params, COS_AUTH_EXPIRE_DEFAULT, &signstr);
     
     if (res != COSE_OK) {
         return res;
