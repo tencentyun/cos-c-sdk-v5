@@ -86,20 +86,29 @@ int main(int argc, char *argv[])
     cos_str_set(&options->config->access_key_secret, "<用户的SecretKey>");    //用户注册COS服务后所获得的SecretKey
     cos_str_set(&options->config->appid, "<用户的AppId>");                    //用户注册COS服务后所获得的AppId
 
+    /* 可以通过设置sts_token来使用临时秘钥，当使用临时秘钥时access_key_id和access_key_secret均需要设置为对应临时秘钥所配套的SecretId和SecretKey */
+    //cos_str_set(&options->config->sts_token, "MyTokenString");
+
     /* 是否使用了CNAME */
     options->config->is_cname = 0;
 
     /* 用于设置网络相关参数，比如超时时间等*/
     options->ctl = cos_http_controller_create(options->pool, 0);
+
+    /* 用于设置上传请求是否自动添加Content-MD5头部，enable为COS_FALSE时上传请求将不自动添加Content-MD5头部，enable为COS_TRUE时上传请求将自动添加Content-MD5头部，如果不设置此项则默认将添加Content-MD5头部 */
+    cos_set_content_md5_enable(options->ctl, COS_FALSE);
+	
+    /* 用于设置请求路由地址和端口，一般情况下无需设置此参数，请求将按域名解析结果路由 */
+    //cos_set_request_route(options->ctl, "1.2.3.4", 80);
 ```
 
 ##  SDK 一般使用流程
 1. 初始化 SDK。
 2. 设置请求选项参数。
-关于 APPID、SecretId、SecretKey、Bucket 等名称的含义和获取方式请参考 [COS 术语信息](/document/product/436/7751)。
+关于 APPID、SecretId、SecretKey、Bucket 等名称的含义和获取方式请参考 [COS 术语信息](https://cloud.tencent.com/document/product/436/7751)。
   *  APPID 是申请腾讯云账户后，系统分配的账户标识之一。
   * access_key_id 与 access_key_secret 是账户 API 密钥。
-  * endpoint 是 COS 访问域名信息，可以通过腾讯云[【COS 可用地域】](/document/product/436/6224) 页面查看。
+  * endpoint 是 COS 访问域名信息，可以通过腾讯云[【COS 可用地域】](https://cloud.tencent.com/document/product/436/6224) 页面查看。
   例如，广州地区 endpoint 为 cos.ap-guangzhou.myqcloud.com。
 3. 设置 API 接口必需的参数。
 4. 调用 SDK API 发起请求并获得请求响应结果。

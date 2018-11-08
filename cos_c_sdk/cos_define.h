@@ -121,7 +121,8 @@ typedef struct cos_lib_curl_initializer_s cos_lib_curl_initializer_t;
 typedef enum {
     COS_ACL_PRIVATE                  = 0,   /*< private */
     COS_ACL_PUBLIC_READ              = 1,   /*< public read */
-    COS_ACL_PUBLIC_READ_WRITE        = 2    /*< public read write */
+    COS_ACL_PUBLIC_READ_WRITE        = 2,   /*< public read write */
+    COS_ACL_DEFAULT                  = 3    /*< default */
 } cos_acl_e;
 
 typedef struct {

@@ -248,6 +248,8 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
     //init headers
     headers = cos_table_create_if_null(options, headers, 0);
 
+    cos_add_content_md5_from_buffer(options, buffer, headers);
+
     cos_init_object_request(options, bucket, object, HTTP_PUT, &req, query_params, 
                             headers, progress_callback, 0, &resp);
 
@@ -303,6 +305,8 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
 
     //init headers
     headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_add_content_md5_from_file_range(options, upload_file, headers);
 
     cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
                             query_params, headers, progress_callback, 0, &resp);

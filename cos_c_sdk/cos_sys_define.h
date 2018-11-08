@@ -105,8 +105,8 @@ typedef apr_array_header_t cos_array_header_t;
 
 #define COS_CONNECT_TIMEOUT 10
 #define COS_DNS_CACHE_TIMOUT 60
-#define COS_MIN_SPEED_LIMIT 1024
-#define COS_MIN_SPEED_TIME 15
+#define COS_MIN_SPEED_LIMIT 8
+#define COS_MIN_SPEED_TIME 120
 #define COS_MAX_MEMORY_SIZE 1024*1024*1024L
 #define COS_MAX_PART_SIZE 512*1024*1024L
 #define COS_DEFAULT_PART_SIZE 1024*1024L
@@ -121,7 +121,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define CR     (char) 13
 #define CRLF   "\x0d\x0a"
 
-#define COS_VERSION    "5.0.3"
+#define COS_VERSION    "5.0.5"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
 #define COS_HTTP_PREFIX   "http://"

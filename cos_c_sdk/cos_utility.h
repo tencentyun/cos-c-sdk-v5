@@ -305,6 +305,8 @@ cos_table_t* cos_table_create_if_null(const cos_request_options_t *options,
 
 int is_enable_crc(const cos_request_options_t *options);
 
+int is_enable_md5(const cos_request_options_t *options);
+
 int has_crc_in_response(const cos_http_response_t *resp);
 
 int has_range_or_process_in_request(const cos_http_request_t *req) ;
@@ -322,6 +324,39 @@ int cos_init_read_response_body_to_file_part(cos_pool_t *p,
                                         cos_upload_file_t *download_file,
                                         cos_http_response_t *resp);
 
+/**
+ * @brief add Content-MD5 header, md5 calculated from buffer
+**/
+int cos_add_content_md5_from_buffer(const cos_request_options_t *options,
+                                    cos_list_t *buffer,
+                                    cos_table_t *headers);
+
+/**
+ * @brief add Content-MD5 header, md5 calculated from file
+**/
+int cos_add_content_md5_from_file(const cos_request_options_t *options,
+                                  const cos_string_t *filename,
+                                  cos_table_t *headers);
+
+/**
+ * @brief add Content-MD5 header, md5 calculated from file range
+**/
+int cos_add_content_md5_from_file_range(const cos_request_options_t *options,
+                                  cos_upload_file_t *upload_file,
+                                  cos_table_t *headers);
+
+/**
+ * @brief set flag of adding Content-MD5 header
+ * @param[in] enable    COS_TRUE: sdk will add Content-MD5 automatically; COS_FALSE:sdk does not add Content-MD5
+**/
+void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable);
+
+/**
+ * @brief set route address param in request options
+ * @param[in] host_ip, string of route ip with '\0' ending, ip-port will not be applied if host_ip is NULL
+ * @param[in] host_port, the route port, ip-port will not be applied if host_port is a none-positive integer
+**/
+void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_port);
 
 COS_CPP_END
 

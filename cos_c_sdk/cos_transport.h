@@ -32,8 +32,11 @@ struct cos_http_request_options_s {
     int connect_timeout;
     int64_t max_memory_size;
     int enable_crc;
+    int enable_md5;
     char *proxy_host;
     char *proxy_auth;
+    char *host_ip;
+    int host_port;
 };
 
 struct cos_http_transport_options_s {

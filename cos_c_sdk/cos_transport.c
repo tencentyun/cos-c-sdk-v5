@@ -75,19 +75,41 @@ static int cos_init_curl_url(cos_curl_http_transport_t *t)
     }
 
     proto = strlen(t->req->proto) != 0 ? t->req->proto : COS_HTTP_PREFIX;
-    if (querystr.len == 0) {
-        t->url = apr_psprintf(t->pool, "%s%s/%s",
-                              proto,
-                              t->req->host,
-                              uristr);
-    } else {
-        t->url = apr_psprintf(t->pool, "%s%s/%s%.*s",
-                              proto,
-                              t->req->host,
-                              uristr,
-                              querystr.len,
-                              querystr.data);
+    /* use original host to build url */
+    if (NULL == t->controller->options->host_ip || 0 >= t->controller->options->host_port) {
+        if (querystr.len == 0) {
+            t->url = apr_psprintf(t->pool, "%s%s/%s",
+                                  proto,
+                                  t->req->host,
+                                  uristr);
+        } else {
+            t->url = apr_psprintf(t->pool, "%s%s/%s%.*s",
+                                  proto,
+                                  t->req->host,
+                                  uristr,
+                                  querystr.len,
+                                  querystr.data);
+        }
     }
+    /* use specified ip-port to build url */
+    else {
+        if (querystr.len == 0) {
+            t->url = apr_psprintf(t->pool, "%s%s:%d/%s",
+                                  proto,
+                                  t->controller->options->host_ip,
+                                  t->controller->options->host_port,
+                                  uristr);
+        } else {
+            t->url = apr_psprintf(t->pool, "%s%s:%d/%s%.*s",
+                                  proto,
+                                  t->controller->options->host_ip,
+                                  t->controller->options->host_port,
+                                  uristr,
+                                  querystr.len,
+                                  querystr.data);
+        }
+    }
+    
     cos_info_log("url:%s", t->url);
 
     return COSE_OK;
@@ -394,7 +416,7 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
     curl_easy_setopt_safe(CURLOPT_DNS_CACHE_TIMEOUT, t->controller->options->dns_cache_timeout);
     curl_easy_setopt_safe(CURLOPT_CONNECTTIMEOUT, t->controller->options->connect_timeout);
     curl_easy_setopt_safe(CURLOPT_LOW_SPEED_LIMIT, t->controller->options->speed_limit);
-    //curl_easy_setopt_safe(CURLOPT_LOW_SPEED_TIME, t->controller->options->speed_time);
+    curl_easy_setopt_safe(CURLOPT_LOW_SPEED_TIME, t->controller->options->speed_time);
 
     cos_init_curl_headers(t);
     curl_easy_setopt_safe(CURLOPT_HTTPHEADER, t->headers);

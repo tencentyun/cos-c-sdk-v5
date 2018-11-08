@@ -195,6 +195,12 @@ cos_request_options_t *cos_request_options_create(cos_pool_t *p)
     return options;
 }
 
+void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_port)
+{
+    ctl->options->host_ip = apr_pstrdup(ctl->pool, host_ip);
+    ctl->options->host_port = host_port;
+}
+
 void cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
@@ -768,6 +774,8 @@ const char *get_cos_acl_str(cos_acl_e cos_acl)
             return "public-read";
         case COS_ACL_PUBLIC_READ_WRITE:
             return "public-read-write";
+        case COS_ACL_DEFAULT:
+            return  "default";
         default:
             return NULL;
     }
@@ -987,6 +995,11 @@ int is_enable_crc(const cos_request_options_t *options)
     return options->ctl->options->enable_crc;
 }
 
+int is_enable_md5(const cos_request_options_t *options) 
+{
+    return options->ctl->options->enable_md5;
+}
+
 int has_crc_in_response(const cos_http_response_t *resp) 
 {
     if (NULL != apr_table_get(resp->headers, COS_HASH_CRC64_ECMA)) {
@@ -1052,3 +1065,206 @@ int cos_temp_file_rename(cos_status_t *s, const char *from_path, const char *to_
 
     return res;
 }
+
+int cos_add_content_md5_from_buffer(const cos_request_options_t *options,
+                                    cos_list_t *buffer,
+                                    cos_table_t *headers)
+{
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+    unsigned char md5_data[APR_MD5_DIGESTSIZE + 1];
+    apr_md5_ctx_t context;
+    cos_buf_t *content;
+    
+    /* do not add content-md5 if the option is disabled */
+    if (!is_enable_md5(options)) {
+        return 0;
+    }
+
+    /* use user-specified content-md5 */
+    if (NULL != apr_table_get(headers, COS_CONTENT_MD5)) {
+        return 0;
+    }
+
+    /* calc md5 digest */
+    if (0 != apr_md5_init(&context)) {
+        return COSE_INTERNAL_ERROR;
+    }
+    cos_list_for_each_entry(cos_buf_t, content, buffer, node) {
+        if (0 != apr_md5_update(&context, content->pos, (apr_size_t)cos_buf_size(content))) {
+            return COSE_INTERNAL_ERROR;
+        }
+    }
+    if (0 != apr_md5_final(md5_data, &context)) {
+        return COSE_INTERNAL_ERROR;
+    }
+    md5_data[APR_MD5_DIGESTSIZE] = '\0';
+
+    /* add content-md5 header */
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5_data, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+    
+    return 0;
+}
+
+int cos_add_content_md5_from_file(const cos_request_options_t *options,
+                                  const cos_string_t *filename,
+                                  cos_table_t *headers)
+{
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+    unsigned char md5_data[APR_MD5_DIGESTSIZE + 1];
+    apr_md5_ctx_t context;
+    apr_file_t *thefile;
+    apr_finfo_t finfo;
+    int s;
+    char buff[64 * 1024];
+    apr_size_t nbytes;
+    apr_size_t bytes_left;
+    
+    /* do not add content-md5 if the option is disabled */
+    if (!is_enable_md5(options)) {
+        return 0;
+    }
+
+    /* use user-specified content-md5 */
+    if (NULL != apr_table_get(headers, COS_CONTENT_MD5)) {
+        return 0;
+    }
+
+    /* open input file */
+    if ((s = apr_file_open(&thefile, filename->data, APR_READ, APR_UREAD | APR_GREAD, options->pool)) != APR_SUCCESS) {
+        return COSE_OPEN_FILE_ERROR;
+    }
+    if ((s = apr_file_info_get(&finfo, APR_FINFO_NORM, thefile)) != APR_SUCCESS) {
+        apr_file_close(thefile);
+        return COSE_FILE_INFO_ERROR;
+    }
+    bytes_left = finfo.size;
+
+    /* calc md5 digest */
+    if (0 != apr_md5_init(&context)) {
+        apr_file_close(thefile);
+        return COSE_INTERNAL_ERROR;
+    }
+    while (bytes_left) {
+        nbytes = cos_min(sizeof(buff), bytes_left);
+        if ((s = apr_file_read(thefile, buff, &nbytes)) != APR_SUCCESS) {
+            apr_file_close(thefile);
+            return COSE_FILE_READ_ERROR;
+        }
+        if (0 != apr_md5_update(&context, buff, nbytes)) {
+            apr_file_close(thefile);
+            return COSE_INTERNAL_ERROR;
+        }
+        bytes_left -= nbytes;
+    }
+    if (0 != apr_md5_final(md5_data, &context)) {
+        apr_file_close(thefile);
+        return COSE_INTERNAL_ERROR;
+    }
+    md5_data[APR_MD5_DIGESTSIZE] = '\0';
+
+    /* add content-md5 header */
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5_data, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+
+    apr_file_close(thefile);
+    
+    return 0;
+}
+
+int cos_add_content_md5_from_file_range(const cos_request_options_t *options,
+                                  cos_upload_file_t *upload_file,
+                                  cos_table_t *headers)
+{
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+    unsigned char md5_data[APR_MD5_DIGESTSIZE + 1];
+    apr_md5_ctx_t context;
+    apr_file_t *thefile;
+    apr_finfo_t finfo;
+    int s;
+    char buff[64 * 1024];
+    apr_size_t nbytes;
+    apr_size_t bytes_left;
+    apr_off_t offset;
+    apr_off_t file_last;
+    
+    /* do not add content-md5 if the option is disabled */
+    if (!is_enable_md5(options)) {
+        return 0;
+    }
+
+    /* use user-specified content-md5 */
+    if (NULL != apr_table_get(headers, COS_CONTENT_MD5)) {
+        return 0;
+    }
+
+    /* open input file */
+    if ((s = apr_file_open(&thefile, upload_file->filename.data, APR_READ, APR_UREAD | APR_GREAD, options->pool)) != APR_SUCCESS) {
+        return COSE_OPEN_FILE_ERROR;
+    }
+    if ((s = apr_file_info_get(&finfo, APR_FINFO_NORM, thefile)) != APR_SUCCESS) {
+        apr_file_close(thefile);
+        return COSE_FILE_INFO_ERROR;
+    }
+    offset = upload_file->file_pos;
+    if ((s = apr_file_seek(thefile, APR_SET, &offset)) != APR_SUCCESS) {
+        apr_file_close(thefile);
+        return COSE_FILE_INFO_ERROR;
+    }
+    file_last = cos_min(finfo.size, upload_file->file_last);
+    if (offset >= file_last) {
+        apr_file_close(thefile);
+        return COSE_FILE_INFO_ERROR;
+    }
+    bytes_left = file_last - offset;
+
+    /* calc md5 digest */
+    if (0 != apr_md5_init(&context)) {
+        apr_file_close(thefile);
+        return COSE_INTERNAL_ERROR;
+    }
+    while (bytes_left) {
+        nbytes = cos_min(sizeof(buff), bytes_left);
+        if ((s = apr_file_read(thefile, buff, &nbytes)) != APR_SUCCESS) {
+            apr_file_close(thefile);
+            return COSE_FILE_READ_ERROR;
+        }
+        if (0 != apr_md5_update(&context, buff, nbytes)) {
+            apr_file_close(thefile);
+            return COSE_INTERNAL_ERROR;
+        }
+        bytes_left -= nbytes;
+    }
+    if (0 != apr_md5_final(md5_data, &context)) {
+        apr_file_close(thefile);
+        return COSE_INTERNAL_ERROR;
+    }
+    md5_data[APR_MD5_DIGESTSIZE] = '\0';
+
+    /* add content-md5 header */
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5_data, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+
+    apr_file_close(thefile);
+    
+    return 0;
+}
+
+void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable)
+{
+    ctl->options->enable_md5 = enable;
+}
+
+

@@ -39,6 +39,8 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
 
     query_params = cos_table_create_if_null(options, params, 0);
 
+    cos_add_content_md5_from_buffer(options, buffer, headers);
+    
     cos_init_object_request(options, bucket, object, HTTP_PUT, 
                             &req, query_params, headers, progress_callback, 0, &resp);
     cos_write_request_body_from_buffer(buffer, req);
@@ -88,6 +90,8 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
     apr_table_add(headers, COS_EXPECT, "");
 
     query_params = cos_table_create_if_null(options, params, 0);
+
+    cos_add_content_md5_from_file(options, filename, headers);
 
     cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
                             query_params, headers, progress_callback, 0, &resp);
@@ -805,7 +809,6 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
 
     return COSE_OK;    
 }
-
 
 
 #if 0

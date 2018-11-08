@@ -83,6 +83,7 @@ cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p)
     options->dns_cache_timeout = COS_DNS_CACHE_TIMOUT;
     options->max_memory_size = COS_MAX_MEMORY_SIZE;
     options->enable_crc = COS_TRUE;
+    options->enable_md5 = COS_TRUE;
     options->proxy_auth = NULL;
     options->proxy_host = NULL;
 
