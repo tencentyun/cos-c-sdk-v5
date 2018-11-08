@@ -93,10 +93,10 @@ int main(int argc, char *argv[])
 ##  SDK 一般使用流程
 1. 初始化 SDK。
 2. 设置请求选项参数。
-关于 APPID、SecretId、SecretKey、Bucket 等名称的含义和获取方式请参考 [COS 术语信息](/document/product/436/7751)。
+关于 APPID、SecretId、SecretKey、Bucket 等名称的含义和获取方式请参考 [COS 术语信息](https://cloud.tencent.com/document/product/436/7751)。
   *  APPID 是申请腾讯云账户后，系统分配的账户标识之一。
   * access_key_id 与 access_key_secret 是账户 API 密钥。
-  * endpoint 是 COS 访问域名信息，可以通过腾讯云[【COS 可用地域】](/document/product/436/6224) 页面查看。
+  * endpoint 是 COS 访问域名信息，可以通过腾讯云[【COS 可用地域】](https://cloud.tencent.com/document/product/436/6224) 页面查看。
   例如，广州地区 endpoint 为 cos.ap-guangzhou.myqcloud.com。
 3. 设置 API 接口必需的参数。
 4. 调用 SDK API 发起请求并获得请求响应结果。
