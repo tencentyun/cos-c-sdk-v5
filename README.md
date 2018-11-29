@@ -28,7 +28,7 @@ make install
 make
 make install
 ```
-5. 安装 minixml（建议 2.8 及以上版本），点击 [这里](http://www.msweet.org/downloads.php?spm=5176.doc32132.2.11.23MmBq&L+Z3) 下载，典型安装方式如下：
+5. 安装 minixml（建议 2.8 及以上版本），点击 [这里](https://www.msweet.org/mxml/) 下载，典型安装方式如下：
 ```bash
 ./configure
 make
@@ -49,7 +49,7 @@ make install
 int main(int argc, char *argv[])
 {
     /* 程序入口处调用 cos_http_io_initialize 方法，这个方法内部会做一些全局资源的初始化，涉及网络，内存等部分 */
- ? ?if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
+    if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);
     }
 
