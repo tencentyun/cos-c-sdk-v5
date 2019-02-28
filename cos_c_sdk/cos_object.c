@@ -255,6 +255,12 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
     cos_table_t *pHeaders = NULL;
     cos_table_t *query_params = NULL;
 
+    if (cos_is_null_string((cos_string_t *)object)) {
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "Object is invalid");
+        return s;
+    }
+
     pHeaders = cos_table_create_if_null(options, headers, 0);
     query_params = cos_table_create_if_null(options, query_params, 0);
 
