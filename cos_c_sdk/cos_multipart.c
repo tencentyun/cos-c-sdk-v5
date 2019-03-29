@@ -478,32 +478,25 @@ cos_status_t *cos_upload_file(cos_request_options_t *options,
     parent_pool = options->pool;
 
     //get upload_id and uploaded part
-    cos_pool_create(&subpool, options->pool);
-    options->pool = subpool;
     if (NULL == upload_id->data) {
         cos_table_t *init_multipart_headers = NULL;
         cos_table_t *init_multipart_resp_headers = NULL;
 
-        init_multipart_headers = cos_table_make(subpool, 0);
+        init_multipart_headers = cos_table_make(parent_pool, 0);
         s = cos_init_multipart_upload(options, bucket, object, 
                 upload_id, init_multipart_headers, &init_multipart_resp_headers);
         if (!cos_status_is_ok(s)) {
             ret = cos_status_dup(parent_pool, s);
-            cos_pool_destroy(subpool);
-            options->pool = parent_pool;
-            return ret;
+           return ret;
         }
     } else {
         s = cos_get_sorted_uploaded_part(options, bucket, object, upload_id, 
                 &complete_part_list, &part_count);
         if (!cos_status_is_ok(s)) {
             ret = cos_status_dup(parent_pool, s);
-            cos_pool_destroy(subpool);
-            options->pool = parent_pool;
             return ret;
         }
     }
-    cos_pool_destroy(subpool);
 
     //get part size
     fb = cos_create_file_buf(parent_pool);
