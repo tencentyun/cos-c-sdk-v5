@@ -116,7 +116,7 @@ void cos_sign_headers(cos_pool_t *p,
                       cos_table_t *headers)
 {
     
-    apr_table_addn(headers, COS_AUTHORIZATION, signstr->data);
+    apr_table_setn(headers, COS_AUTHORIZATION, signstr->data);
 
     return;
 }
