@@ -4,13 +4,12 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-
-static char TEST_COS_ENDPOINT[] = "cn-south.myqcloud.com";
-static char TEST_ACCESS_KEY_ID[] = "AKIDasdfi3gwWasdiTTasdB93dfghzqRxE";
-static char TEST_ACCESS_KEY_SECRET[] = "B7asddfghasdhjklNasdkljHasdwerHkz";
-static char TEST_APPID[] = "";
-static char TEST_BUCKET_NAME[] = "mybucket-1253666666";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
-static char TEST_OBJECT_NAME1[] = "test1.dat";
+static char TEST_COS_ENDPOINT[] = "cos.ap-shenzhen-fsi.myqcloud.com";
+static char TEST_ACCESS_KEY_ID[] = "SECRET_ID";		//your secret_id
+static char TEST_ACCESS_KEY_SECRET[] = "SECRET_KEY";	//your secret_key
+static char TEST_APPID[] = "APPID";	//your appid
+static char TEST_BUCKET_NAME[] = "<bucketname-APPID>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+static char TEST_OBJECT_NAME1[] = "1.txt";
 static char TEST_OBJECT_NAME2[] = "test2.dat";
 static char TEST_OBJECT_NAME3[] = "test3.dat";
 static char TEST_OBJECT_NAME4[] = "multipart.txt";
@@ -1182,6 +1181,81 @@ void test_presigned_url()
     
 }
 
+void test_head_bucket()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+
+    status = cos_head_bucket(options, &bucket, &resp_headers);
+    if (cos_status_is_ok(status)) {
+        printf("head bucket succeeded\n");
+    } else {
+        printf("head bucket failed\n");
+    }
+
+    cos_pool_destroy(pool);
+}
+
+void test_get_service()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_get_service_params_t *list_params = NULL;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+
+    //创建get service参数, 默认获取全部bucket
+    list_params = cos_create_get_service_params(options->pool);
+    //若将all_region设置为0，则只根据options->config->endpoint的区域进行查询
+    //list_params->all_region = 0;
+
+    status = cos_get_service(options, list_params, &resp_headers);
+    if (cos_status_is_ok(status)) {
+        printf("get service succeeded\n");
+    } else {
+        printf("get service failed\n");
+        cos_pool_destroy(pool);
+        return;
+    }
+
+    //查看结果
+    cos_get_service_content_t *content = NULL;
+    char *line = NULL;
+    cos_list_for_each_entry(cos_get_service_content_t, content, &list_params->bucket_list, node) {
+        line = apr_psprintf(options->pool, "%.*s\t%.*s\t%.*s\n", content->bucket_name.len, content->bucket_name.data, content->location.len, content->location.data, content->creation_date.len, content->creation_date.data);
+        printf("%s", line);
+    }
+
+    cos_pool_destroy(pool);
+}
+
 int main(int argc, char *argv[])
 {
     int exit_code = -1;
@@ -1197,6 +1271,8 @@ int main(int argc, char *argv[])
     //set log output, default stderr
     cos_log_set_output(NULL);
 
+    test_head_bucket();
+    test_get_service();
     //test_delete_objects();
     //test_delete_objects_by_prefix();
     //test_bucket();

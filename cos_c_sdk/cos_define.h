@@ -206,6 +206,20 @@ typedef struct {
 } cos_upload_part_t;
 
 typedef struct {
+    cos_list_t node;
+    cos_string_t bucket_name;
+    cos_string_t location;
+    cos_string_t creation_date;
+} cos_get_service_content_t;
+
+typedef struct {
+    int all_region;
+    cos_string_t owner_id;
+    cos_string_t owner_display_name;
+    cos_list_t bucket_list;
+} cos_get_service_params_t;
+
+typedef struct {
     cos_string_t encoding_type;
     cos_string_t prefix;
     cos_string_t marker;

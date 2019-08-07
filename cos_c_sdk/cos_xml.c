@@ -77,6 +77,103 @@ char *get_xmlnode_value(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_pa
     return value;
 }
 
+void cos_get_service_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_service_params_t *params)
+{
+    char *content;
+    char *owner_id;
+    char *owner_display_name;
+    mxml_node_t *node = NULL;
+
+    node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        owner_id = apr_pstrdup(p, content);
+        cos_str_set(&params->owner_id, owner_id);
+    }
+
+    node = mxmlFindElement(xml_node, xml_node, "DisplayName", NULL, NULL, MXML_DESCEND);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        owner_display_name = apr_pstrdup(p, content);
+        cos_str_set(&params->owner_display_name, owner_display_name);
+    }
+}
+
+void cos_get_service_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_service_content_t *bucket_content)
+{
+    char *content = NULL;
+    char *tmp_point = NULL;
+    mxml_node_t *node = NULL;
+
+    node = mxmlFindElement(xml_node, xml_node, "Name", NULL, NULL, MXML_DESCEND);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        tmp_point = apr_pstrdup(p, content);
+        cos_str_set(&bucket_content->bucket_name, tmp_point);
+    }
+
+    node = mxmlFindElement(xml_node, xml_node, "Location", NULL, NULL, MXML_DESCEND);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        tmp_point = apr_pstrdup(p, content);
+        cos_str_set(&bucket_content->location, tmp_point);
+    }
+
+    node = mxmlFindElement(xml_node, xml_node, "CreationDate", NULL, NULL, MXML_DESCEND);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        tmp_point = apr_pstrdup(p, content);
+        cos_str_set(&bucket_content->creation_date, tmp_point);
+    }
+}
+
+void cos_get_service_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *path, cos_list_t *bucket_list)
+{
+    cos_get_service_content_t *content = NULL;
+    mxml_node_t *xml_node = NULL;
+    mxml_node_t *node = NULL;
+    const char bucket_content_path[] = "Bucket";
+
+    //查找Buckets节点
+    xml_node = mxmlFindElement(root, root, path, NULL, NULL, MXML_DESCEND);
+    if (xml_node == NULL) {
+        return;
+    }
+
+    //查找Bucket节点
+    node = mxmlFindElement(xml_node, xml_node, bucket_content_path, NULL, NULL, MXML_DESCEND);
+    while (node != NULL) {
+        content = cos_create_get_service_content(p);
+        cos_get_service_content_parse(p, node, content);
+        cos_list_add_tail(&content->node, bucket_list);
+        node = mxmlFindElement(node, xml_node, bucket_content_path, NULL, NULL, MXML_DESCEND);
+    }
+}
+
+int cos_get_service_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_get_service_params_t *params)
+{
+    int res;
+    mxml_node_t *root;
+    mxml_node_t *node;
+    const char owner_path[] = "Owner";
+    const char buckets_xml_path[] = "Buckets";
+
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+
+        node = mxmlFindElement(root, root, owner_path, NULL, NULL, MXML_DESCEND);
+        if (NULL != node) {
+            cos_get_service_owner_parse(p, node, params);
+        }
+
+        cos_get_service_contents_parse(p, root, buckets_xml_path, &params->bucket_list);
+
+        mxmlDelete(root);
+    }
+
+    return res;
+}
+
 void cos_acl_grantee_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_acl_grantee_content_t *content)
 {
     char *id;

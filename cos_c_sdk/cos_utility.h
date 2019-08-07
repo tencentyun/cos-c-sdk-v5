@@ -55,6 +55,12 @@ void cos_init_request(const cos_request_options_t *options, http_method_e method
         cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, cos_http_response_t **resp);
 
 /**
+  * @brief  init cos service request
+**/
+void cos_init_service_request(const cos_request_options_t *options, http_method_e method,
+        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, const int all_region, cos_http_response_t **resp);
+
+/**
   * @brief  init cos bucket request
 **/
 void cos_init_bucket_request(const cos_request_options_t *options, const cos_string_t *bucket,
@@ -118,6 +124,13 @@ void cos_get_bucket_uri(const cos_request_options_t *options,
                         cos_http_request_t *req);
 
 /**
+  * @brief  service uri
+**/
+void cos_get_service_uri(const cos_request_options_t *options,
+                         const int all_region,
+                         cos_http_request_t *req);
+
+/**
   * @brief  get rtmp uri using third-level domain if hostname is cos domain, otherwise second-level domain
 **/
 void cos_get_rtmp_uri(const cos_request_options_t *options,
@@ -161,11 +174,18 @@ void cos_fill_read_response_header(cos_http_response_t *resp, cos_table_t **head
 **/
 void *cos_create_api_result_content(cos_pool_t *p, size_t size);
 cos_acl_grantee_content_t *cos_create_acl_list_content(cos_pool_t *p);
+cos_get_service_content_t *cos_create_get_service_content(cos_pool_t *p);
 cos_list_object_content_t *cos_create_list_object_content(cos_pool_t *p);
 cos_list_object_common_prefix_t *cos_create_list_object_common_prefix(cos_pool_t *p);
 cos_list_part_content_t *cos_create_list_part_content(cos_pool_t *p);
 cos_list_multipart_upload_content_t *cos_create_list_multipart_upload_content(cos_pool_t *p);
 cos_complete_part_content_t *cos_create_complete_part_content(cos_pool_t *p);
+
+/**
+ *  @brief create cos api get service parameters
+ *  @return cos api get service parameters
+**/
+cos_get_service_params_t *cos_create_get_service_params(cos_pool_t *p);
 
 /**
   * @brief  create cos api list parameters
