@@ -128,6 +128,12 @@ int cos_copy_object_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_copy_obje
 int cos_upload_id_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_string_t *upload_id);
 
 /**
+ *  @brief parse buckets list from xml body for get services
+**/
+
+int cos_get_service_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_get_service_params_t *params);
+
+/**
   * @brief parse objects from xml body for list objects
 **/
 void cos_list_objects_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list_object_content_t *content);

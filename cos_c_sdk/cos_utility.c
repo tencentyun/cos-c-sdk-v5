@@ -201,6 +201,27 @@ void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_p
     ctl->options->host_port = host_port;
 }
 
+void cos_get_service_uri(const cos_request_options_t *options,
+                         const int all_region,
+                         cos_http_request_t *req)
+{
+    int32_t proto_len;
+    cos_string_t raw_endpoint;
+
+    generate_proto(options, req);
+    if (all_region == 1) {
+        req->host = apr_psprintf(options->pool, "%s", "service.cos.myqcloud.com");
+    } else {
+        proto_len = strlen(req->proto);
+        raw_endpoint.len = options->config->endpoint.len - proto_len;
+        raw_endpoint.data = options->config->endpoint.data + proto_len;
+        req->host = apr_psprintf(options->pool, "%.*s", raw_endpoint.len, raw_endpoint.data);
+    }
+
+    req->resource = apr_psprintf(options->pool, "%s", "");
+    req->uri = apr_psprintf(options->pool, "%s", "");
+}
+
 void cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
@@ -474,6 +495,16 @@ cos_acl_grantee_content_t *cos_create_acl_list_content(cos_pool_t *p)
     return content;
 }
 
+cos_get_service_content_t *cos_create_get_service_content(cos_pool_t *p)
+{
+    cos_get_service_content_t *content = NULL;
+    content = (cos_get_service_content_t*)cos_create_api_result_content(p, sizeof(cos_get_service_content_t));
+    cos_str_set(&content->bucket_name, "");
+    cos_str_set(&content->location, "");
+    cos_str_set(&content->creation_date, "");
+    return content;
+}
+
 cos_list_object_content_t *cos_create_list_object_content(cos_pool_t *p)
 {
     return (cos_list_object_content_t *)cos_create_api_result_content(
@@ -508,6 +539,17 @@ cos_complete_part_content_t *cos_create_complete_part_content(cos_pool_t *p)
             p, sizeof(cos_complete_part_content_t));
 
     return complete_part_content;
+}
+
+cos_get_service_params_t *cos_create_get_service_params(cos_pool_t *p)
+{
+    cos_get_service_params_t *params = NULL;
+    params = (cos_get_service_params_t *)cos_pcalloc(p, sizeof(cos_get_service_params_t));
+    params->all_region = 1;
+    cos_list_init(&params->bucket_list);
+    cos_str_set(&params->owner_id, "");
+    cos_str_set(&params->owner_display_name, "");
+    return params;
 }
 
 cos_acl_params_t *cos_create_acl_params(cos_pool_t *p)
@@ -794,6 +836,18 @@ void cos_init_request(const cos_request_options_t *options,
     init_sts_token_header();
     (*req)->headers = headers;
     (*req)->query_params = params;
+}
+
+void cos_init_service_request(const cos_request_options_t *options,
+                              http_method_e method,
+                              cos_http_request_t **req,
+                              cos_table_t *params,
+                              cos_table_t *headers,
+                              const int all_region,
+                              cos_http_response_t **resp)
+{
+    cos_init_request(options, method, req, params, headers, resp);
+    cos_get_service_uri(options, all_region, *req);
 }
 
 void cos_init_bucket_request(const cos_request_options_t *options, 

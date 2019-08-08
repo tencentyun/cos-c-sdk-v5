@@ -8,6 +8,75 @@
 #include "cos_xml.h"
 #include "cos_api.h"
 
+cos_status_t *cos_get_service(const cos_request_options_t *options,
+                                cos_get_service_params_t *params,
+                                cos_table_t **resp_headers)
+{
+    return cos_do_get_service(options, params, NULL, resp_headers);
+}
+
+
+cos_status_t *cos_do_get_service(const cos_request_options_t *options,
+                                cos_get_service_params_t *params,
+                                cos_table_t *header,
+                                cos_table_t **resp_headers)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+
+    cos_table_t *headers = NULL;
+    cos_table_t *query_params = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 0);
+    headers = cos_table_create_if_null(options, header, 1);
+
+    cos_init_service_request(options, HTTP_GET, &req, query_params, headers, params->all_region, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    res = cos_get_service_parse_from_body(options->pool, &resp->body, params);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+
+    return s;
+}
+
+
+cos_status_t *cos_head_bucket(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                cos_table_t **resp_headers)
+{
+    return cos_do_head_bucket(options, bucket, NULL, resp_headers);
+}
+
+cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                cos_table_t *header,
+                                cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *query_params = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 0);
+    headers = cos_table_create_if_null(options, header, 1);
+
+    cos_init_bucket_request(options, bucket, HTTP_GET, &req, query_params, headers, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    return s;
+}
+
 cos_status_t *cos_create_bucket(const cos_request_options_t *options, 
                                 const cos_string_t *bucket, 
                                 cos_acl_e cos_acl, 
@@ -214,12 +283,13 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
 {
     cos_pool_t *subpool = NULL;
     cos_pool_t *parent_pool = NULL;
+    cos_pool_t *nextmark_pool = NULL;
     int is_quiet = 1;
     cos_status_t *s = NULL;
     cos_status_t *ret = NULL;
     cos_list_object_params_t *params = NULL;
     int list_object_count = 0;
-    
+
     parent_pool = options->pool;
     params = cos_create_list_object_params(parent_pool);
     if (prefix->data == NULL) {
@@ -227,6 +297,8 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
     } else {
         cos_str_set(&params->prefix, prefix->data);
     }
+
+    cos_pool_create(&nextmark_pool, parent_pool);
     while (params->truncated) {
         cos_table_t *list_object_resp_headers = NULL;
         cos_list_t object_list;
@@ -234,6 +306,7 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
         cos_list_object_content_t *list_content = NULL;
         cos_table_t *delete_objects_resp_headers = NULL;
         char *key = NULL;
+        char *next_mark = NULL;
 
         cos_pool_create(&subpool, parent_pool);
         options->pool = subpool;
@@ -243,35 +316,35 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
         if (!cos_status_is_ok(s)) {
             ret = cos_status_dup(parent_pool, s);
             cos_pool_destroy(subpool);
+            cos_pool_destroy(nextmark_pool);
             options->pool = parent_pool;
             return ret;
         }
 
         cos_list_for_each_entry(cos_list_object_content_t, list_content, &params->object_list, node) {
-            cos_object_key_t *object_key = cos_create_cos_object_key(parent_pool);
-            key = apr_psprintf(parent_pool, "%.*s", list_content->key.len, 
+            cos_object_key_t *object_key = cos_create_cos_object_key(subpool);
+            key = apr_psprintf(subpool, "%.*s", list_content->key.len,
                                list_content->key.data);
             cos_str_set(&object_key->key, key);
             cos_list_add_tail(&object_key->node, &object_list);
             list_object_count += 1;
         }
-        if (list_object_count == 0)
-        {
+
+        if (list_object_count == 0) {
             ret = cos_status_dup(parent_pool, s);
             cos_pool_destroy(subpool);
+            cos_pool_destroy(nextmark_pool);
             options->pool = parent_pool;
             return ret;
         }
-        cos_pool_destroy(subpool);
 
         cos_list_init(&deleted_object_list);
-        cos_pool_create(&subpool, parent_pool);
-        options->pool = subpool;
         s = cos_delete_objects(options, bucket, &object_list, is_quiet,
                                &delete_objects_resp_headers, &deleted_object_list);
         if (!cos_status_is_ok(s)) {
             ret = cos_status_dup(parent_pool, s);
             cos_pool_destroy(subpool);
+            cos_pool_destroy(nextmark_pool);
             options->pool = parent_pool;
             return ret;
         }
@@ -279,14 +352,19 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
             ret = cos_status_dup(parent_pool, s);
         }
 
-        cos_pool_destroy(subpool);
-
-        cos_list_init(&params->object_list);
+        cos_pool_destroy(nextmark_pool);
+        cos_pool_create(&nextmark_pool, parent_pool);
         if (params->next_marker.data) {
-            cos_str_set(&params->marker, params->next_marker.data);
+            next_mark = apr_psprintf(nextmark_pool, "%.*s", params->next_marker.len, params->next_marker.data);
+            cos_str_set(&params->marker, next_mark);
         }
+        cos_list_init(&params->object_list);
+
+        cos_pool_destroy(subpool);
     }
+    cos_pool_destroy(nextmark_pool);
     options->pool = parent_pool;
+
     return ret;
 }
 

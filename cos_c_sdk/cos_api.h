@@ -11,6 +11,61 @@
 COS_CPP_START
 
 /*
+ * @brief  get cos service
+ * @param[in]   options       the cos request options
+ * @param[in]   params        a switch of region or all region for get service request
+ * @param[out]  params        output params for get service response,
+                              including owner msg and buckets list
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_service(const cos_request_options_t *options,
+                                cos_get_service_params_t *params,
+                                cos_table_t **resp_headers);
+
+/*
+ * @brief  get cos service
+ * @param[in]   options       the cos request options
+ * @param[in]   params        a switch of region or all region for get service request
+ * @param[out]  params        output params for get service response,
+ *                            including owner msg and buckets list
+ * @param[in]   header        the headers for request.
+ *
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_do_get_service(const cos_request_options_t *options,
+                                cos_get_service_params_t *params,
+                                cos_table_t *header,
+                                cos_table_t **resp_headers);
+
+
+/*
+ * @brief  head cos bucket
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_head_bucket(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                cos_table_t **resp_headers);
+
+/*
+ * @brief  head cos bucket
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   header        the headers for request.
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                cos_table_t *header,
+                                cos_table_t **resp_headers);
+
+
+/*
  * @brief  create cos bucket
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
