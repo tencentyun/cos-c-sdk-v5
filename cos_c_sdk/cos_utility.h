@@ -246,8 +246,22 @@ cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *
 **/
 cos_replication_params_t *cos_create_replication_params(cos_pool_t *p);
 
-cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p);
+/**
+ *  @brief  create website rule content
+ */
+cos_website_rule_content_t *cos_create_website_rule_content(cos_pool_t *P);
 
+/**
+ *  @brief  create website params
+ */
+cos_website_params_t *cos_create_website_params(cos_pool_t *p);
+
+/**
+ *  @brief  create domain params
+ */
+cos_domain_params_t *cos_create_domain_params(cos_pool_t *p);
+
+cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p);
 
 /**
   * @brief  create cos object content for delete objects

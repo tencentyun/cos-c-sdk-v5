@@ -77,6 +77,8 @@ extern const char COS_LIFECYCLE[];
 extern const char COS_CORS[];
 extern const char COS_VERSIONING[];
 extern const char COS_REPLICATION[];
+extern const char COS_WEBSITE[];
+extern const char COS_DOMAIN[];
 extern const char COS_DELETE[];
 extern const char COS_YES[];
 extern const char COS_OBJECT_TYPE_NORMAL[];
@@ -418,6 +420,29 @@ typedef struct {
     cos_string_t end_time;
     cos_string_t remote_addr;
 } cos_live_record_content_t;
+
+typedef struct {
+    cos_string_t index;
+    cos_string_t redirect_protocol;
+    cos_string_t error_document;
+    cos_list_t rule_list;
+} cos_website_params_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t condition_errcode;
+    cos_string_t condition_prefix;
+    cos_string_t redirect_protocol;
+    cos_string_t redirect_replace_key;
+    cos_string_t redirect_replace_key_prefix;	
+} cos_website_rule_content_t;
+
+typedef struct {
+    cos_string_t status;
+    cos_string_t name;
+    cos_string_t type;
+    cos_string_t forced_replacement;
+} cos_domain_params_t;
 
 #define COS_AUTH_EXPIRE_DEFAULT 300
 

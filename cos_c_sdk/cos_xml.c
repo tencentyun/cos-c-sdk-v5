@@ -155,8 +155,8 @@ int cos_get_service_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_get_servi
     int res;
     mxml_node_t *root;
     mxml_node_t *node;
-    const char owner_path[] = "Owner";
-    const char buckets_xml_path[] = "Buckets";
+    static const char owner_path[] = "Owner";
+    static const char buckets_xml_path[] = "Buckets";
 
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
@@ -1012,6 +1012,132 @@ void build_replication_body(cos_pool_t *p, cos_replication_params_t *replication
     cos_list_add_tail(&b->node, body);
 }
 
+void build_xml_node(mxml_node_t *pnode, const char *xml, cos_string_t *param)
+{
+    if (!cos_is_null_string(param)) {
+        mxml_node_t *node = mxmlNewElement(pnode, xml);
+        mxmlNewText(node, 0, param->data);
+    }
+}
+
+void build_xml_node_with_parent(mxml_node_t *root, const char *pxml, const char *cxml, cos_string_t *param)
+{
+    if (!cos_is_null_string(param)) {
+        mxml_node_t *pnode = mxmlNewElement(root, pxml);
+        mxml_node_t *cnode = mxmlNewElement(pnode, cxml);
+        mxmlNewText(cnode, 0, param->data);
+    }
+}
+
+void build_website_body(cos_pool_t *p, cos_website_params_t *website_params, cos_list_t *body) 
+{
+    char *website_xml;
+    cos_buf_t *b;
+
+    website_xml = build_website_xml(p, website_params);
+    cos_list_init(body);
+    b = cos_buf_pack(p, website_xml, strlen(website_xml));
+    cos_list_add_tail(&b->node, body);
+}
+
+char* build_website_xml(cos_pool_t *p, cos_website_params_t *website_params) 
+{ 
+    char *website_xml;
+    char *xml_buff;
+    cos_string_t xml_doc;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    cos_website_rule_content_t *content = NULL;
+
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "WebsiteConfiguration");
+
+    build_xml_node_with_parent(root_node, "IndexDocument", "Suffix", &website_params->index);
+    build_xml_node_with_parent(root_node, "RedirectAllRequestsTo", "Protocol", &website_params->redirect_protocol);
+    build_xml_node_with_parent(root_node, "ErrorDocument", "Key", &website_params->error_document);
+
+    if (!cos_list_empty(&website_params->rule_list)) {
+        mxml_node_t *rules_node = mxmlNewElement(root_node, "RoutingRules");
+
+        cos_list_for_each_entry(cos_website_rule_content_t, content, &website_params->rule_list, node) {
+            mxml_node_t *rule_node = mxmlNewElement(rules_node, "RoutingRule");
+
+            if (!cos_is_null_string(&content->condition_errcode) 
+                    || !cos_is_null_string(&content->condition_prefix)) {
+
+                mxml_node_t *condition_node = mxmlNewElement(rule_node, "Condition");
+                build_xml_node(condition_node, "HttpErrorCodeReturnedEquals", &content->condition_errcode);
+                build_xml_node(condition_node, "KeyPrefixEquals", &content->condition_prefix);
+            }
+
+            if (!cos_is_null_string(&content->redirect_protocol) 
+                    || !cos_is_null_string(&content->redirect_replace_key)
+                    || !cos_is_null_string(&content->redirect_replace_key_prefix)) {
+
+                mxml_node_t *redirect_node = mxmlNewElement(rule_node, "Redirect");
+                build_xml_node(redirect_node, "Protocol", &content->redirect_protocol);
+                build_xml_node(redirect_node, "ReplaceKeyWith", &content->redirect_replace_key);
+                build_xml_node(redirect_node, "ReplaceKeyPrefixWith", &content->redirect_replace_key_prefix);
+            }
+        }
+    }
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return NULL;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    website_xml = cos_pstrdup(p, &xml_doc);
+
+    free(xml_buff);
+    mxmlDelete(doc);
+
+    return website_xml;
+}
+
+void build_domain_body(cos_pool_t *p, cos_domain_params_t *domain_params, cos_list_t *body)
+{
+    char *domain_xml;
+    cos_buf_t *b;
+
+    domain_xml = build_domain_xml(p, domain_params);
+    cos_list_init(body);
+    b = cos_buf_pack(p, domain_xml, strlen(domain_xml));
+    cos_list_add_tail(&b->node, body);
+}
+
+char *build_domain_xml(cos_pool_t *p, cos_domain_params_t *domain_params)
+{
+    char *domain_xml;
+    char *xml_buff;
+    cos_string_t xml_doc;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    mxml_node_t *rule_node;
+
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "DomainConfiguration");
+    rule_node = mxmlNewElement(root_node, "DomainRule");
+    build_xml_node(rule_node, "Status", &domain_params->status);
+    build_xml_node(rule_node, "Name", &domain_params->name);
+    build_xml_node(rule_node, "Type", &domain_params->type);
+    build_xml_node(rule_node, "ForedReplacement", &domain_params->forced_replacement);
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return NULL;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    domain_xml = cos_pstrdup(p, &xml_doc);
+
+    free(xml_buff);
+    mxmlDelete(doc);
+
+    return domain_xml;
+}
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body)
 {
     cos_buf_t *b;
@@ -1301,6 +1427,127 @@ void cos_lifecycle_rule_abort_parse(cos_pool_t *p, mxml_node_t * xml_node,
     }
 }
 
+void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param)
+{
+    char *content;
+    char *content_in_pool;
+    mxml_node_t *node;
+
+    node = mxmlFindElement(pnode, root, xml, NULL, NULL, MXML_DESCEND_FIRST);
+    if (node != NULL && node->child != NULL) {
+        content = node->child->value.opaque;
+        content_in_pool = apr_pstrdup(p, content);
+        cos_str_set(param, content_in_pool);
+    }
+}
+
+void cos_common_parse_from_parent_node(cos_pool_t *p, mxml_node_t *root, const char *pxml, const char *cxml, cos_string_t *param)
+{
+    mxml_node_t *pnode;
+
+    pnode = mxmlFindElement(root, root, pxml, NULL, NULL, MXML_DESCEND_FIRST);
+    if (pnode != NULL) {
+        cos_common_parse_from_xml_node(p, pnode, root, cxml, param);
+    }
+} 
+
+void cos_get_website_parse_rules(cos_pool_t *p, mxml_node_t *root, cos_website_params_t *website)
+{
+    static const char *kRoutingRule = "RoutingRule";
+    static const char *kCondition = "Condition";
+    static const char *kCondition_ErrCode = "HttpErrorCodeReturnedEquals";
+    static const char *kCondition_Prefix = "KeyPrefixEquals";
+    static const char *kRedirect = "Redirect";
+    static const char *kRedirect_Protocol = "Protocol";
+    static const char *kRedirect_ReplaceKey = "ReplaceKeyWith";
+    static const char *kRedirect_ReplaceKeyPrefix = "ReplaceKeyPrefixWith";
+
+    mxml_node_t *node;
+    mxml_node_t *condition_node;
+    mxml_node_t *redirect_node;
+    cos_website_rule_content_t *content;
+
+    node = mxmlFindElement(root, root, kRoutingRule, NULL, NULL, MXML_DESCEND);
+    while (node != NULL) {
+        content = cos_create_website_rule_content(p);
+
+        condition_node = mxmlFindElement(node, node, kCondition, NULL, NULL, MXML_DESCEND_FIRST);
+        if (condition_node != NULL) {
+            cos_common_parse_from_xml_node(p, condition_node, node, kCondition_ErrCode, &content->condition_errcode);
+            cos_common_parse_from_xml_node(p, condition_node, node, kCondition_Prefix, &content->condition_prefix);
+        }
+
+        redirect_node = mxmlFindElement(node, node, kRedirect, NULL, NULL, MXML_DESCEND_FIRST);
+        if (redirect_node != NULL) {
+            cos_common_parse_from_xml_node(p, redirect_node, node, kRedirect_Protocol, &content->redirect_protocol);
+            cos_common_parse_from_xml_node(p, redirect_node, node, kRedirect_ReplaceKey, &content->redirect_replace_key);
+            cos_common_parse_from_xml_node(p, redirect_node, node, kRedirect_ReplaceKeyPrefix, &content->redirect_replace_key_prefix);
+        }
+
+        cos_list_add_tail(&content->node, &website->rule_list);
+
+        node = mxmlFindElement(node, root, kRoutingRule, NULL, NULL, MXML_DESCEND);
+    }
+}
+
+int cos_get_website_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_website_params_t *website)
+{
+    static const char *kIndexDocument = "IndexDocument";
+    static const char *kIndexDocument_Suffix = "Suffix";
+    static const char *kRedirectRequest = "RedirectAllRequestsTo";
+    static const char *kRedirectRequest_Protocol = "Protocol";
+    static const char *kErrorDocument = "ErrorDocument";
+    static const char *kErrorDocument_Key = "Key";
+    static const char *kRoutingRules = "RoutingRules";
+
+    int res;
+    mxml_node_t *root;
+    mxml_node_t *rules_node;
+
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+        cos_common_parse_from_parent_node(p, root, kIndexDocument, kIndexDocument_Suffix, &website->index);
+        cos_common_parse_from_parent_node(p, root, kRedirectRequest, kRedirectRequest_Protocol, &website->redirect_protocol);
+        cos_common_parse_from_parent_node(p, root, kErrorDocument, kErrorDocument_Key, &website->error_document);
+
+        rules_node = mxmlFindElement(root, root, kRoutingRules, NULL, NULL, MXML_DESCEND_FIRST);
+        if (rules_node != NULL) {
+            cos_get_website_parse_rules(p, rules_node, website);
+        }
+
+        mxmlDelete(root);
+    }
+    return res;
+}
+
+int cos_get_domain_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_domain_params_t *domain)
+{
+    static const char *kDomainRule = "DomainRule";
+    static const char *kStatus = "Status";
+    static const char *kName = "Name";
+    static const char *kType = "Type";
+    static const char *kForcedReplacement = "ForcedReplacement";
+
+    int res = 0;
+    mxml_node_t *root;
+    mxml_node_t *rule_node;
+    if (cos_list_empty(bc)) {
+        return res;
+    }
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+        rule_node = mxmlFindElement(root, root, kDomainRule, NULL, NULL, MXML_DESCEND);
+        if (rule_node != NULL) {
+            cos_common_parse_from_xml_node(p, rule_node, rule_node, kStatus, &domain->status);
+            cos_common_parse_from_xml_node(p, rule_node, rule_node, kName, &domain->name);
+            cos_common_parse_from_xml_node(p, rule_node, rule_node, kType, &domain->type);
+            cos_common_parse_from_xml_node(p, rule_node, rule_node, kForcedReplacement, &domain->forced_replacement);
+        }
+
+        mxmlDelete(root);
+    }
+    return res;
+}
 
 void cos_delete_objects_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *object_list)

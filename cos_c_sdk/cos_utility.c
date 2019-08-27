@@ -688,6 +688,42 @@ cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *
     return rule;
 }
 
+cos_website_rule_content_t *cos_create_website_rule_content(cos_pool_t *p)
+{
+    cos_website_rule_content_t *content = NULL;
+    content = (cos_website_rule_content_t*) cos_palloc(p, sizeof(cos_website_rule_content_t));
+    cos_list_init(&content->node);
+    cos_str_set(&content->condition_errcode, "");
+    cos_str_set(&content->condition_prefix, "");
+    cos_str_set(&content->redirect_protocol, "");
+    cos_str_set(&content->redirect_replace_key, "");
+    cos_str_set(&content->redirect_replace_key_prefix, "");
+    return content;
+}
+
+cos_website_params_t *cos_create_website_params(cos_pool_t *p)
+{
+    cos_website_params_t *params = NULL;
+    params = (cos_website_params_t*) cos_palloc(p, sizeof(cos_website_params_t));
+    cos_list_init(&params->rule_list);
+    cos_str_set(&params->index, "");
+    cos_str_set(&params->redirect_protocol, "");
+    cos_str_set(&params->error_document, "");
+    return params;
+}
+
+cos_domain_params_t *cos_create_domain_params(cos_pool_t *p)
+{
+    cos_domain_params_t *params = NULL;
+    params = (cos_domain_params_t*) cos_palloc(p, sizeof(cos_domain_params_t));
+    cos_str_set(&params->status, "");
+    cos_str_set(&params->name, "");
+    cos_str_set(&params->type, "");
+    cos_str_set(&params->forced_replacement, "");
+
+    return params;
+}
+
 cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
 {
     cos_object_restore_params_t *params;

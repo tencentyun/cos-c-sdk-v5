@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-static char TEST_COS_ENDPOINT[] = "cos.ap-shenzhen-fsi.myqcloud.com";
+static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
 static char TEST_ACCESS_KEY_ID[] = "SECRET_ID";		//your secret_id
 static char TEST_ACCESS_KEY_SECRET[] = "SECRET_KEY";	//your secret_key
 static char TEST_APPID[] = "APPID";	//your appid
@@ -1203,11 +1203,7 @@ void test_head_bucket()
     options->ctl = cos_http_controller_create(options->pool, 0);
 
     status = cos_head_bucket(options, &bucket, &resp_headers);
-    if (cos_status_is_ok(status)) {
-        printf("head bucket succeeded\n");
-    } else {
-        printf("head bucket failed\n");
-    }
+    log_status(status);
 
     cos_pool_destroy(pool);
 }
@@ -1237,10 +1233,8 @@ void test_get_service()
     //list_params->all_region = 0;
 
     status = cos_get_service(options, list_params, &resp_headers);
-    if (cos_status_is_ok(status)) {
-        printf("get service succeeded\n");
-    } else {
-        printf("get service failed\n");
+    log_status(status);
+    if (!cos_status_is_ok(status)) {
         cos_pool_destroy(pool);
         return;
     }
@@ -1252,6 +1246,138 @@ void test_get_service()
         line = apr_psprintf(options->pool, "%.*s\t%.*s\t%.*s\n", content->bucket_name.len, content->bucket_name.data, content->location.len, content->location.data, content->creation_date.len, content->creation_date.data);
         printf("%s", line);
     }
+
+    cos_pool_destroy(pool);
+}
+
+void test_website()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_website_params_t  *website_params = NULL;
+    cos_website_params_t  *website_result = NULL;
+    cos_website_rule_content_t *website_content = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建website参数
+    website_params = cos_create_website_params(options->pool);
+    cos_str_set(&website_params->index, "index.html");
+    cos_str_set(&website_params->redirect_protocol, "https");
+    cos_str_set(&website_params->error_document, "Error.html");
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_errcode, "404");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key, "404.html");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_prefix, "docs/");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key_prefix, "documents/");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_prefix, "img/");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key, "demo.jpg");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    status = cos_put_bucket_website(options, &bucket, website_params, &resp_headers);
+    log_status(status);
+
+    website_result = cos_create_website_params(options->pool);
+    status = cos_get_bucket_website(options, &bucket, website_result, &resp_headers);
+    log_status(status);
+    if (!cos_status_is_ok(status)) {
+        cos_pool_destroy(pool);
+        return;
+    }
+
+    //查看结果
+    cos_website_rule_content_t *content = NULL;
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->index.len, website_result->index.data);
+    printf("index: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->redirect_protocol.len, website_result->redirect_protocol.data);
+    printf("redirect protocol: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->error_document.len, website_result->error_document.data);
+    printf("error document: %s", line);
+    cos_list_for_each_entry(cos_website_rule_content_t, content, &website_result->rule_list, node) {
+        line = apr_psprintf(options->pool, "%.*s\t%.*s\t%.*s\t%.*s\t%.*s\n", content->condition_errcode.len, content->condition_errcode.data, content->condition_prefix.len, content->condition_prefix.data, content->redirect_protocol.len, content->redirect_protocol.data, content->redirect_replace_key.len, content->redirect_replace_key.data, content->redirect_replace_key_prefix.len, content->redirect_replace_key_prefix.data);
+        printf("%s", line);
+    }
+
+    status = cos_delete_bucket_website(options, &bucket, &resp_headers);
+    log_status(status); 
+
+    cos_pool_destroy(pool);
+}
+
+void test_domain()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_domain_params_t  *domain_params = NULL;
+    cos_domain_params_t  *domain_result = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建domain参数
+    domain_params = cos_create_domain_params(options->pool);
+    cos_str_set(&domain_params->status, "ENABLED");
+    cos_str_set(&domain_params->name, "www.abc.com");
+    cos_str_set(&domain_params->type, "REST");
+    cos_str_set(&domain_params->forced_replacement, "CNAME");
+
+    status = cos_put_bucket_domain(options, &bucket, domain_params, &resp_headers);
+    log_status(status);
+
+    domain_result = cos_create_domain_params(options->pool);
+    status = cos_get_bucket_domain(options, &bucket, domain_result, &resp_headers);
+    log_status(status);
+    if (!cos_status_is_ok(status)) {
+        cos_pool_destroy(pool);
+        return;
+    }
+
+    //查看结果
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->status.len, domain_result->status.data);
+    printf("status: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->name.len, domain_result->name.data);
+    printf("name: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->type.len, domain_result->type.data);
+    printf("type: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->forced_replacement.len, domain_result->forced_replacement.data);
+    printf("forced_replacement: %s", line);
 
     cos_pool_destroy(pool);
 }
@@ -1271,8 +1397,10 @@ int main(int argc, char *argv[])
     //set log output, default stderr
     cos_log_set_output(NULL);
 
-    test_head_bucket();
-    test_get_service();
+    //test_head_bucket();
+    //test_get_service();
+    //test_website();
+    //test_domain();
     //test_delete_objects();
     //test_delete_objects_by_prefix();
     //test_bucket();
