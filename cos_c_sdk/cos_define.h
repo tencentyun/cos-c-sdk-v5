@@ -79,6 +79,9 @@ extern const char COS_VERSIONING[];
 extern const char COS_REPLICATION[];
 extern const char COS_WEBSITE[];
 extern const char COS_DOMAIN[];
+extern const char COS_LOGGING[];
+extern const char COS_INVENTORY[];
+extern const char COS_TAGGING[];
 extern const char COS_DELETE[];
 extern const char COS_YES[];
 extern const char COS_OBJECT_TYPE_NORMAL[];
@@ -443,6 +446,44 @@ typedef struct {
     cos_string_t type;
     cos_string_t forced_replacement;
 } cos_domain_params_t;
+
+typedef struct {
+    cos_string_t target_bucket;
+    cos_string_t target_prefix;
+} cos_logging_params_t;
+
+typedef struct {
+    cos_string_t format;
+    cos_string_t account_id;
+    cos_string_t bucket;
+    cos_string_t prefix;
+    int encryption;
+} cos_inventory_destination_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t field;
+} cos_inventory_optional_t;
+
+typedef struct {
+    cos_string_t id;
+    cos_string_t is_enabled;
+    cos_string_t frequency;
+    cos_string_t filter_prefix;
+    cos_string_t included_object_versions;
+    cos_inventory_destination_t destination;
+    cos_list_t fields;
+} cos_inventory_params_t;  
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t key;
+    cos_string_t value;
+} cos_tagging_tag_t;
+
+typedef struct {
+    cos_list_t node;
+} cos_tagging_params_t;
 
 #define COS_AUTH_EXPIRE_DEFAULT 300
 

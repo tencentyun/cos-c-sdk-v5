@@ -368,6 +368,45 @@ cos_status_t *cos_get_bucket_domain(const cos_request_options_t *options,
                                     cos_table_t **resp_header);
 
 
+cos_status_t *cos_put_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_get_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_put_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_get_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_delete_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+
+cos_status_t *cos_delete_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_table_t **resp_headers);
+
+
 cos_status_t *cos_put_object_acl(const cos_request_options_t *options, 
                                  const cos_string_t *bucket,
                                  const cos_string_t *object, 

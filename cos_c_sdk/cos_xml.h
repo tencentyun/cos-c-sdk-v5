@@ -97,6 +97,18 @@ void build_domain_body(cos_pool_t *p, cos_domain_params_t *domain_params, cos_li
 **/ 
 char *build_domain_xml(cos_pool_t *p, cos_domain_params_t *domain_params);
 
+/**
+ *  @brief  build body for put bucket logging
+ */
+void build_logging_body(cos_pool_t *p, cos_logging_params_t *params, cos_list_t *body);
+char *build_logging_xml(cos_pool_t *p, cos_logging_params_t *params);
+
+/**
+ *  @brief  build body for put bucket logging
+ */
+void build_inventory_body(cos_pool_t *p, cos_inventory_params_t *params, cos_list_t *body);
+char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params);
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body);
 
 /**
@@ -253,6 +265,14 @@ int cos_get_website_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_website_p
   * @brief parse domain form body
 **/
 int cos_get_domain_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_domain_params_t *domain);
+
+/**
+ *  @brief parse logging from body
+ */
+int cos_get_logging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_logging_params_t *logging);
+
+//  @brief parse inventory from body
+int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_inventory_params_t *params);
 
 /**
   * @brief parse delete objects contents from xml body

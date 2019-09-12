@@ -1055,3 +1055,232 @@ cos_status_t *cos_get_bucket_domain(const cos_request_options_t *options,
 
     return s;
 }
+
+cos_status_t *cos_put_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    cos_list_t body;
+    unsigned char *md5 = NULL;
+    char *buf = NULL;
+    int64_t body_len;
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_DOMAIN, "");
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_bucket_request(options, bucket, HTTP_PUT, &req, 
+            query_params, headers, &resp);
+
+    build_logging_body(options->pool, logging_params, &body);
+
+    //add Content-MD5
+    body_len = cos_buf_list_len(&body);
+    buf = cos_buf_list_content(options->pool, &body);
+    md5 = cos_md5(options->pool, buf, (apr_size_t)body_len);
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+
+    apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
+
+    cos_write_request_body_from_buffer(&body, req);
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+
+    return s;
+}
+
+cos_status_t *cos_get_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_LOGGING, "");
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_bucket_request(options, bucket, HTTP_GET, &req,
+            query_params, headers, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    res = cos_get_logging_parse_from_body(options->pool, &resp->body, logging_params);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
+
+cos_status_t *cos_put_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    cos_list_t body;
+    unsigned char *md5 = NULL;
+    char *buf = NULL;
+    int64_t body_len;
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+
+    query_params = cos_table_create_if_null(options, query_params, 2);
+    apr_table_add(query_params, COS_INVENTORY, "");
+    apr_table_add(query_params, "id", inventory_params->id.data);
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_bucket_request(options, bucket, HTTP_PUT, &req, 
+            query_params, headers, &resp);
+
+    build_inventory_body(options->pool, inventory_params, &body);
+
+    //add Content-MD5
+    body_len = cos_buf_list_len(&body);
+    buf = cos_buf_list_content(options->pool, &body);
+    md5 = cos_md5(options->pool, buf, (apr_size_t)body_len);
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+
+    apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
+
+    cos_write_request_body_from_buffer(&body, req);
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+
+    return s;
+
+}
+
+cos_status_t *cos_get_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 2);
+    apr_table_add(query_params, COS_INVENTORY, "");
+    apr_table_add(query_params, "id", inventory_params->id.data);
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_bucket_request(options, bucket, HTTP_GET, &req,
+            query_params, headers, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    res = cos_get_inventory_parse_from_body(options->pool, &resp->body, inventory_params);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
+
+cos_status_t *cos_delete_bucket_inventory(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_INVENTORY, "");
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_bucket_request(options, bucket, HTTP_DELETE, &req, 
+            query_params, headers, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+
+    return s;
+} 
+
+cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    return s;
+}
+
+cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    return s;
+}
+
+cos_status_t *cos_delete_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_table_t **resp_headers) 
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    cos_table_t *headers = NULL;
+
+    return s;
+}
+
+
