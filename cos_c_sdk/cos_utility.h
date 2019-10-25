@@ -261,6 +261,18 @@ cos_website_params_t *cos_create_website_params(cos_pool_t *p);
  */
 cos_domain_params_t *cos_create_domain_params(cos_pool_t *p);
 
+// @brief  create logging params
+cos_logging_params_t *cos_create_logging_params(cos_pool_t *p);
+
+// @brief  create inventory params
+cos_list_inventory_params_t *cos_create_list_inventory_params(cos_pool_t *p);
+cos_inventory_params_t *cos_create_inventory_params(cos_pool_t *p);
+cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p);
+
+// @brief  create tagging params
+cos_tagging_params_t *cos_create_tagging_params(cos_pool_t *p);
+cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p);
+
 cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p);
 
 /**

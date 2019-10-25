@@ -1243,6 +1243,50 @@ char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params)
     return inventory_xml;
 }
 
+void build_tagging_body(cos_pool_t *p, cos_tagging_params_t *params, cos_list_t *body)
+{
+    char *tagging_xml;
+    cos_buf_t *b;
+
+    tagging_xml = build_tagging_xml(p, params);
+    cos_list_init(body);
+    b = cos_buf_pack(p, tagging_xml, strlen(tagging_xml));
+    cos_list_add_tail(&b->node, body);
+}
+
+char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params) 
+{ 
+    char *tagging_xml;
+    char *xml_buff;
+    cos_string_t xml_doc;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    mxml_node_t *set_node;
+    cos_tagging_tag_t *content = NULL;
+
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "Tagging");
+    set_node = mxmlNewElement(root_node, "TagSet");
+    cos_list_for_each_entry(cos_tagging_tag_t, content, &params->node, node) {
+        mxml_node_t *tag_node = mxmlNewElement(set_node, "Tag");
+        build_xml_node(tag_node, "Key", &content->key);
+        build_xml_node(tag_node, "Value", &content->value);
+    }
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return NULL;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    tagging_xml = cos_pstrdup(p, &xml_doc);
+
+    free(xml_buff);
+    mxmlDelete(doc);
+
+    return tagging_xml;
+}
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body)
 {
     cos_buf_t *b;
@@ -1251,7 +1295,7 @@ void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *param
     char *xml_buff;
     cos_string_t xml_doc;
     char *restore_xml;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "RestoreRequest");
 
@@ -1676,42 +1720,107 @@ int cos_get_logging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_logging_p
     return res;
 }
 
+void cos_inventory_parse_from_node(cos_pool_t *p, mxml_node_t *root, cos_inventory_params_t *params)
+{
+    mxml_node_t *dest_node;
+    mxml_node_t *optional_node;
+
+    cos_common_parse_from_xml_node(p, root, root, "Id", &params->id);
+    cos_common_parse_from_xml_node(p, root, root, "IsEnabled", &params->is_enabled);
+    cos_common_parse_from_xml_node(p, root, root, "IncludedObjectVersions", &params->included_object_versions);
+    cos_common_parse_from_parent_node(p, root, "Schedule", "Frequency", &params->frequency);
+    cos_common_parse_from_parent_node(p, root, "Filter", "Prefix", &params->filter_prefix);
+
+    dest_node = mxmlFindElement(root, root, "COSBucketDestination", NULL, NULL, MXML_DESCEND);
+    if (dest_node != NULL) {
+        cos_common_parse_from_xml_node(p, dest_node, root, "Format", &params->destination.format);
+        cos_common_parse_from_xml_node(p, dest_node, root, "AccountId", &params->destination.account_id);
+        cos_common_parse_from_xml_node(p, dest_node, root, "Bucket", &params->destination.bucket);
+        cos_common_parse_from_xml_node(p, dest_node, root, "Prefix", &params->destination.prefix);
+        optional_node = mxmlFindElement(dest_node, root, "SSE-COS", NULL, NULL, MXML_DESCEND);
+        if (optional_node != NULL) {
+            params->destination.encryption = 1;
+        } 
+    }
+
+    optional_node = mxmlFindElement(root, root, "OptionalFields", NULL, NULL, MXML_DESCEND);
+    if (optional_node != NULL) {
+        char *content;
+        mxml_node_t *field_node = mxmlFindElement(optional_node, optional_node, "Field", NULL, NULL, MXML_DESCEND);
+        while (field_node != NULL) { 
+            cos_inventory_optional_t *optional = cos_create_inventory_optional(p);
+            if (field_node->child != NULL) {
+                content = apr_pstrdup(p, field_node->child->value.opaque);
+                cos_str_set(&optional->field, content);
+            }
+            cos_list_add_tail(&optional->node, &params->fields);
+            field_node = mxmlFindElement(field_node, optional_node, "Field", NULL, NULL, MXML_DESCEND);
+        }
+    }
+}
+
 int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_inventory_params_t *params)
 {
     int res = 0;
     mxml_node_t *root;
-    mxml_node_t *dest_node;
-    mxml_node_t *optional_node;
-    
+   
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
-        cos_common_parse_from_xml_node(p, root, root, "IsEnabled", &params->is_enabled);
-        cos_common_parse_from_xml_node(p, root, root, "IncludedObjectVersions", &params->included_object_versions);
-        cos_common_parse_from_parent_node(p, root, "Schedule", "Frequency", &params->frequency);
-        cos_common_parse_from_parent_node(p, root, "Filter", "Prefix", &params->filter_prefix);
-        
-        dest_node = mxmlFindElement(root, root, "COSBucketDestination", NULL, NULL, MXML_DESCEND);
-        if (dest_node != NULL) {
-            cos_common_parse_from_xml_node(p, root, dest_node, "Format", &params->destination.format);
-            cos_common_parse_from_xml_node(p, root, dest_node, "AccountId", &params->destination.account_id);
-            cos_common_parse_from_xml_node(p, root, dest_node, "Bucket", &params->destination.bucket);
-            cos_common_parse_from_xml_node(p, root, dest_node, "Prefix", &params->destination.prefix);
-            optional_node = mxmlFindElement(root, dest_node, "SSE-COS", NULL, NULL, MXML_DESCEND);
-            if (optional_node != NULL) {
-                params->destination.encryption = 1;
-            } 
-        }
-
-        optional_node = mxmlFindElement(root, root, "OptionalFields", NULL, NULL, MXML_DESCEND);
-        if (optional_node != NULL) {
-            
-        }
-
+        cos_inventory_parse_from_node(p, root, params);
         mxmlDelete(root);
     }
     return res;
 }
 
+int cos_list_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_inventory_params_t *params) 
+{
+    int res = 0;
+    mxml_node_t *root;
+
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+        cos_string_t is_truncated;
+        cos_common_parse_from_xml_node(p, root, root, "IsTruncated", &is_truncated);
+        if (strncmp(is_truncated.data, "true", is_truncated.len)) {
+            params->is_truncated = 1;
+        }
+        cos_common_parse_from_xml_node(p, root, root, "ContinuationToken", &params->continuation_token);
+        cos_common_parse_from_xml_node(p, root, root, "NextContinuationToken", &params->next_continuation_token);
+        mxml_node_t *node = mxmlFindElement(root, root, "InventoryConfiguration", NULL, NULL, MXML_DESCEND);
+        while (node != NULL) {
+            cos_inventory_params_t *inventory = cos_create_inventory_params(p);
+            cos_inventory_parse_from_node(p, node, inventory);
+            cos_list_add_tail(&inventory->node, &params->inventorys);
+            node = mxmlFindElement(node, root, "InventoryConfiguration", NULL, NULL, MXML_DESCEND);
+        }
+    }
+    return res;
+}
+
+int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_params_t *params)
+{
+    int res = 0;
+    mxml_node_t *root;
+    mxml_node_t *tags_node;
+
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+        tags_node = mxmlFindElement(root, root, "TagSet", NULL, NULL, MXML_DESCEND);
+        if (tags_node != NULL) {
+            mxml_node_t *tag_node = mxmlFindElement(tags_node, tags_node, "Tag", NULL, NULL, MXML_DESCEND);
+            while (tag_node != NULL) {
+                cos_tagging_tag_t *tag = cos_create_tagging_tag(p);
+                cos_common_parse_from_xml_node(p, tag_node, tag_node, "Key", &tag->key); 
+                cos_common_parse_from_xml_node(p, tag_node, tag_node, "Value", &tag->value);
+                cos_list_add_tail(&tag->node, &params->node);
+                tag_node = mxmlFindElement(tag_node, tags_node, "Tag", NULL, NULL, MXML_DESCEND);
+            }
+        }
+        mxmlDelete(root);
+    }
+ 
+    return res;
+}
 
 void cos_delete_objects_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *object_list)

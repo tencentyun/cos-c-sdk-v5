@@ -2,13 +2,16 @@
 #include "cos_api.h"
 #include "cos_log.h"
 #include <stdint.h>
+#include <pthread.h>
 #include <sys/stat.h>
 
 static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
-static char TEST_ACCESS_KEY_ID[] = "SECRET_ID";		//your secret_id
-static char TEST_ACCESS_KEY_SECRET[] = "SECRET_KEY";	//your secret_key
-static char TEST_APPID[] = "APPID";	//your appid
+static char TEST_ACCESS_KEY_ID[] = "SECRET_ID";                //your secret_id
+static char TEST_ACCESS_KEY_SECRET[] = "SECRET_KEY";   //your secret_key
+static char TEST_APPID[] = "APPID";    //your appid
 static char TEST_BUCKET_NAME[] = "<bucketname-APPID>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+static char TEST_UIN[] = "uin";    //your uin
+static char TEST_REGION[] = "ap-guangzhou";    //region in endpoint
 static char TEST_OBJECT_NAME1[] = "1.txt";
 static char TEST_OBJECT_NAME2[] = "test2.dat";
 static char TEST_OBJECT_NAME3[] = "test3.dat";
@@ -351,6 +354,93 @@ void test_put_object_from_file()
     cos_pool_destroy(p);
 }
 
+void test_put_object_from_file_with_sse() 
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers;
+    cos_string_t file;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_table_t *headers = NULL;
+    headers = cos_table_make(p, 3);
+//  apr_table_add(headers, "x-cos-server-side-encryption", "AES256");
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-algorithm", "AES256");
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-key", "MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=");
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-key-MD5", "U5L61r7jcwdNvT7frmUG8g==");
+
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&file, "/home/jojoliang/data/test.jpg");
+    cos_str_set(&object, "pic");
+
+    s = cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
+    log_status(s);
+    {
+        int i = 0;
+        apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
+        for ( ; i < pp->nelts; i++)
+        {
+            apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
+            printf("%s: %s\n",ele->key,ele->val);
+        }
+    }
+
+    cos_pool_destroy(p);
+}
+
+void test_get_object_to_file_with_sse()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers;
+    cos_string_t file;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 3);
+/*
+    apr_table_add(headers, "x-cos-server-side-encryption", "AES256");
+*/
+/*
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-algorithm", "AES256");
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-key", "MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=");
+    apr_table_add(headers, "x-cos-server-side-encryption-customer-key-MD5", "U5L61r7jcwdNvT7frmUG8g==");
+*/
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&file, "getfile");
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    s = cos_get_object_to_file(options, &bucket, &object, headers, params, &file, &resp_headers);
+    log_status(s);
+
+    {
+        int i = 0;
+        apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
+        for ( ; i < pp->nelts; i++)
+        {
+            apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
+            printf("%s: %s\n",ele->key,ele->val);
+        }
+    }
+
+
+    cos_pool_destroy(p);
+
+}
+
 void multipart_upload_file_from_file()
 {
     cos_pool_t *p = NULL;
@@ -571,7 +661,7 @@ void test_resumable()
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, TEST_MULTIPART_OBJECT3);
+    cos_str_set(&object, TEST_MULTIPART_OBJECT4);
     cos_str_set(&filepath, TEST_DOWNLOAD_NAME4);
 
     s = cos_resumable_download_file_without_cp(options, &bucket, &object, &filepath, NULL, NULL, 3, 
@@ -579,7 +669,6 @@ void test_resumable()
     log_status(s);
 
     cos_pool_destroy(p);
-    
 }
 
 void test_resumable_upload_with_multi_threads()
@@ -1382,6 +1471,224 @@ void test_domain()
     cos_pool_destroy(pool);
 }
 
+void test_logging()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_logging_params_t  *params = NULL;
+    cos_logging_params_t  *result = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建logging参数
+    params = cos_create_logging_params(options->pool);
+    cos_str_set(&params->target_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&params->target_prefix, "logging/");
+
+    status = cos_put_bucket_logging(options, &bucket, params, &resp_headers);
+    log_status(status);
+
+    result = cos_create_logging_params(options->pool);
+    status = cos_get_bucket_logging(options, &bucket, result, &resp_headers);
+    log_status(status);
+    if (!cos_status_is_ok(status)) {
+        cos_pool_destroy(pool);
+        return;
+    }
+
+    //查看结果
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", result->target_bucket.len, result->target_bucket.data);
+    printf("target bucket: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", result->target_prefix.len, result->target_prefix.data);
+    printf("target prefix: %s", line);
+
+    cos_pool_destroy(pool);
+}
+
+void test_inventory() 
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    int inum = 3, i, len;
+    char buf[inum][32];
+    char dest_bucket[128];
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_inventory_params_t *get_params = NULL;
+    cos_inventory_optional_t *optional = NULL;
+    cos_list_inventory_params_t *list_params = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put bucket inventory 
+    len = snprintf(dest_bucket, 128, "qcs::cos:%s::%s", TEST_REGION, TEST_BUCKET_NAME);
+    dest_bucket[len] = 0;
+    for (i = 0; i < inum; i++) {
+        cos_inventory_params_t *params = cos_create_inventory_params(pool);
+        cos_inventory_optional_t *optional;
+        len = snprintf(buf[i], 32, "id%d", i);
+        buf[i][len] = 0;
+        cos_str_set(&params->id, buf[i]);
+        cos_str_set(&params->is_enabled, "true");
+        cos_str_set(&params->frequency, "Daily");
+        cos_str_set(&params->filter_prefix, "myPrefix");
+        cos_str_set(&params->included_object_versions, "All");
+        cos_str_set(&params->destination.format, "CSV");
+        cos_str_set(&params->destination.account_id, TEST_UIN);
+        cos_str_set(&params->destination.bucket, dest_bucket);
+        cos_str_set(&params->destination.prefix, "invent");
+        params->destination.encryption = 1;
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "Size");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "LastModifiedDate");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "ETag");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "StorageClass");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "ReplicationStatus");
+        cos_list_add_tail(&optional->node, &params->fields);
+
+        status = cos_put_bucket_inventory(options, &bucket, params, &resp_headers);
+        log_status(status);
+    }
+
+    // get inventory 
+    get_params = cos_create_inventory_params(pool);
+    cos_str_set(&get_params->id, buf[inum/2]);
+    status = cos_get_bucket_inventory(options, &bucket, get_params, &resp_headers);
+    log_status(status); 
+
+    printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+            get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
+    printf("destination:\n");
+    printf("\tencryption: %d\n", get_params->destination.encryption);
+    printf("\tformat: %s\n", get_params->destination.format.data);
+    printf("\taccount_id: %s\n", get_params->destination.account_id.data);
+    printf("\tbucket: %s\n", get_params->destination.bucket.data);
+    printf("\tprefix: %s\n", get_params->destination.prefix.data);
+    cos_list_for_each_entry(cos_inventory_optional_t, optional, &get_params->fields, node) {
+        printf("field: %s\n", optional->field.data);
+    }
+
+    // list inventory
+    list_params = cos_create_list_inventory_params(pool); 
+    status = cos_list_bucket_inventory(options, &bucket, list_params, &resp_headers);
+    log_status(status);
+
+    get_params = NULL;
+    cos_list_for_each_entry(cos_inventory_params_t, get_params, &list_params->inventorys, node) {
+        printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+                get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
+        printf("destination:\n");
+        printf("\tencryption: %d\n", get_params->destination.encryption);
+        printf("\tformat: %s\n", get_params->destination.format.data);
+        printf("\taccount_id: %s\n", get_params->destination.account_id.data);
+        printf("\tbucket: %s\n", get_params->destination.bucket.data);
+        printf("\tprefix: %s\n", get_params->destination.prefix.data);
+        cos_list_for_each_entry(cos_inventory_optional_t, optional, &get_params->fields, node) {
+            printf("field: %s\n", optional->field.data);
+        }
+    }
+
+    // delete inventory
+    for (i = 0; i < inum; i++) {
+        cos_string_t id;
+        cos_str_set(&id, buf[i]);
+        status = cos_delete_bucket_inventory(options, &bucket, &id, &resp_headers);
+        log_status(status);
+    }
+
+    cos_pool_destroy(pool);
+}
+
+void test_tagging()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    status = cos_put_bucket_tagging(options, &bucket, params, &resp_headers);
+    log_status(status);
+
+    // get tagging
+    result = cos_create_tagging_params(pool);
+    status = cos_get_bucket_tagging(options, &bucket, result, &resp_headers);
+    log_status(status);
+
+    tag = NULL;
+    cos_list_for_each_entry(cos_tagging_tag_t, tag, &result->node, node) {
+        printf("taging key: %s\n", tag->key.data);
+        printf("taging value: %s\n", tag->value.data);
+
+    } 
+
+    // delete tagging
+    status = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
+    log_status(status);
+
+    cos_pool_destroy(pool);
+}
+
 int main(int argc, char *argv[])
 {
     int exit_code = -1;
@@ -1397,6 +1704,11 @@ int main(int argc, char *argv[])
     //set log output, default stderr
     cos_log_set_output(NULL);
 
+    test_tagging();
+    test_logging();
+    test_inventory();
+    //test_put_object_from_file_with_sse();
+    //test_get_object_to_file_with_sse();
     //test_head_bucket();
     //test_get_service();
     //test_website();
@@ -1412,8 +1724,11 @@ int main(int argc, char *argv[])
     //multipart_upload_file_from_file();
     //abort_multipart_upload();
     //list_multipart();
+    
+    //pthread_t tid[20];
+    //test_resumable_upload_with_multi_threads();
     //test_resumable();
-    //test_resumable_upload_with_multi_threads();test_bucket();
+    //test_bucket();
     //test_acl();
     //test_copy();
     //test_cors();

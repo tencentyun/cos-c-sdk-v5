@@ -724,6 +724,78 @@ cos_domain_params_t *cos_create_domain_params(cos_pool_t *p)
     return params;
 }
 
+cos_logging_params_t *cos_create_logging_params(cos_pool_t *p) 
+{
+    cos_logging_params_t *params;
+    params = (cos_logging_params_t*) cos_palloc(p, sizeof(cos_logging_params_t));
+    cos_str_set(&params->target_bucket, "");
+    cos_str_set(&params->target_prefix, "");
+
+    return params;
+}
+
+cos_list_inventory_params_t *cos_create_list_inventory_params(cos_pool_t *p)
+{
+    cos_list_inventory_params_t *params = NULL;
+    params = (cos_list_inventory_params_t*) cos_palloc(p, sizeof(cos_list_inventory_params_t));
+    cos_list_init(&params->inventorys);
+    cos_str_set(&params->continuation_token, "");
+    cos_str_set(&params->next_continuation_token, "");
+    params->is_truncated = 0;
+
+    return params;
+}
+
+cos_inventory_params_t *cos_create_inventory_params(cos_pool_t *p)
+{
+    cos_inventory_params_t *params = NULL;
+    params = (cos_inventory_params_t*) cos_palloc(p, sizeof(cos_inventory_params_t));
+    cos_str_set(&params->id, "");
+    cos_str_set(&params->is_enabled, "");
+    cos_str_set(&params->frequency, "");
+    cos_str_set(&params->filter_prefix, "");
+    cos_str_set(&params->included_object_versions, "");
+
+    cos_str_set(&params->destination.format, "");
+    cos_str_set(&params->destination.account_id, "");
+    cos_str_set(&params->destination.bucket, "");
+    cos_str_set(&params->destination.prefix, "");
+    params->destination.encryption = 0;
+
+    cos_list_init(&params->fields);
+    cos_list_init(&params->node);
+
+    return params;
+}
+
+cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p)
+{
+    cos_inventory_optional_t *params = NULL;
+    params = (cos_inventory_optional_t*) cos_palloc(p, sizeof(cos_inventory_optional_t));
+    cos_str_set(&params->field, "");
+    cos_list_init(&params->node);
+
+    return params;
+}
+
+cos_tagging_params_t *cos_create_tagging_params(cos_pool_t *p)
+{
+    cos_tagging_params_t *params = NULL;
+    params = (cos_tagging_params_t*) cos_palloc(p, sizeof(cos_tagging_params_t));
+    cos_list_init(&params->node);
+    return params;
+}
+
+cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p)
+{
+    cos_tagging_tag_t *params = NULL;
+    params = (cos_tagging_tag_t*) cos_palloc(p, sizeof(cos_tagging_tag_t));
+    cos_list_init(&params->node);
+    cos_str_set(&params->key, "");
+    cos_str_set(&params->value, "");
+    return params;
+}
+
 cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
 {
     cos_object_restore_params_t *params;

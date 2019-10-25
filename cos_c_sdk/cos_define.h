@@ -466,6 +466,7 @@ typedef struct {
 } cos_inventory_optional_t;
 
 typedef struct {
+    cos_list_t node;
     cos_string_t id;
     cos_string_t is_enabled;
     cos_string_t frequency;
@@ -473,7 +474,14 @@ typedef struct {
     cos_string_t included_object_versions;
     cos_inventory_destination_t destination;
     cos_list_t fields;
-} cos_inventory_params_t;  
+} cos_inventory_params_t;
+
+typedef struct {
+    cos_list_t inventorys;
+    int is_truncated;
+    cos_string_t continuation_token;
+    cos_string_t next_continuation_token;
+} cos_list_inventory_params_t;
 
 typedef struct {
     cos_list_t node;
