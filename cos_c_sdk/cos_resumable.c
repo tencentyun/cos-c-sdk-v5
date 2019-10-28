@@ -242,16 +242,19 @@ void cos_build_upload_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint,
     checkpoint->part_num = i;
 }
 
-int cos_dump_checkpoint(cos_pool_t *pool, const cos_checkpoint_t *checkpoint) 
+int cos_dump_checkpoint(cos_pool_t *parent_pool, const cos_checkpoint_t *checkpoint) 
 {
     char *xml_body = NULL;
     apr_status_t s;
     char buf[256];
     apr_size_t len;
-    
+    cos_pool_t *pool; 
+
+    cos_pool_create(&pool, parent_pool);
     // to xml
     xml_body = cos_build_checkpoint_xml(pool, checkpoint);
     if (NULL == xml_body) {
+        cos_pool_destroy(pool);
         return COSE_OUT_MEMORY;
     }
 
@@ -259,6 +262,7 @@ int cos_dump_checkpoint(cos_pool_t *pool, const cos_checkpoint_t *checkpoint)
     s = apr_file_trunc(checkpoint->thefile, 0);
     if (s != APR_SUCCESS) {
         cos_error_log("apr_file_write fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
+        cos_pool_destroy(pool);
         return COSE_FILE_TRUNC_ERROR;
     }
    
@@ -267,6 +271,7 @@ int cos_dump_checkpoint(cos_pool_t *pool, const cos_checkpoint_t *checkpoint)
     s = apr_file_write(checkpoint->thefile, xml_body, &len);
     if (s != APR_SUCCESS) {
         cos_error_log("apr_file_write fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
+        cos_pool_destroy(pool);
         return COSE_FILE_WRITE_ERROR;
     }
 
@@ -274,9 +279,11 @@ int cos_dump_checkpoint(cos_pool_t *pool, const cos_checkpoint_t *checkpoint)
     s = apr_file_flush(checkpoint->thefile);
     if (s != APR_SUCCESS) {
         cos_error_log("apr_file_flush fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
+        cos_pool_destroy(pool);
         return COSE_FILE_FLUSH_ERROR;
     }
 
+    cos_pool_destroy(pool);
     return COSE_OK;
 }
 
