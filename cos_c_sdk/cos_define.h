@@ -77,6 +77,11 @@ extern const char COS_LIFECYCLE[];
 extern const char COS_CORS[];
 extern const char COS_VERSIONING[];
 extern const char COS_REPLICATION[];
+extern const char COS_WEBSITE[];
+extern const char COS_DOMAIN[];
+extern const char COS_LOGGING[];
+extern const char COS_INVENTORY[];
+extern const char COS_TAGGING[];
 extern const char COS_DELETE[];
 extern const char COS_YES[];
 extern const char COS_OBJECT_TYPE_NORMAL[];
@@ -418,6 +423,75 @@ typedef struct {
     cos_string_t end_time;
     cos_string_t remote_addr;
 } cos_live_record_content_t;
+
+typedef struct {
+    cos_string_t index;
+    cos_string_t redirect_protocol;
+    cos_string_t error_document;
+    cos_list_t rule_list;
+} cos_website_params_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t condition_errcode;
+    cos_string_t condition_prefix;
+    cos_string_t redirect_protocol;
+    cos_string_t redirect_replace_key;
+    cos_string_t redirect_replace_key_prefix;	
+} cos_website_rule_content_t;
+
+typedef struct {
+    cos_string_t status;
+    cos_string_t name;
+    cos_string_t type;
+    cos_string_t forced_replacement;
+} cos_domain_params_t;
+
+typedef struct {
+    cos_string_t target_bucket;
+    cos_string_t target_prefix;
+} cos_logging_params_t;
+
+typedef struct {
+    cos_string_t format;
+    cos_string_t account_id;
+    cos_string_t bucket;
+    cos_string_t prefix;
+    int encryption;
+} cos_inventory_destination_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t field;
+} cos_inventory_optional_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t id;
+    cos_string_t is_enabled;
+    cos_string_t frequency;
+    cos_string_t filter_prefix;
+    cos_string_t included_object_versions;
+    cos_inventory_destination_t destination;
+    cos_list_t fields;
+} cos_inventory_params_t;
+
+typedef struct {
+    cos_list_t inventorys;
+    int is_truncated;
+    cos_string_t continuation_token;
+    cos_string_t next_continuation_token;
+} cos_list_inventory_params_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t key;
+    cos_string_t value;
+} cos_tagging_tag_t;
+
+typedef struct {
+    cos_list_t node;
+} cos_tagging_params_t;
 
 #define COS_AUTH_EXPIRE_DEFAULT 300
 

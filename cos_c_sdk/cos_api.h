@@ -304,6 +304,178 @@ cos_status_t *cos_delete_bucket_lifecycle(const cos_request_options_t *options,
                                           const cos_string_t *bucket, 
                                           cos_table_t **resp_headers);
 
+/*
+ * @brief  put cos bucket website 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   website_params  the cos bucket website configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_bucket_website(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_website_params_t *website_params,
+                                    cos_table_t **resp_header);
+
+/*
+ * @brief  get cos bucket website 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  website_params  the cos bucket website configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_bucket_website(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_website_params_t *website_params,
+                                    cos_table_t **resp_header);
+
+/*
+ * @brief  del cos bucket website 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_delete_bucket_website(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        cos_table_t **resp_header);
+
+/*
+ * @brief  put cos bucket domain 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   domain_params  the cos bucket domain configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_bucket_domain(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_domain_params_t *domain_params,
+                                    cos_table_t **resp_header);
+
+/*
+ * @brief  get cos bucket domain 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  domain_params  the cos bucket domain configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_bucket_domain(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_domain_params_t *domain_params,
+                                    cos_table_t **resp_header);
+
+/*
+ * @brief  put cos bucket logging
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   logging_params  the cos bucket logging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  get cos bucket logging 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  logging_params  the cos bucket logging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_bucket_logging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_logging_params_t *logging_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  put cos bucket inventory
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   inventory_params  the cos bucket inventory configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+
+cos_status_t *cos_put_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  get cos bucket inventory
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  inventory_params  the cos bucket inventory configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  list cos bucket inventory 
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  inventory_params  the cos bucket inventory configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_list_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_list_inventory_params_t *inventory_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  delete cos bucket inventory
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   id            the cos bucket inventory configuration id
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_delete_bucket_inventory(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    const cos_string_t *id,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  put cos bucket tagging
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   tagging_params  the cos bucket tagging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  get cos bucket tagging
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  tagging_params  the cos bucket tagging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+
+cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+/*
+ * @brief  delete cos bucket tagging
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_delete_bucket_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    cos_table_t **resp_headers);
+
 
 cos_status_t *cos_put_object_acl(const cos_request_options_t *options, 
                                  const cos_string_t *bucket,

@@ -66,6 +66,52 @@ void build_versioning_body(cos_pool_t *p, cos_versioning_content_t *versioning, 
 **/
 char *build_versioning_xml(cos_pool_t *p, cos_versioning_content_t *versioning);
 
+/**
+  * @brief  build a xml node
+  * eg: <xml>param->data</xml>
+**/ 
+void build_xml_node(mxml_node_t *pnode, const char *xml, cos_string_t *param);
+
+/** @brief  build a xml node with parent. 
+  * eg: <pxml><cxml>pamam->data</cxml></pxml>
+**/
+void build_xml_node_with_parent(mxml_node_t *root, const char *pxml, const char *cxml, cos_string_t *param);
+
+/**
+  * @brief  build body for put bucket website
+**/
+void build_website_body(cos_pool_t *p, cos_website_params_t *website_params, cos_list_t *body);
+
+/**
+  * @brief  build xml body for put bucket website
+**/
+char *build_website_xml(cos_pool_t *p, cos_website_params_t *website_params);
+
+/**
+  * @brief  build body for put bucket domain
+**/
+void build_domain_body(cos_pool_t *p, cos_domain_params_t *domain_params, cos_list_t *body);
+
+/**
+  * @brief  build xml body for put bucket domain
+**/ 
+char *build_domain_xml(cos_pool_t *p, cos_domain_params_t *domain_params);
+
+/**
+ *  @brief  build body for put bucket logging
+ */
+void build_logging_body(cos_pool_t *p, cos_logging_params_t *params, cos_list_t *body);
+char *build_logging_xml(cos_pool_t *p, cos_logging_params_t *params);
+
+/**
+ *  @brief  build body for put bucket logging
+ */
+void build_inventory_body(cos_pool_t *p, cos_inventory_params_t *params, cos_list_t *body);
+char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params);
+
+void build_tagging_body(cos_pool_t *p, cos_tagging_params_t *params, cos_list_t *body);
+char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params);
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body);
 
 /**
@@ -200,6 +246,39 @@ void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t *xml_node,
 void cos_lifecycle_rule_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *lifecycle_rule_list);
 int cos_lifecycle_rules_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *lifecycle_rule_list);
+
+/**
+  * @brief parse from a xml node. 
+  * eg: <xml>text</xml> 
+**/  
+void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param);
+
+/**
+  * @brief parse from a parent xml node. 
+  * eg: <pxml><cxml>test<cxml></pxml>
+**/ 
+void cos_common_parse_from_parent_node(cos_pool_t *p, mxml_node_t *root, const char *pxml, const char *cxml, cos_string_t *param);
+
+/**
+  * @brief parse website from body
+**/
+int cos_get_website_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_website_params_t *website);
+
+/**
+  * @brief parse domain form body
+**/
+int cos_get_domain_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_domain_params_t *domain);
+
+/**
+ *  @brief parse logging from body
+ */
+int cos_get_logging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_logging_params_t *logging);
+
+//  @brief parse inventory from body
+int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_inventory_params_t *params);
+int cos_list_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_inventory_params_t *params);
+
+int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_params_t *params);
 
 /**
   * @brief parse delete objects contents from xml body
