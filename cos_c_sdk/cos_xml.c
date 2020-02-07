@@ -1748,7 +1748,7 @@ void cos_inventory_parse_from_node(cos_pool_t *p, mxml_node_t *root, cos_invento
         mxml_node_t *field_node = mxmlFindElement(optional_node, optional_node, "Field", NULL, NULL, MXML_DESCEND);
         while (field_node != NULL) { 
             cos_inventory_optional_t *optional = cos_create_inventory_optional(p);
-	    const char *opaque = mxmlGetOpaque(field_node);
+            const char *opaque = mxmlGetOpaque(field_node);
             if (opaque != NULL) {
                 content = apr_pstrdup(p, opaque);
                 cos_str_set(&optional->field, content);
