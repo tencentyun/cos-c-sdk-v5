@@ -66,12 +66,12 @@ char *get_xmlnode_value(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_pa
 {
     char *value = NULL;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
 
     node = mxmlFindElement(xml_node, xml_node, xml_path, NULL, NULL, MXML_DESCEND);
-    if (NULL != node && node->child != NULL) {
-        node_content = node->child->value.opaque;
-        value = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        value = apr_pstrdup(p, node_content);
     }
 
     return value;
@@ -79,21 +79,21 @@ char *get_xmlnode_value(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_pa
 
 void cos_get_service_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_service_params_t *params)
 {
-    char *content;
+    const char *content;
     char *owner_id;
     char *owner_display_name;
     mxml_node_t *node = NULL;
 
     node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         owner_id = apr_pstrdup(p, content);
         cos_str_set(&params->owner_id, owner_id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "DisplayName", NULL, NULL, MXML_DESCEND);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         owner_display_name = apr_pstrdup(p, content);
         cos_str_set(&params->owner_display_name, owner_display_name);
     }
@@ -101,27 +101,27 @@ void cos_get_service_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_s
 
 void cos_get_service_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_service_content_t *bucket_content)
 {
-    char *content = NULL;
+    const char *content = NULL;
     char *tmp_point = NULL;
     mxml_node_t *node = NULL;
 
     node = mxmlFindElement(xml_node, xml_node, "Name", NULL, NULL, MXML_DESCEND);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         tmp_point = apr_pstrdup(p, content);
         cos_str_set(&bucket_content->bucket_name, tmp_point);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Location", NULL, NULL, MXML_DESCEND);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         tmp_point = apr_pstrdup(p, content);
         cos_str_set(&bucket_content->location, tmp_point);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "CreationDate", NULL, NULL, MXML_DESCEND);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         tmp_point = apr_pstrdup(p, content);
         cos_str_set(&bucket_content->creation_date, tmp_point);
     }
@@ -179,7 +179,7 @@ void cos_acl_grantee_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_acl
     char *id;
     char *name;
     char *permission;
-    char *node_content;
+    const char *node_content;
     char *type = NULL;
     mxml_node_t *node;
 
@@ -191,31 +191,30 @@ void cos_acl_grantee_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_acl
     }
 
     node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        id = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        id = apr_pstrdup(p, node_content);
         cos_str_set(&content->id, id);
-    }
-    else {
+    } else {
         node = mxmlFindElement(xml_node, xml_node, "URI", NULL, NULL, MXML_DESCEND);
-        if (NULL != node && NULL != node->child) {
-            node_content = node->child->value.opaque;
-            id = apr_pstrdup(p, (char *)node_content);
+        node_content = mxmlGetOpaque(node);
+        if (node_content != NULL) {
+            id = apr_pstrdup(p, node_content);
             cos_str_set(&content->id, id);
         }
     }
 
     node = mxmlFindElement(xml_node, xml_node, "DisplayName", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        name = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        name = apr_pstrdup(p, node_content);
         cos_str_set(&content->name, name);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Permission", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        permission = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        permission = apr_pstrdup(p, node_content);
         cos_str_set(&content->permission, permission);
     }
 
@@ -238,20 +237,20 @@ void cos_acl_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_pa
 void cos_acl_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_acl_params_t *content)
 {
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     char *owner_id;
     char *owner_name;
 
     node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
         owner_id = apr_pstrdup(p, node_content);
         cos_str_set(&content->owner_id, owner_id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "DisplayName", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
         owner_name = apr_pstrdup(p, node_content);
         cos_str_set(&content->owner_name, owner_name);
     }
@@ -288,41 +287,41 @@ void cos_replication_rule_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_replic
     char *prefix;
     char *bucket;
     char *storage_class;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
 
     node = mxmlFindElement(xml_node, xml_node, "Status", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        status = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        status = apr_pstrdup(p, node_content);
         cos_str_set(&content->status, status);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        id = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        id = apr_pstrdup(p, node_content);
         cos_str_set(&content->id, id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        prefix = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        prefix = apr_pstrdup(p, node_content);
         cos_str_set(&content->prefix, prefix);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Bucket", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        bucket = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        bucket = apr_pstrdup(p, node_content);
         cos_str_set(&content->dst_bucket, bucket);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "StorageClass", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        storage_class = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        storage_class = apr_pstrdup(p, node_content);
         cos_str_set(&content->storage_class, storage_class);
     }
 
@@ -347,14 +346,14 @@ int cos_replication_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_replicati
     int res;
     mxml_node_t *root;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     char *role;
 
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
         node = mxmlFindElement(root, root, "Role", NULL, NULL, MXML_DESCEND);
-        if (NULL != node && NULL != node->child) {
-            node_content = node->child->value.opaque;
+        node_content = mxmlGetOpaque(node);
+        if (node_content != NULL) {
             role = apr_pstrdup(p, node_content);
             cos_str_set(&content->role, role);
         }
@@ -372,22 +371,22 @@ int cos_copy_object_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_copy_obje
     int res;
     mxml_node_t *root;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     char *etag;
     char *last_modify;
 
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
         node = mxmlFindElement(root, root, "ETag", NULL, NULL, MXML_DESCEND);
-        if (NULL != node && NULL != node->child) {
-            node_content = node->child->value.opaque;
+        node_content = mxmlGetOpaque(node);
+        if (node_content != NULL) {
             etag = apr_pstrdup(p, node_content);
             cos_str_set(&content->etag, etag);
         }
 
         node = mxmlFindElement(root, root, "LastModified", NULL, NULL, MXML_DESCEND);
-        if (NULL != node && NULL != node->child) {
-            node_content = node->child->value.opaque;
+        node_content = mxmlGetOpaque(node);
+        if (node_content != NULL) {
             last_modify = apr_pstrdup(p, node_content);
             cos_str_set(&content->last_modify, last_modify);
         }
@@ -401,20 +400,20 @@ int cos_copy_object_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_copy_obje
 void cos_list_objects_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list_object_content_t *content)
 {
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     char *owner_id;
     char *owner_display_name;
 
     node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
         owner_id = apr_pstrdup(p, node_content);
         cos_str_set(&content->owner_id, owner_id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "DisplayName", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
         owner_display_name = apr_pstrdup(p, node_content);
         cos_str_set(&content->owner_display_name, owner_display_name);
     }
@@ -426,34 +425,34 @@ void cos_list_objects_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_li
     char *last_modified;
     char *etag;
     char *size;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
 
     node = mxmlFindElement(xml_node, xml_node, "Key", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        key = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        key = apr_pstrdup(p, node_content);
         cos_str_set(&content->key, key);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "LastModified", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        last_modified = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        last_modified = apr_pstrdup(p, node_content);
         cos_str_set(&content->last_modified, last_modified);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "ETag", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        etag = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        etag = apr_pstrdup(p, node_content);
         cos_str_set(&content->etag, etag);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Size", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        size = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        size = apr_pstrdup(p, node_content);
         cos_str_set(&content->size, size);
     }
 
@@ -463,9 +462,9 @@ void cos_list_objects_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_li
     }
 
     node = mxmlFindElement(xml_node, xml_node, "StorageClass", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        etag = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        etag = apr_pstrdup(p, node_content);
         cos_str_set(&content->storage_class, etag);
     }
 }
@@ -489,12 +488,12 @@ void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_lis
 {
     char *prefix;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     
     node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        prefix = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        prefix = apr_pstrdup(p, node_content);
         cos_str_set(&common_prefix->prefix, prefix);
     }
 }
@@ -583,34 +582,34 @@ void cos_list_parts_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list
     char *last_modified;
     char *etag;
     char *size;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
 
     node = mxmlFindElement(xml_node, xml_node, "PartNumber", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        part_number = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        part_number = apr_pstrdup(p, node_content);
         cos_str_set(&content->part_number, part_number);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "LastModified", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        last_modified = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        last_modified = apr_pstrdup(p, node_content);
         cos_str_set(&content->last_modified, last_modified);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "ETag", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        etag = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        etag = apr_pstrdup(p, node_content);
         cos_str_set(&content->etag, etag);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Size", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        size = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        size = apr_pstrdup(p, node_content);
         cos_str_set(&content->size, size);
     }
 }
@@ -664,27 +663,27 @@ void cos_list_multipart_uploads_content_parse(cos_pool_t *p, mxml_node_t *xml_no
     char *key;
     char *upload_id;
     char *initiated;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
 
     node = mxmlFindElement(xml_node, xml_node, "Key",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        key = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        key = apr_pstrdup(p, node_content);
         cos_str_set(&content->key, key);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "UploadID",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        upload_id = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        upload_id = apr_pstrdup(p, node_content);
         cos_str_set(&content->upload_id, upload_id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Initiated",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        initiated = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        initiated = apr_pstrdup(p, node_content);
         cos_str_set(&content->initiated, initiated);
     }
 }
@@ -1332,15 +1331,15 @@ int cos_versioning_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_versioning
     int res;
     mxml_node_t *root = NULL;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
     char *status;
 
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
         node = mxmlFindElement(root, root, "Status", NULL, NULL, MXML_DESCEND);
-        if (NULL != node && NULL != node->child) {
-            node_content = node->child->value.opaque;
-            status = apr_pstrdup(p, (char *)node_content);
+        node_content = mxmlGetOpaque(node);
+        if (node_content != NULL) {
+            status = apr_pstrdup(p, node_content);
             cos_str_set(&versioning->status, status);
         }
         mxmlDelete(root);
@@ -1387,47 +1386,47 @@ void cos_cors_rule_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_cors_
     char *expose_header;
     char *max_age_seconds;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
 
     node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        id = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        id = apr_pstrdup(p, node_content);
         cos_str_set(&content->id, id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "AllowedOrigin", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        allowed_origin = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        allowed_origin = apr_pstrdup(p, node_content);
         cos_str_set(&content->allowed_origin, allowed_origin);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "AllowedMethod", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        allowed_method = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        allowed_method = apr_pstrdup(p, node_content);
         cos_str_set(&content->allowed_method, allowed_method);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "AllowedHeader", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        allowed_header = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        allowed_header = apr_pstrdup(p, node_content);
         cos_str_set(&content->allowed_header, allowed_header);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "ExposeHeader", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        expose_header = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        expose_header = apr_pstrdup(p, node_content);
         cos_str_set(&content->expose_header, expose_header);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "MaxAgeSeconds", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        max_age_seconds = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        max_age_seconds = apr_pstrdup(p, node_content);
         content->max_age_seconds = atoi(max_age_seconds);
     }
 }
@@ -1468,27 +1467,27 @@ void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t * xml_node,
     char *id;
     char *prefix;
     char *status;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
 
     node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        id = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        id = apr_pstrdup(p, node_content);
         cos_str_set(&content->id, id);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Prefix",NULL, NULL,MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        prefix = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        prefix = apr_pstrdup(p, node_content);
         cos_str_set(&content->prefix, prefix);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Status",NULL, NULL,MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        status = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        status = apr_pstrdup(p, node_content);
         cos_str_set(&content->status, status);
     }
 
@@ -1514,19 +1513,19 @@ void cos_lifecycle_rule_expire_parse(cos_pool_t *p, mxml_node_t * xml_node,
     char* days;
     char *date;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
 
     node = mxmlFindElement(xml_node, xml_node, "Days", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        days = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        days = apr_pstrdup(p, node_content);
         content->expire.days = atoi(days);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Date", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        date = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        date = apr_pstrdup(p, node_content);
         cos_str_set(&content->expire.date, date);
     }
 }
@@ -1537,26 +1536,26 @@ void cos_lifecycle_rule_transition_parse(cos_pool_t *p, mxml_node_t * xml_node,
     char* days;
     char *date;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
 
     node = mxmlFindElement(xml_node, xml_node, "Days", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        days = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        days = apr_pstrdup(p, node_content);
         content->transition.days = atoi(days);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "Date", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        date = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        date = apr_pstrdup(p, node_content);
         cos_str_set(&content->transition.date, date);
     }
 
     node = mxmlFindElement(xml_node, xml_node, "StorageClass", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        date = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        date = apr_pstrdup(p, node_content);
         cos_str_set(&content->transition.storage_class, date);
     }
 }
@@ -1566,25 +1565,25 @@ void cos_lifecycle_rule_abort_parse(cos_pool_t *p, mxml_node_t * xml_node,
 {
     char* days;
     mxml_node_t *node;
-    char *node_content;
+    const char *node_content;
 
     node = mxmlFindElement(xml_node, xml_node, "Days", NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
-        days = apr_pstrdup(p, (char *)node_content);
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
+        days = apr_pstrdup(p, node_content);
         content->abort.days = atoi(days);
     }
 }
 
 void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param)
 {
-    char *content;
+    const char *content;
     char *content_in_pool;
     mxml_node_t *node;
 
     node = mxmlFindElement(pnode, root, xml, NULL, NULL, MXML_DESCEND_FIRST);
-    if (node != NULL && node->child != NULL) {
-        content = node->child->value.opaque;
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
         content_in_pool = apr_pstrdup(p, content);
         cos_str_set(param, content_in_pool);
     }
@@ -1749,8 +1748,9 @@ void cos_inventory_parse_from_node(cos_pool_t *p, mxml_node_t *root, cos_invento
         mxml_node_t *field_node = mxmlFindElement(optional_node, optional_node, "Field", NULL, NULL, MXML_DESCEND);
         while (field_node != NULL) { 
             cos_inventory_optional_t *optional = cos_create_inventory_optional(p);
-            if (field_node->child != NULL) {
-                content = apr_pstrdup(p, field_node->child->value.opaque);
+	    const char *opaque = mxmlGetOpaque(field_node);
+            if (opaque != NULL) {
+                content = apr_pstrdup(p, opaque);
                 cos_str_set(&optional->field, content);
             }
             cos_list_add_tail(&optional->node, &params->fields);
@@ -1841,12 +1841,12 @@ void cos_object_key_parse(cos_pool_t *p, mxml_node_t * xml_node,
 {   
     char *key;
     char *encoded_key;
-    char *node_content;
+    const char *node_content;
     mxml_node_t *node;
     
     node = mxmlFindElement(xml_node, xml_node, "Key",NULL, NULL, MXML_DESCEND);
-    if (NULL != node && NULL != node->child) {
-        node_content = node->child->value.opaque;
+    node_content = mxmlGetOpaque(node);
+    if (node_content != NULL) {
         encoded_key = (char*)node_content;
         key = (char *) cos_palloc(p, strlen(encoded_key));
         cos_url_decode(encoded_key, key);
