@@ -93,7 +93,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define cos_palloc(p, s) apr_palloc(p, s)
 #define cos_pcalloc(p, s) apr_pcalloc(p, s)
 
-#define COS_RETRY_TIME 1
+#define COS_RETRY_TIME 2
 
 #define COS_INIT_WINSOCK 1
 #define COS_MD5_STRING_LEN 32
