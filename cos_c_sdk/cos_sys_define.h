@@ -93,6 +93,8 @@ typedef apr_array_header_t cos_array_header_t;
 #define cos_palloc(p, s) apr_palloc(p, s)
 #define cos_pcalloc(p, s) apr_pcalloc(p, s)
 
+#define COS_RETRY_TIME 1
+
 #define COS_INIT_WINSOCK 1
 #define COS_MD5_STRING_LEN 32
 #define COS_MAX_URI_LEN 2048
@@ -121,7 +123,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define CR     (char) 13
 #define CRLF   "\x0d\x0a"
 
-#define COS_VERSION    "5.0.5"
+#define COS_VERSION    "5.0.6"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
 #define COS_HTTP_PREFIX   "http://"
