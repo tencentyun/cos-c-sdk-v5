@@ -108,6 +108,8 @@ extern const int COS_PER_RET_NUM;
 extern const int MAX_SUFFIX_LEN;
 extern const char COS_CONTENT_SHA1[];
 extern const char COS_RANGE[];
+extern const char COS_INTELLIGENTTIERING[];
+
 
 
 typedef struct cos_lib_curl_initializer_s cos_lib_curl_initializer_t;
@@ -492,6 +494,11 @@ typedef struct {
 typedef struct {
     cos_list_t node;
 } cos_tagging_params_t;
+
+typedef struct {
+    cos_string_t status;
+    int days;
+} cos_intelligenttiering_params_t;
 
 #define COS_AUTH_EXPIRE_DEFAULT 300
 

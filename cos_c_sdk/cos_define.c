@@ -82,4 +82,4 @@ const int  LIVE_CHANNEL_DEFAULT_FRAG_COUNT = 3;
 const int COS_MAX_PART_NUM = 10000;
 const int COS_PER_RET_NUM = 1000;
 const int MAX_SUFFIX_LEN = 1024;
-
+const char COS_INTELLIGENTTIERING[] = "intelligenttiering";

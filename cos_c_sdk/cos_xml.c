@@ -1286,6 +1286,51 @@ char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params)
     return tagging_xml;
 }
 
+void build_intelligenttiering_body(cos_pool_t *p, cos_intelligenttiering_params_t *params, cos_list_t *body)
+{
+    char *xml;
+    cos_buf_t *b;
+    xml = build_intelligenttiering_xml(p, params);
+    cos_list_init(body);
+    b = cos_buf_pack(p, xml, strlen(xml));
+    cos_list_add_tail(&b->node, body);
+}
+
+char *build_intelligenttiering_xml(cos_pool_t *p, cos_intelligenttiering_params_t *params)
+{
+    char *xml;
+    char *xml_buff;
+    char value_str[64];
+    cos_string_t xml_doc;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    mxml_node_t *trans_node;
+    mxml_node_t *node;
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "IntelligentTieringConfiguration");
+    build_xml_node(root_node, "Status", &params->status);
+    trans_node = mxmlNewElement(root_node, "Transition");
+    if (params->days != 0) {
+        apr_snprintf(value_str, sizeof(value_str), "%d", params->days);
+        node = mxmlNewElement(trans_node, "Days");
+        mxmlNewText(node, 0, value_str);
+    }
+    node = mxmlNewElement(trans_node, "RequestFrequent");
+    mxmlNewText(node, 0, "1");      // RequestFrequent 当前固定是 1
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return NULL;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    xml = cos_pstrdup(p, &xml_doc);
+ 
+    free(xml_buff);
+    mxmlDelete(doc);
+    return xml;
+}
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body)
 {
     cos_buf_t *b;
@@ -1819,6 +1864,22 @@ int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_p
         mxmlDelete(root);
     }
  
+    return res;
+}
+
+int cos_get_intelligenttiering_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_intelligenttiering_params_t *params)
+{
+    int res = 0;
+    mxml_node_t *root;
+    
+    res = get_xmldoc(bc, &root);
+    if (res == COSE_OK) {
+        cos_string_t val;
+        cos_common_parse_from_xml_node(p, root, root, "Status", &params->status);
+        cos_common_parse_from_parent_node(p, root, "Transition", "Days", &val);
+        params->days = atoi(val.data);
+        mxmlDelete(root);
+    }
     return res;
 }
 

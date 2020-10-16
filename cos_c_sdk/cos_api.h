@@ -477,6 +477,17 @@ cos_status_t *cos_delete_bucket_tagging(const cos_request_options_t *options,
                                     cos_table_t **resp_headers);
 
 
+cos_status_t *cos_put_bucket_intelligenttiering(const cos_request_options_t *options,
+                                                const cos_string_t *bucket,
+                                                cos_intelligenttiering_params_t *params,
+                                                cos_table_t **resp_headers);
+
+cos_status_t *cos_get_bucket_intelligenttiering(const cos_request_options_t *options,
+                                                const cos_string_t *bucket,
+                                                cos_intelligenttiering_params_t *params,
+                                                cos_table_t **resp_headers);
+
+
 cos_status_t *cos_put_object_acl(const cos_request_options_t *options, 
                                  const cos_string_t *bucket,
                                  const cos_string_t *object, 

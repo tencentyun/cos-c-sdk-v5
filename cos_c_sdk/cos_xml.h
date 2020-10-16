@@ -112,6 +112,10 @@ char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params);
 void build_tagging_body(cos_pool_t *p, cos_tagging_params_t *params, cos_list_t *body);
 char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params);
 
+
+void build_intelligenttiering_body(cos_pool_t *p, cos_intelligenttiering_params_t *params, cos_list_t *body);
+char *build_intelligenttiering_xml(cos_pool_t *p, cos_intelligenttiering_params_t *params);
+
 void build_object_restore_body(cos_pool_t *p, cos_object_restore_params_t *params, cos_list_t *body);
 
 /**
@@ -279,6 +283,8 @@ int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_invento
 int cos_list_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_inventory_params_t *params);
 
 int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_params_t *params);
+
+int cos_get_intelligenttiering_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_intelligenttiering_params_t *params);
 
 /**
   * @brief parse delete objects contents from xml body

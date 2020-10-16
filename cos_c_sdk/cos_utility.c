@@ -796,6 +796,15 @@ cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p)
     return params;
 }
 
+cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t *p)
+{
+    cos_intelligenttiering_params_t *params = NULL;
+    params = (cos_intelligenttiering_params_t*) cos_palloc(p, sizeof(cos_intelligenttiering_params_t));
+    cos_str_set(&params->status, "");
+    params->days = 0;
+    return params;
+}
+
 cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
 {
     cos_object_restore_params_t *params;
