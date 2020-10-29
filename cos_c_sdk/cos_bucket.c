@@ -70,7 +70,7 @@ cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 0);
     headers = cos_table_create_if_null(options, header, 1);
 
-    cos_init_bucket_request(options, bucket, HTTP_GET, &req, query_params, headers, &resp);
+    cos_init_bucket_request(options, bucket, HTTP_HEAD, &req, query_params, headers, &resp);
 
     s = cos_process_request(options, req, resp);
     cos_fill_read_response_header(resp, resp_headers);
