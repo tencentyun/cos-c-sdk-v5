@@ -123,6 +123,9 @@ void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part
         cos_str_set(&config->access_key_id, options->config->access_key_id.data);
         cos_str_set(&config->access_key_secret, options->config->access_key_secret.data);
         cos_str_set(&config->appid, options->config->appid.data);
+        if (options->config->sts_token.data != NULL) {
+            cos_str_set(&config->sts_token, options->config->sts_token.data);
+        }
         config->is_cname = options->config->is_cname;
         ctl = cos_http_controller_create(subpool, 0);
         thr_params[i].options.config = config;

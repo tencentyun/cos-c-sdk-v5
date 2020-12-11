@@ -2,15 +2,16 @@
 #include "cos_api.h"
 #include "cos_log.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <sys/stat.h>
 
 static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
-static char TEST_ACCESS_KEY_ID[] = "SECRET_ID";                //your secret_id
-static char TEST_ACCESS_KEY_SECRET[] = "SECRET_KEY";   //your secret_key
-static char TEST_APPID[] = "APPID";    //your appid
-static char TEST_BUCKET_NAME[] = "<bucketname-APPID>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
-static char TEST_UIN[] = "uin";    //your uin
+static char *TEST_ACCESS_KEY_ID;                //your secret_id
+static char *TEST_ACCESS_KEY_SECRET;            //your secret_key
+static char TEST_APPID[] = "<APPID>";    //your appid
+static char TEST_BUCKET_NAME[] = "<bucketname-appid>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+static char TEST_UIN[] = "<Uin>";    //your uin
 static char TEST_REGION[] = "ap-guangzhou";    //region in endpoint
 static char TEST_OBJECT_NAME1[] = "1.txt";
 static char TEST_OBJECT_NAME2[] = "test2.dat";
@@ -1689,11 +1690,54 @@ void test_tagging()
     cos_pool_destroy(pool);
 }
 
+void test_intelligenttiering()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_intelligenttiering_params_t *params = NULL;
+    cos_intelligenttiering_params_t *result = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put intelligenttiering
+    params = cos_create_intelligenttiering_params(pool);
+    cos_str_set(&params->status, "Enabled");
+    params->days = 30; 
+
+    status = cos_put_bucket_intelligenttiering(options, &bucket, params, &resp_headers);
+    log_status(status);
+
+    // get intelligenttiering
+    result = cos_create_intelligenttiering_params(pool);
+    status = cos_get_bucket_intelligenttiering(options, &bucket, result, &resp_headers);
+    log_status(status);
+
+    printf("status: %s\n", result->status.data);
+    printf("days: %d\n", result->days);
+    cos_pool_destroy(pool);
+}
+
 int main(int argc, char *argv[])
 {
     int exit_code = -1;
 
-    
+    // 通过环境变量获取 SECRETID 和 SECRETKEY
+    TEST_ACCESS_KEY_ID     = getenv("COS_SECRETID");
+    TEST_ACCESS_KEY_SECRET = getenv("COS_SECRETKEY");
+ 
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
        exit(1);
     }
@@ -1704,9 +1748,10 @@ int main(int argc, char *argv[])
     //set log output, default stderr
     cos_log_set_output(NULL);
 
-    test_tagging();
-    test_logging();
-    test_inventory();
+    //test_intelligenttiering();
+    //test_tagging();
+    //test_logging();
+    //test_inventory();
     //test_put_object_from_file_with_sse();
     //test_get_object_to_file_with_sse();
     //test_head_bucket();
