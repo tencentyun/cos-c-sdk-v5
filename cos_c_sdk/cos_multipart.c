@@ -27,6 +27,7 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
 
     //init headers
     headers = cos_table_create_if_null(options, headers, 1);
+    set_content_type(NULL, object->data, headers);
     cos_set_multipart_content_type(headers);
 
     cos_init_object_request(options, bucket, object, HTTP_POST, 
@@ -195,6 +196,7 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
 
     //init headers
     headers = cos_table_create_if_null(options, headers, 1);
+    set_content_type(NULL, object->data, headers);
     cos_set_multipart_content_type(headers);
     //apr_table_add(headers, COS_REPLACE_OBJECT_META, COS_YES);
 
