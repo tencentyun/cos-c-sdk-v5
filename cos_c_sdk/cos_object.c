@@ -151,6 +151,8 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
     if (is_enable_crc(options) && has_crc_in_response(resp) &&  
         !has_range_or_process_in_request(req)) {
         cos_check_crc_consistent(resp->crc64, resp->headers, s);
+    } else if (is_enable_crc(options)) {
+        cos_check_len_consistent(buffer, resp->headers, s);
     }
 
     return s;
