@@ -365,6 +365,8 @@ int has_range_or_process_in_request(const cos_http_request_t *req) ;
 **/
 int cos_check_crc_consistent(uint64_t crc, const apr_table_t *resp_headers, cos_status_t *s);
 
+int cos_check_len_consistent(cos_list_t *buffer, const apr_table_t *resp_headers, cos_status_t *s);
+
 int cos_get_temporary_file_name(cos_pool_t *p, const cos_string_t *filename, cos_string_t *temp_file_name);
 
 int cos_temp_file_rename(cos_status_t *s, const char *from_path, const char *to_path, apr_pool_t *pool);

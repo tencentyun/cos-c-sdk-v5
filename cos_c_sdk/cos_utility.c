@@ -1208,6 +1208,19 @@ int cos_check_crc_consistent(uint64_t crc, const apr_table_t *resp_headers, cos_
     return res;
 }
 
+int cos_check_len_consistent(cos_list_t *buffer, const apr_table_t *resp_headers, cos_status_t *s)
+{
+    if (resp_headers != NULL && buffer != NULL) {
+        int64_t len = cos_buf_list_len(buffer);
+        char *content_length = (char*)(apr_table_get(resp_headers, COS_CONTENT_LENGTH));
+        if (content_length != NULL && len != cos_atoi64(content_length)) {
+            cos_inconsistent_error_status_set(s, COSE_CRC_INCONSISTENT_ERROR);
+            return COSE_CRC_INCONSISTENT_ERROR;
+        }
+    }
+    return COSE_OK;
+}
+
 int cos_get_temporary_file_name(cos_pool_t *p, const cos_string_t *filename, cos_string_t *temp_file_name)
 {
     int len = filename->len + 1;
