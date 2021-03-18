@@ -469,7 +469,6 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
 int cos_curl_http_transport_perform(cos_http_transport_t *t_)
 {
     int ecode;
-    int retry_time = 0;
     CURLcode code;
     cos_curl_http_transport_t *t = (cos_curl_http_transport_t *)(t_);
     ecode = cos_curl_transport_setup(t);
@@ -477,16 +476,11 @@ int cos_curl_http_transport_perform(cos_http_transport_t *t_)
         return ecode;
     }
 
-do_retry:
     t->controller->start_time = apr_time_now();
     code = curl_easy_perform(t->curl);
     t->controller->finish_time = apr_time_now();
-    if (code == CURLE_OPERATION_TIMEDOUT && retry_time < COS_RETRY_TIME) {
-        retry_time++;
-        goto do_retry;
-    }
     cos_move_transport_state(t, TRANS_STATE_DONE);
-    
+
     if ((code != CURLE_OK) && (t->controller->error_code == COSE_OK)) {
         ecode = cos_curl_code_to_status(code);
         if (ecode != COSE_OK) {
@@ -495,8 +489,8 @@ do_retry:
             cos_error_log("transport failure curl code:%d error:%s", code, t->controller->reason);
         }
     }
-    
+
     cos_curl_transport_finish(t);
-    
+
     return t->controller->error_code;
 }
