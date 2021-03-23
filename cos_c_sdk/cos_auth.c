@@ -129,6 +129,9 @@ int cos_get_signed_headers(cos_pool_t *p,
 {
     int res;
     cos_string_t signstr;
+    if (cos_is_null_string(access_key_id)) {
+        return COSE_OK;
+    }
 
     res = cos_get_string_to_sign(p, req->method, access_key_id, access_key_secret, canon_res, 
                                  req->headers, req->query_params, COS_AUTH_EXPIRE_DEFAULT, &signstr);
