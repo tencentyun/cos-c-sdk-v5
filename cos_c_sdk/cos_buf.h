@@ -53,6 +53,7 @@ int cos_open_file_for_range_read(cos_pool_t *p, const char *path,
  * @return COSE_OK success, other failure.
  */
 int cos_open_file_for_write(cos_pool_t *p, const char *path, cos_file_buf_t *fb);
+int cos_open_file_for_write_notrunc(cos_pool_t *p, const char *path, cos_file_buf_t *fb);
 
 int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_pos, int64_t file_last, cos_file_buf_t *fb);
 

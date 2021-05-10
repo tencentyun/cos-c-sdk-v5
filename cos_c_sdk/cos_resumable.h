@@ -17,6 +17,7 @@ typedef struct {
     int64_t size;   // the size of part
     int completed;  // COS_TRUE completed, COS_FALSE uncompleted
     cos_string_t etag; // the etag of part, for upload
+    uint64_t crc64;
 } cos_checkpoint_part_t;
 
 typedef struct {
@@ -44,7 +45,8 @@ typedef struct {
 typedef struct {
     cos_checkpoint_part_t *part;
     cos_status_t *s;
-    cos_string_t etag; 
+    cos_string_t etag;
+    uint64_t crc64;
 } cos_part_task_result_t;
 
 typedef struct {
@@ -129,7 +131,7 @@ int cos_load_checkpoint(cos_pool_t *pool, const cos_string_t *filepath, cos_chec
 
 int cos_is_upload_checkpoint_valid(cos_pool_t *pool, cos_checkpoint_t *checkpoint, apr_finfo_t *finfo);
 
-void cos_update_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, int32_t part_index, cos_string_t *etag);
+void cos_update_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, int32_t part_index, cos_string_t *etag, uint64_t crc64);
 
 void cos_get_checkpoint_undo_parts(cos_checkpoint_t *checkpoint, int *part_num, cos_checkpoint_part_t *parts);
 

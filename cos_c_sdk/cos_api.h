@@ -1350,6 +1350,26 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
                                         cos_table_t **resp_headers,
                                         cos_list_t *resp_body);
 
+/*
+ * @brief  cos download file with mulit-thread and resumable
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object              the cos object name
+ * @param[in]   filename            the filename containing object content
+ * @param[in]   headers             the headers for request    
+ * @param[in]   params              the params for request
+ * @param[in]   clt_params          the control params of upload
+ * @param[in]   progress_callback   the progress callback function
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
+                                            cos_string_t *bucket,
+                                            cos_string_t *object,
+                                            cos_string_t *filepath,
+                                            cos_table_t *headers,
+                                            cos_table_t *params,
+                                            cos_resumable_clt_params_t *clt_params,
+                                            cos_progress_callback progress_callback);
 #if 0
 /*
  * @brief  cos create live channel

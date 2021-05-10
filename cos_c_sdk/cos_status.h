@@ -44,6 +44,7 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
 extern const char COS_XML_PARSE_ERROR_CODE[];
 extern const char COS_OPEN_FILE_ERROR_CODE[];
 extern const char COS_WRITE_FILE_ERROR_CODE[];
+extern const char COS_RENAME_FILE_ERROR_CODE[];
 extern const char COS_HTTP_IO_ERROR_CODE[];
 extern const char COS_UNKNOWN_ERROR_CODE[];
 extern const char COS_CLIENT_ERROR_CODE[];
