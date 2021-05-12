@@ -1140,7 +1140,6 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
                                                    int64_t part_size,
                                                    cos_progress_callback progress_callback) 
 {
-    cos_pool_t *subpool = NULL;
     cos_pool_t *parent_pool = NULL;
     cos_status_t *s = NULL;
     cos_status_t *ret = NULL;
@@ -1178,15 +1177,11 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     s = cos_head_object(options, bucket, object, NULL, &resp_headers);
     if (!cos_status_is_ok(s)) {
         s = cos_status_dup(parent_pool, s);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return s;
     }
     value = apr_table_get(resp_headers, COS_CONTENT_LENGTH);
     if (NULL == value) {
         cos_status_set(ret, COSE_INVALID_ARGUMENT, COS_LACK_OF_CONTENT_LEN_ERROR_CODE, NULL);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return ret;
     }
     file_size = cos_atoi64(value);
@@ -1311,7 +1306,6 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
                                                    cos_string_t *checkpoint_path,
                                                    cos_progress_callback progress_callback) 
 {
-    cos_pool_t *subpool = NULL;
     cos_pool_t *parent_pool = NULL;
     cos_status_t *s = NULL;
     cos_status_t *ret = NULL;
@@ -1350,8 +1344,6 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
     s = cos_head_object(options, bucket, object, NULL, &resp_headers);
     if (!cos_status_is_ok(s)) {
         s = cos_status_dup(parent_pool, s);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return s;
     }
     object_size_str = apr_table_get(resp_headers, COS_CONTENT_LENGTH);
@@ -1360,8 +1352,6 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
     crc64_str = apr_table_get(resp_headers, COS_HASH_CRC64_ECMA);
     if (!object_size_str || !object_last_modified || !object_etag) {
         cos_status_set(ret, COSE_INVALID_ARGUMENT, COS_LACK_OF_CONTENT_LEN_ERROR_CODE, NULL);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return ret;
     }
     file_size = cos_atoi64(object_size_str);

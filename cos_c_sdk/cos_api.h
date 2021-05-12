@@ -1530,6 +1530,30 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
                           cos_string_t *presigned_url);
 
 
+cos_status_t *ci_image_process(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
+                                cos_table_t *headers,
+                                cos_table_t **resp_headers,
+                                ci_operation_result_t **results);
+
+cos_status_t *ci_put_object_from_file(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        const cos_string_t *object,
+                                        const cos_string_t *filename,
+                                        cos_table_t *headers,
+                                        cos_table_t **resp_headers,
+                                        ci_operation_result_t **results);
+
+cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
+                                int cover,
+                                cos_table_t *headers,
+                                cos_table_t *query_params, 
+                                cos_table_t **resp_headers,
+                                ci_qrcode_result_t **results);
+
 COS_CPP_END
 
 #endif

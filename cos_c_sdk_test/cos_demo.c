@@ -553,6 +553,114 @@ void multipart_upload_file_from_file()
     cos_pool_destroy(p);
 }
 
+void multipart_upload_file_from_buffer()
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    int is_cname = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *complete_headers = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t upload_id;
+    cos_upload_file_t *upload_file = NULL;
+    cos_status_t *s = NULL;
+    cos_list_upload_part_params_t *params = NULL;
+    cos_list_t complete_part_list;
+    cos_list_part_content_t *part_content = NULL;
+    cos_complete_part_content_t *complete_part_content = NULL;
+    int part_num = 1;
+    int64_t pos = 0;
+    int64_t file_length = 0;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 1);
+    complete_headers = cos_table_make(p, 1);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_MULTIPART_OBJECT);
+    
+    //init mulitipart
+    s = cos_init_multipart_upload(options, &bucket, &object, 
+                                  &upload_id, headers, &resp_headers);
+
+    if (cos_status_is_ok(s)) {
+        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+               upload_id.len, upload_id.data);
+    } else {
+        printf("Init multipart upload failed\n");
+        cos_pool_destroy(p);
+        return;
+    }
+
+    //upload part from buffer
+    int res = COSE_OK;
+    char *str = "This is my test data....";
+    cos_list_t buffer;
+    cos_buf_t *content;
+
+    // 上传一个分块
+    cos_list_init(&buffer);
+    content = cos_buf_pack(p, str, strlen(str));
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id, 1, &buffer, &resp_headers);
+
+    // 直接获取etag
+    char *etag = apr_pstrdup(p, (char*)apr_table_get(resp_headers, "ETag"));
+    cos_list_init(&complete_part_list);
+    complete_part_content = cos_create_complete_part_content(p);
+    cos_str_set(&complete_part_content->part_number, "1");
+    cos_str_set(&complete_part_content->etag, etag);
+    cos_list_add_tail(&complete_part_content->node, &complete_part_list);
+
+    // 也可以通过 list part 获取取etag
+    /*
+    //list part
+    params = cos_create_list_upload_part_params(p);
+    params->max_ret = 1000;
+    cos_list_init(&complete_part_list);
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+                             params, &resp_headers);
+
+    if (cos_status_is_ok(s)) {
+        printf("List multipart succeeded\n");
+        cos_list_for_each_entry(cos_list_part_content_t, part_content, &params->part_list, node) {
+            printf("part_number = %s, size = %s, last_modified = %s, etag = %s\n",
+                   part_content->part_number.data, 
+                   part_content->size.data, 
+                   part_content->last_modified.data, 
+                   part_content->etag.data);
+        }
+    } else {
+        printf("List multipart failed\n");
+        cos_pool_destroy(p);
+        return;
+    }
+
+    cos_list_for_each_entry(cos_list_part_content_t, part_content, &params->part_list, node) {
+        complete_part_content = cos_create_complete_part_content(p);
+        cos_str_set(&complete_part_content->part_number, part_content->part_number.data);
+        cos_str_set(&complete_part_content->etag, part_content->etag.data);
+        cos_list_add_tail(&complete_part_content->node, &complete_part_list);
+    }
+    */
+
+    //complete multipart
+    s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
+            &complete_part_list, complete_headers, &resp_headers);
+
+    if (cos_status_is_ok(s)) {
+        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
+               upload_id.len, upload_id.data);
+    } else {
+        printf("Complete multipart upload from file failed\n");
+    }
+
+    cos_pool_destroy(p);
+}
+
 void abort_multipart_upload()
 {
     cos_pool_t *p = NULL;
@@ -657,6 +765,7 @@ void test_resumable()
     cos_string_t bucket;
     cos_string_t object;
     cos_string_t filepath;
+    cos_resumable_clt_params_t *clt_params;
     
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -665,8 +774,8 @@ void test_resumable()
     cos_str_set(&object, TEST_MULTIPART_OBJECT4);
     cos_str_set(&filepath, TEST_DOWNLOAD_NAME4);
 
-    s = cos_resumable_download_file_without_cp(options, &bucket, &object, &filepath, NULL, NULL, 3, 
-            5*1024*1024, NULL);
+    clt_params = cos_create_resumable_clt_params_content(p, 5*1024*1024, 3, COS_FALSE, NULL);
+    s = cos_resumable_download_file(options, &bucket, &object, &filepath, NULL, NULL, clt_params, NULL);
     log_status(s);
 
     cos_pool_destroy(p);
@@ -1730,6 +1839,295 @@ void test_intelligenttiering()
     cos_pool_destroy(pool);
 }
 
+void test_directory()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_list_t buffer;
+    int is_truncated = 1;
+    cos_string_t marker;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "folder/");
+    cos_list_init(&buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &object, 
+                   &buffer, headers, &resp_headers);
+    log_status(s);
+
+    cos_str_set(&file, "examplefile");
+    cos_str_set(&object, "folder/exampleobject");
+    s = cos_put_object_from_file(options, &bucket, &object, &file, NULL, &resp_headers);
+    log_status(s);
+
+    //list object (get bucket)
+    cos_list_object_params_t *list_params = NULL;
+    list_params = cos_create_list_object_params(p);
+    cos_str_set(&list_params->encoding_type, "url");
+    cos_str_set(&list_params->prefix, "folder/");
+    cos_str_set(&marker, "");
+    while (is_truncated) {
+        list_params->marker = marker;
+        s = cos_list_object(options, &bucket, list_params, &resp_headers);
+        if (!cos_status_is_ok(s)) {
+            printf("list object failed, req_id:%s\n", s->req_id);
+            break;
+        }
+        cos_list_object_content_t *content = NULL;
+        char *line = NULL;
+        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
+            s = cos_delete_object(options, &bucket, &content->key, &resp_headers);
+            log_status(s);
+            if (!cos_status_is_ok(s)) {
+                printf("delete object[%s] failed, req_id:%s\n", content->key.data, s->req_id);
+            }
+        }
+        is_truncated = list_params->truncated;
+        marker = list_params->next_marker;
+    }
+    cos_pool_destroy(p);
+}
+
+void test_move()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+    
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    
+    //设置对象复制
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+    cos_str_set(&src_endpoint, "ap-guangzhou.myqcloud.com");
+    cos_str_set(&src_object, TEST_OBJECT_NAME2);
+    
+    cos_copy_object_params_t *params = NULL;
+    params = cos_create_copy_object_params(p);
+    s = cos_copy_object(options, &bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
+    log_status(s);
+    if (cos_status_is_ok(s)) {
+        s = cos_delete_object(options, &bucket, &src_object, &resp_headers);
+        log_status(s);
+        printf("move object succeeded\n");
+    } else {
+        printf("move object failed\n");
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p);
+}
+
+// 基础图片处理
+void test_ci_base_image_process()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *params = NULL;
+      
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    params = cos_table_make(p, 1);
+    apr_table_addn(params, "imageMogr2/thumbnail/!50p", "");
+    cos_str_set(&file, "test.jpg");
+    cos_str_set(&object, "test.jpg");
+    s = cos_get_object_to_file(options, &bucket, &object, NULL, params, &file, &resp_headers);
+    log_status(s);
+    if (!cos_status_is_ok(s)) {
+        printf("cos_get_object_to_file fail, req_id:%s\n", s->req_id);
+    }
+    cos_pool_destroy(p);
+}
+
+// 持久化处理
+void test_ci_image_process()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    ci_operation_result_t *results = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.jpg");
+
+    // 云上数据处理
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"imageView2/format/png\"}]}");
+    s = ci_image_process(options, &bucket, &object, headers, &resp_headers, &results);
+    log_status(s);
+    printf("origin key: %s\n", results->origin.key.data);
+    printf("process key: %s\n", results->object.key.data);
+
+    // 上传时处理
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"imageView2/format/png\"}]}");
+    cos_str_set(&file, "test.jpg");
+    cos_str_set(&object, "test.jpg");
+    s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
+    log_status(s);
+    printf("origin key: %s\n", results->origin.key.data);
+    printf("process key: %s\n", results->object.key.data);
+
+    cos_pool_destroy(p);
+}
+
+// 二维码识别
+void test_ci_image_qrcode()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    ci_operation_result_t *results = NULL;
+    ci_qrcode_info_t *content = NULL;
+    ci_qrcode_result_t *result2 = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.jpg");
+    
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"QRcode/cover/1\"}]}");
+    // 上传时识别
+    cos_str_set(&file, "test.jpg");
+    cos_str_set(&object, "test.jpg");
+    s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
+    log_status(s);
+    if (!cos_status_is_ok(s)) {
+        printf("put object failed\n");
+    }
+    printf("CodeStatus: %d\n", results->object.code_status);
+    cos_list_for_each_entry(ci_qrcode_info_t, content, &results->object.qrcode_info, node) {
+        printf("CodeUrl: %s\n", content->code_url.data);
+        printf("Point: %s\n", content->point[0].data);
+        printf("Point: %s\n", content->point[1].data);
+        printf("Point: %s\n", content->point[2].data);
+        printf("Point: %s\n", content->point[3].data);
+    }
+
+    // 下载时识别
+    s = ci_get_qrcode(options, &bucket, &object, 1, NULL, NULL, &resp_headers, &result2);
+    log_status(s);
+    if (!cos_status_is_ok(s)) {
+        printf("get object failed\n");
+    }
+    printf("CodeStatus: %d\n", result2->code_status);
+    cos_list_for_each_entry(ci_qrcode_info_t, content, &result2->qrcode_info, node) {
+        printf("CodeUrl: %s\n", content->code_url.data);
+        printf("Point: %s\n", content->point[0].data);
+        printf("Point: %s\n", content->point[1].data);
+        printf("Point: %s\n", content->point[2].data);
+        printf("Point: %s\n", content->point[3].data);
+    }
+    printf("ImageResult: %s\n", result2->result_image.data);
+
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
+// 图片压缩
+void test_ci_image_compression()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *params = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    params = cos_table_make(p, 1);
+    apr_table_addn(params, "imageMogr2/format/tpg", "");
+    cos_str_set(&object, "test.jpg");
+    cos_str_set(&file, "test.tpg");
+    s = cos_get_object_to_file(options, &bucket, &object, NULL, params, &file, &resp_headers);
+    log_status(s);
+    if (!cos_status_is_ok(s)) {
+        printf("cos_get_object_to_file fail, req_id:%s\n", s->req_id);
+    }
+
+    params = cos_table_make(p, 1);
+    apr_table_addn(params, "imageMogr2/format/heif", "");
+    cos_str_set(&file, "test.heif");
+    s = cos_get_object_to_file(options, &bucket, &object, NULL, params, &file, &resp_headers);
+    log_status(s);
+    if (!cos_status_is_ok(s)) {
+        printf("cos_get_object_to_file fail, req_id:%s\n", s->req_id);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int exit_code = -1;
@@ -1767,6 +2165,7 @@ int main(int argc, char *argv[])
     //test_sign();
     //test_object();
     //multipart_upload_file_from_file();
+    //multipart_upload_file_from_buffer();
     //abort_multipart_upload();
     //list_multipart();
     
@@ -1781,7 +2180,13 @@ int main(int argc, char *argv[])
     //test_replication();
     //test_part_copy();
     //test_copy_with_part_copy();
-    
+    //test_move();
+    //test_directory();
+    //test_ci_base_image_process();
+    //test_ci_image_process();
+    //test_ci_image_qrcode();
+    //test_ci_image_compression();
+
     //cos_http_io_deinitialize last
     cos_http_io_deinitialize();
 

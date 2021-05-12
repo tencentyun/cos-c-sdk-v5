@@ -284,6 +284,11 @@ cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p);
 **/
 cos_object_key_t *cos_create_cos_object_key(cos_pool_t *p);
 
+// ci qrcode
+ci_qrcode_info_t *ci_create_qrcode_info(cos_pool_t *p);
+ci_operation_result_t *ci_create_operation_result(cos_pool_t *p);
+ci_qrcode_result_t *ci_create_qrcode_result(cos_pool_t *p);
+
 /**
   * @brief  create cos live channel publish url content for delete objects
   * @return cos live channel publish url content

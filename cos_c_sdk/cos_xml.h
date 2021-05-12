@@ -132,10 +132,12 @@ void build_delete_objects_body(cos_pool_t *p, cos_list_t *object_list, int is_qu
 mxml_node_t *set_xmlnode_value_str(mxml_node_t *parent, const char *name, const cos_string_t *value);
 mxml_node_t *set_xmlnode_value_int(mxml_node_t *parent, const char *name, int value);
 mxml_node_t *set_xmlnode_value_int64(mxml_node_t *parent, const char *name, int64_t value);
+mxml_node_t	*set_xmlnode_value_int64(mxml_node_t *parent, const char *name, int64_t value);
 
 int get_xmlnode_value_str(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, cos_string_t *value);
 int get_xmlnode_value_int(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, int *value);
 int get_xmlnode_value_int64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, int64_t *value);
+int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, uint64_t *value);
 
 /**
   * @brief  build xml for checkpoint
@@ -257,6 +259,7 @@ int cos_lifecycle_rules_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_
 **/  
 void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param);
 
+mxml_node_t *cos_serveral_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param);
 /**
   * @brief parse from a parent xml node. 
   * eg: <pxml><cxml>test<cxml></pxml>
@@ -346,6 +349,12 @@ void cos_live_channel_history_content_parse(cos_pool_t *p, mxml_node_t * xml_nod
 void cos_live_channel_history_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *live_record_list);
 int cos_live_channel_history_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *live_record_list);
+
+/*
+ * CI parse
+ */
+int ci_get_operation_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_operation_result_t *res);
+int ci_get_qrcode_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_qrcode_result_t *res);
 
 COS_CPP_END
 
