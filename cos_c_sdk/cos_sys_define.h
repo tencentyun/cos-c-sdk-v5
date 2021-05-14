@@ -104,6 +104,7 @@ typedef apr_array_header_t cos_array_header_t;
 
 #define COS_MAX_XML_NODE_VALUE_LEN 1024
 #define COS_MAX_INT64_STRING_LEN 64
+#define COS_MAX_UINT64_STRING_LEN 64
 
 #define COS_CONNECT_TIMEOUT 10
 #define COS_DNS_CACHE_TIMOUT 60
@@ -123,7 +124,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define CR     (char) 13
 #define CRLF   "\x0d\x0a"
 
-#define COS_VERSION    "5.0.8"
+#define COS_VERSION    "5.0.9"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
 #define COS_HTTP_PREFIX   "http://"

@@ -8,6 +8,7 @@
 #include "cos_xml.h"
 #include "cos_api.h"
 #include "cos_resumable.h"
+#include "cos_crc64.h"
 
 int32_t cos_get_thread_num(cos_resumable_clt_params_t *clt_params)
 {
@@ -77,10 +78,8 @@ int cos_open_checkpoint_file(cos_pool_t *pool,  cos_string_t *checkpoint_path, c
 {
     apr_status_t s;
     apr_file_t *thefile;
-    char buf[256];
     s = apr_file_open(&thefile, checkpoint_path->data, APR_CREATE | APR_WRITE, APR_UREAD | APR_UWRITE | APR_GREAD, pool);
     if (s == APR_SUCCESS) {
-        cos_error_log("apr_file_info_get failure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
         checkpoint->thefile = thefile;
     }
     return s;
@@ -245,6 +244,31 @@ void cos_build_upload_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint,
     checkpoint->part_num = i;
 }
 
+void cos_build_download_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, cos_string_t *file_path, 
+        const char *object_name, int64_t object_size, const char *object_last_modified, 
+        const char *object_etag, int64_t part_size) 
+{
+    int i = 0; 
+
+    checkpoint->cp_type = COS_CP_DOWNLOAD;
+    checkpoint->thefile = NULL;
+    cos_str_set(&checkpoint->file_path, cos_pstrdup(pool, file_path));
+    cos_str_set(&checkpoint->object_name, object_name);
+    checkpoint->object_size = object_size;
+    cos_str_set(&checkpoint->object_last_modified, object_last_modified);
+    cos_str_set(&checkpoint->object_etag, object_etag);
+
+    checkpoint->part_size = part_size;
+    for (; i * part_size < object_size; i++) {
+        checkpoint->parts[i].index = i; 
+        checkpoint->parts[i].offset = i * part_size;
+        checkpoint->parts[i].size = cos_min(part_size, (object_size - i * part_size));
+        checkpoint->parts[i].completed = COS_FALSE;
+        cos_str_set(&checkpoint->parts[i].etag , ""); 
+    }    
+    checkpoint->part_num = i; 
+}
+
 int cos_dump_checkpoint(cos_pool_t *parent_pool, const cos_checkpoint_t *checkpoint) 
 {
     char *xml_body = NULL;
@@ -340,12 +364,28 @@ int cos_is_upload_checkpoint_valid(cos_pool_t *pool, cos_checkpoint_t *checkpoin
     return COS_FALSE;
 }
 
-void cos_update_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, int32_t part_index, cos_string_t *etag) 
+int cos_is_download_checkpoint_valid(cos_pool_t *pool, 
+        cos_checkpoint_t *checkpoint, const char *object_name, 
+        int64_t object_size, const char *object_last_modified, 
+        const char *object_etag)
+{
+    if (cos_verify_checkpoint_md5(pool, checkpoint) &&
+            (checkpoint->cp_type == COS_CP_DOWNLOAD) &&
+            (checkpoint->object_size == object_size) &&
+            !strcmp(checkpoint->object_last_modified.data, object_last_modified) &&
+            !strcasecmp(checkpoint->object_etag.data, object_etag)) {
+        return COS_TRUE;
+    }
+    return COS_FALSE;
+}
+
+void cos_update_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, int32_t part_index, cos_string_t *etag, uint64_t crc64) 
 {
     char *p = NULL;
     checkpoint->parts[part_index].completed = COS_TRUE;
     p = apr_pstrdup(pool, etag->data);
     cos_str_set(&checkpoint->parts[part_index].etag, p);
+    checkpoint->parts[part_index].crc64 = crc64;
 }
 
 void cos_get_checkpoint_undo_parts(cos_checkpoint_t *checkpoint, int *part_num, cos_checkpoint_part_t *parts)
@@ -682,7 +722,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
             break;
         } else if(rv == APR_SUCCESS) {
             task_res = (cos_part_task_result_t*)task_result;
-            cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag);
+            cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, 0);
             rv = cos_dump_checkpoint(parent_pool, checkpoint);
             if (rv != COSE_OK) {
                 int idx = task_res->part->index;
@@ -702,7 +742,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
     // deal with left successful parts
     while(APR_SUCCESS == apr_queue_trypop(completed_parts, &task_result)) {
         task_res = (cos_part_task_result_t*)task_result;
-        cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag);
+        cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, 0);
         consume_bytes += task_res->part->size;
         has_left_result = COS_TRUE;
     }
@@ -1035,31 +1075,49 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
     cos_table_t *resp_headers = NULL;
     int part_num;
     char *etag;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *paras = NULL;
+    char range_buf[64];
+    const cos_request_options_t *options = NULL;
+    int res = COSE_OK;
     
     params = (cos_upload_thread_params_t *)data;
     if (apr_atomic_read32(params->failed) > 0) {
         apr_atomic_inc32(params->launched);
         return NULL;
     }
-
+    options = &params->options;
     part_num = params->part->index + 1;
     download_file = cos_create_upload_file(params->options.pool);
     cos_str_set(&download_file->filename, params->filepath->data);
     download_file->file_pos = params->part->offset;
     download_file->file_last = params->part->offset + params->part->size;
 
-    s = cos_download_part_to_file(&params->options, params->bucket, params->object, download_file, &resp_headers);
-    if (!cos_status_is_ok(s)) {
+    headers = cos_table_create_if_null(options, headers, 1);
+    paras = cos_table_create_if_null(options, paras, 0);
+    apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
+    apr_table_add(headers, COS_RANGE, range_buf);
+
+    cos_init_object_request(options, params->bucket, params->object, HTTP_GET, &req, paras, headers, NULL, 0, &resp);
+    s = cos_status_create(options->pool);
+    res = cos_init_read_response_body_to_file_part(options->pool, download_file, resp);
+    if (res != COSE_OK) {
+        cos_file_error_status_set(s, res);
         apr_atomic_inc32(params->failed);
         params->result->s = s;
         apr_queue_push(params->failed_parts, params->result);
         return s;
     }
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, &resp_headers);
 
-    cos_warn_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
+    cos_debug_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
 
     etag = apr_pstrdup(params->options.pool, (char*)apr_table_get(resp_headers, "ETag"));
     cos_str_set(&params->result->etag, etag);
+    params->result->crc64 = resp->crc64;
     apr_atomic_inc32(params->completed);
     apr_queue_push(params->completed_parts, params->result);
     return NULL;
@@ -1082,7 +1140,6 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
                                                    int64_t part_size,
                                                    cos_progress_callback progress_callback) 
 {
-    cos_pool_t *subpool = NULL;
     cos_pool_t *parent_pool = NULL;
     cos_status_t *s = NULL;
     cos_status_t *ret = NULL;
@@ -1106,30 +1163,44 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     const char *value = NULL;
     int64_t file_size = 0;
     cos_table_t *resp_headers = NULL;
+    cos_string_t tmp_filename;
+    cos_file_buf_t *fb = NULL;
+    const char *crc64_str = NULL;
+    cos_checkpoint_t *checkpoint = NULL;
+
+    cos_get_temporary_file_name(options->pool, filepath, &tmp_filename);
 
     // prepare
     parent_pool = options->pool;
     ret = cos_status_create(parent_pool);
     // get object file size
-    cos_pool_create(&subpool, parent_pool);
-    options->pool = subpool;
     s = cos_head_object(options, bucket, object, NULL, &resp_headers);
     if (!cos_status_is_ok(s)) {
         s = cos_status_dup(parent_pool, s);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return s;
     }
     value = apr_table_get(resp_headers, COS_CONTENT_LENGTH);
     if (NULL == value) {
         cos_status_set(ret, COSE_INVALID_ARGUMENT, COS_LACK_OF_CONTENT_LEN_ERROR_CODE, NULL);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
         return ret;
     }
     file_size = cos_atoi64(value);
-    cos_pool_destroy(subpool);
-    options->pool = parent_pool;
+    crc64_str = apr_table_get(resp_headers, COS_HASH_CRC64_ECMA);
+
+    // checkpoint
+    checkpoint = cos_create_checkpoint_content(parent_pool);
+    cos_build_download_checkpoint(options->pool, checkpoint, filepath, object->data, file_size, "", "", part_size);
+
+    // Open and truncate the file
+    fb = cos_create_file_buf(options->pool);
+    if ((rv = cos_open_file_for_write_notrunc(options->pool, tmp_filename.data, fb)) != COSE_OK) {
+        cos_error_log("Open write file fail, filename:%s\n", tmp_filename.data);
+        cos_file_error_status_set(s, rv);
+        return s;
+    }
+    apr_file_trunc(fb->file, file_size);
+    apr_file_close(fb->file);
+
     // init download params
     part_size = cos_get_safe_size_for_download(part_size);
     part_num = cos_get_part_num(file_size, part_size);
@@ -1137,8 +1208,8 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     cos_build_parts(file_size, part_size, parts);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
     thr_params = (cos_transport_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_transport_thread_params_t) * part_num);
-    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath, &upload_id, parts, results);
-    
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, &upload_id, parts, results);
+
     // download parts    
     rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);
     if (APR_SUCCESS != rv) {
@@ -1174,6 +1245,7 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
             break;
         } else if(rv == APR_SUCCESS) {
             task_res = (cos_part_task_result_t*)task_result;
+            cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, task_res->crc64);
             if (NULL != progress_callback) {
                 consume_bytes += task_res->part->size;
                 progress_callback(consume_bytes, file_size);
@@ -1185,6 +1257,7 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     // deal with left successful parts
     while(APR_SUCCESS == apr_queue_trypop(completed_parts, &task_result)) {
         task_res = (cos_part_task_result_t*)task_result;
+        cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, task_res->crc64);
         if (NULL != progress_callback) {
             consume_bytes += task_res->part->size;
             progress_callback(consume_bytes, file_size);
@@ -1203,8 +1276,255 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     // successful
     cos_destroy_thread_pool(thr_params, part_num);
 
-    s = cos_status_create(options->pool);
+    if (is_enable_crc(options) &&  crc64_str) {
+        uint64_t iter_crc64 = 0; 
+        for (i = 0; i < checkpoint->part_num; i++) {
+            iter_crc64 = cos_crc64_combine(iter_crc64, checkpoint->parts[i].crc64, checkpoint->parts[i].size);
+        }
+        if ((rv = cos_check_crc_consistent(iter_crc64, resp_headers, s)) != COSE_OK) { 
+            apr_file_remove(tmp_filename.data, options->pool);
+            cos_inconsistent_error_status_set(s, rv);
+            return s;
+        }    
+    }
+
+    rv = cos_temp_file_rename(s, tmp_filename.data, filepath->data, options->pool);
+    if (rv != APR_SUCCESS) {
+        cos_status_set(s, rv, COS_RENAME_FILE_ERROR_CODE, NULL);
+    }
+    return s;
+}
+
+cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options,
+                                                   cos_string_t *bucket, 
+                                                   cos_string_t *object, 
+                                                   cos_string_t *filepath,                           
+                                                   cos_table_t *headers,
+                                                   cos_table_t *params,
+                                                   int32_t thread_num,
+                                                   int64_t part_size,
+                                                   cos_string_t *checkpoint_path,
+                                                   cos_progress_callback progress_callback) 
+{
+    cos_pool_t *parent_pool = NULL;
+    cos_status_t *s = NULL;
+    cos_status_t *ret = NULL;
+    cos_string_t upload_id;
+    cos_checkpoint_part_t *parts;
+    cos_part_task_result_t *results;
+    cos_part_task_result_t *task_res;
+    cos_transport_thread_params_t *thr_params;
+    apr_thread_pool_t *thrp;
+    apr_uint32_t launched = 0;
+    apr_uint32_t failed = 0;
+    apr_uint32_t completed = 0;
+    apr_uint32_t total_num = 0;
+    apr_queue_t *failed_parts;
+    apr_queue_t *completed_parts;
+    int64_t consume_bytes = 0;
+    void *task_result;
+    int part_num = 0;
+    int i = 0;
+    int rv;
+    int need_init_download = COS_TRUE;
+    const char *object_size_str = NULL, *object_last_modified = NULL, *object_etag = NULL, *crc64_str = NULL;
+    int64_t file_size = 0;
+    cos_string_t tmp_filename;
+    cos_file_buf_t *fb = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_checkpoint_t *checkpoint = NULL;
+
+    cos_get_temporary_file_name(options->pool, filepath, &tmp_filename);
+
+    // prepare
+    parent_pool = options->pool;
+    ret = cos_status_create(parent_pool);
+
+    // get object file size
+    s = cos_head_object(options, bucket, object, NULL, &resp_headers);
+    if (!cos_status_is_ok(s)) {
+        s = cos_status_dup(parent_pool, s);
+        return s;
+    }
+    object_size_str = apr_table_get(resp_headers, COS_CONTENT_LENGTH);
+    object_last_modified = apr_table_get(resp_headers, "Last-Modified");
+    object_etag = apr_table_get(resp_headers, "ETag");
+    crc64_str = apr_table_get(resp_headers, COS_HASH_CRC64_ECMA);
+    if (!object_size_str || !object_last_modified || !object_etag) {
+        cos_status_set(ret, COSE_INVALID_ARGUMENT, COS_LACK_OF_CONTENT_LEN_ERROR_CODE, NULL);
+        return ret;
+    }
+    file_size = cos_atoi64(object_size_str);
+
+    // checkpoint
+    checkpoint = cos_create_checkpoint_content(parent_pool);
+    if (cos_does_file_exist(checkpoint_path, parent_pool)) {
+        apr_finfo_t tmp_finfo;
+        if (COSE_OK == cos_load_checkpoint(parent_pool, checkpoint_path, checkpoint) && 
+                cos_is_download_checkpoint_valid(parent_pool, checkpoint, object->data, file_size, object_last_modified, object_etag) &&
+                cos_does_file_exist(&tmp_filename, options->pool) &&
+                apr_stat(&tmp_finfo, tmp_filename.data, APR_FINFO_SIZE, options->pool) == APR_SUCCESS && 
+                file_size == tmp_finfo.size) {
+            need_init_download = COS_FALSE;
+        } else {
+            apr_file_remove(checkpoint_path->data, parent_pool);
+        }
+    }
+
+    if (need_init_download) {
+        cos_build_download_checkpoint(options->pool, checkpoint, filepath, object->data, file_size, object_last_modified, object_etag, part_size);
+    }
+
+    rv = cos_open_checkpoint_file(parent_pool, checkpoint_path, checkpoint);
+    if (rv != APR_SUCCESS) {
+        cos_status_set(ret, rv, COS_OPEN_FILE_ERROR_CODE, NULL);
+        return ret;
+    }
+
+    // Open and truncate the file
+    fb = cos_create_file_buf(options->pool);
+    if ((rv = cos_open_file_for_write_notrunc(options->pool, tmp_filename.data, fb)) != COSE_OK) {
+        apr_file_close(checkpoint->thefile);
+        cos_error_log("Open write file fail, filename:%s\n", tmp_filename.data);
+        cos_file_error_status_set(s, rv);
+        return s;
+    }
+    apr_file_trunc(fb->file, file_size);
+    apr_file_close(fb->file);
+
+    // init download params
+    part_size = cos_get_safe_size_for_download(part_size);
+    part_num = cos_get_part_num(file_size, part_size);
+    parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
+    cos_get_checkpoint_undo_parts(checkpoint, &part_num, parts);
+    results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
+    thr_params = (cos_transport_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_transport_thread_params_t) * part_num);
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, &upload_id, parts, results);
+
+    // download parts    
+    rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_THREAD_POOL_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    rv = apr_queue_create(&failed_parts, part_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_QUEUE_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    rv = apr_queue_create(&completed_parts, part_num, parent_pool);
+    if (APR_SUCCESS != rv) {
+        cos_status_set(ret, rv, COS_CREATE_QUEUE_ERROR_CODE, NULL); 
+        return ret;
+    }
+
+    // launch
+    cos_set_task_tracker(thr_params, part_num, &launched, &failed, &completed, failed_parts, completed_parts);
+    for (i = 0; i < part_num; i++) {
+        apr_thread_pool_push(thrp, download_part, thr_params + i, 0, NULL);
+    }
+
+    // wait until all tasks exit
+    total_num = apr_atomic_read32(&launched) + apr_atomic_read32(&failed) + apr_atomic_read32(&completed);
+    for ( ; total_num < (apr_uint32_t)part_num; ) {
+        rv = apr_queue_trypop(completed_parts, &task_result);
+        if (rv == APR_EINTR || rv == APR_EAGAIN) {
+            apr_sleep(1000);
+        } else if(rv == APR_EOF) {
+            break;
+        } else if(rv == APR_SUCCESS) {
+            task_res = (cos_part_task_result_t*)task_result;
+            cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, task_res->crc64);
+            rv = cos_dump_checkpoint(parent_pool, checkpoint);
+            if (rv != COSE_OK) {
+                int idx = task_res->part->index;
+                cos_status_set(ret, rv, COS_WRITE_FILE_ERROR_CODE, NULL);
+                apr_atomic_inc32(&failed);
+                thr_params[idx].result->s = ret;
+                apr_queue_push(failed_parts, thr_params[idx].result);
+            }
+            if (NULL != progress_callback) {
+                consume_bytes += task_res->part->size;
+                progress_callback(consume_bytes, file_size);
+            }
+        }
+        total_num = apr_atomic_read32(&launched) + apr_atomic_read32(&failed) + apr_atomic_read32(&completed);
+    }
+
+    // deal with left successful parts
+    while(APR_SUCCESS == apr_queue_trypop(completed_parts, &task_result)) {
+        task_res = (cos_part_task_result_t*)task_result;
+        cos_update_checkpoint(parent_pool, checkpoint, task_res->part->index, &task_res->etag, task_res->crc64);
+        rv = cos_dump_checkpoint(parent_pool, checkpoint);
+        if (rv != COSE_OK) {
+            cos_status_set(ret, rv, COS_WRITE_FILE_ERROR_CODE, NULL);
+            return ret;
+        }
+        if (NULL != progress_callback) {
+            consume_bytes += task_res->part->size;
+            progress_callback(consume_bytes, file_size);
+        }
+    }
+    apr_file_close(checkpoint->thefile);
+
+    // failed
+    if (apr_atomic_read32(&failed) > 0) {
+        apr_queue_pop(failed_parts, &task_result);
+        task_res = (cos_part_task_result_t*)task_result;
+        s = cos_status_dup(parent_pool, task_res->s);
+        cos_destroy_thread_pool(thr_params, part_num);
+        return s;
+    }
+
+    // successful
+    cos_destroy_thread_pool(thr_params, part_num);
+
+    if (is_enable_crc(options) &&  crc64_str) {
+        uint64_t iter_crc64 = 0; 
+        for (i = 0; i < checkpoint->part_num; i++) {
+            iter_crc64 = cos_crc64_combine(iter_crc64, checkpoint->parts[i].crc64, checkpoint->parts[i].size);
+        }
+        if ((rv = cos_check_crc_consistent(iter_crc64, resp_headers, s)) != COSE_OK) { 
+            apr_file_remove(checkpoint_path->data, parent_pool);
+            apr_file_remove(tmp_filename.data, options->pool);
+            cos_inconsistent_error_status_set(s, rv);
+            return s;
+        }    
+    }
+    rv = cos_temp_file_rename(s, tmp_filename.data, filepath->data, options->pool);
+    if (rv != APR_SUCCESS) {
+        cos_status_set(s, rv, COS_RENAME_FILE_ERROR_CODE, NULL);
+        return s;
+    }
+    // remove checkpoint file
+    apr_file_remove(checkpoint_path->data, parent_pool);
     return s;
 }
 
 
+cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
+        cos_string_t *bucket, 
+        cos_string_t *object, 
+        cos_string_t *filepath,
+        cos_table_t *headers,
+        cos_table_t *params,
+        cos_resumable_clt_params_t *clt_params,
+        cos_progress_callback progress_callback) 
+{
+    int32_t thread_num = 0;
+    int64_t part_size = 0;
+    cos_status_t *s = NULL; 
+    cos_string_t checkpoint_path;
+
+    thread_num = cos_get_thread_num(clt_params);
+    part_size = clt_params->part_size;
+    if (clt_params->enable_checkpoint) {
+        cos_get_checkpoint_path(clt_params, filepath, options->pool, &checkpoint_path);
+        s = cos_resumable_download_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, &checkpoint_path, progress_callback);
+    } else {
+        s = cos_resumable_download_file_without_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, progress_callback);
+    }
+    return s;
+}

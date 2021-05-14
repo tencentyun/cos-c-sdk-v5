@@ -818,6 +818,107 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     return COSE_OK;    
 }
 
+// 云上数据处理 https://cloud.tencent.com/document/product/460/18147
+cos_status_t *ci_image_process(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
+                                cos_table_t *headers,
+                                cos_table_t **resp_headers,
+                                ci_operation_result_t **results)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, "image_process", "");
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_object_request(options, bucket, object, HTTP_POST, &req,
+            query_params, headers, NULL, 0, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    *results = ci_create_operation_result(options->pool);
+    res = ci_get_operation_result_parse_from_body(options->pool, &resp->body, *results);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
+
+// 图片持久化处理-上传时处理 https://cloud.tencent.com/document/product/460/18147
+// 二维码识别-上传时识别 https://cloud.tencent.com/document/product/460/37513
+cos_status_t *ci_put_object_from_file(const cos_request_options_t *options,
+                                       const cos_string_t *bucket, 
+                                       const cos_string_t *object, 
+                                       const cos_string_t *filename,
+                                       cos_table_t *headers, 
+                                       cos_table_t **resp_headers,
+                                       ci_operation_result_t **results)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_list_t resp_body;
+
+    cos_list_init(&resp_body);
+    s = cos_do_put_object_from_file(options, bucket, object, filename, headers, NULL, NULL, resp_headers, &resp_body);
+    
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+    *results = ci_create_operation_result(options->pool);
+    res = ci_get_operation_result_parse_from_body(options->pool, &resp_body, *results);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
+
+// 二维码识别-下载时识别 https://cloud.tencent.com/document/product/436/54070
+cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
+                                int cover,
+                                cos_table_t *headers,
+                                cos_table_t *query_params, 
+                                cos_table_t **resp_headers,
+                                ci_qrcode_result_t **results)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    char cover_str[16] = {0};
+    
+    snprintf(cover_str, 16, "%d", cover);
+    query_params = cos_table_create_if_null(options, query_params, 2);
+    apr_table_add(query_params, "ci-process", "QRcode");
+    apr_table_add(query_params, "cover", cover_str);
+
+    headers = cos_table_create_if_null(options, headers, 0);
+    cos_init_object_request(options, bucket, object, HTTP_GET, &req,
+            query_params, headers, NULL, 0, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+    *results = ci_create_qrcode_result(options->pool);
+    res = ci_get_qrcode_result_parse_from_body(options->pool, &resp->body, *results);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
 
 #if 0
 char *cos_gen_signed_url(const cos_request_options_t *options,

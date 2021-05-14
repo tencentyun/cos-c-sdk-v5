@@ -1010,7 +1010,7 @@ void build_replication_body(cos_pool_t *p, cos_replication_params_t *replication
     b = cos_buf_pack(p, cors_xml, strlen(cors_xml));
     cos_list_add_tail(&b->node, body);
 }
-
+;
 void build_xml_node(mxml_node_t *pnode, const char *xml, cos_string_t *param)
 {
     if (!cos_is_null_string(param)) {
@@ -1624,7 +1624,7 @@ void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node
 {
     const char *content;
     char *content_in_pool;
-    mxml_node_t *node;
+    mxml_node_t *node = NULL;
 
     node = mxmlFindElement(pnode, root, xml, NULL, NULL, MXML_DESCEND_FIRST);
     content = mxmlGetOpaque(node);
@@ -1632,6 +1632,21 @@ void cos_common_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node
         content_in_pool = apr_pstrdup(p, content);
         cos_str_set(param, content_in_pool);
     }
+}
+
+mxml_node_t *cos_serveral_parse_from_xml_node(cos_pool_t *p, mxml_node_t *pnode, mxml_node_t *root, const char *xml, cos_string_t *param)
+{
+    const char *content;
+    char *content_in_pool;
+    mxml_node_t *node = NULL;
+
+    node = mxmlFindElement(pnode, root, xml, NULL, NULL, MXML_DESCEND);
+    content = mxmlGetOpaque(node);
+    if (content != NULL) {
+        content_in_pool = apr_pstrdup(p, content);
+        cos_str_set(param, content_in_pool);
+    }
+    return node;
 }
 
 void cos_common_parse_from_parent_node(cos_pool_t *p, mxml_node_t *root, const char *pxml, const char *cxml, cos_string_t *param)
@@ -2537,6 +2552,15 @@ mxml_node_t	*set_xmlnode_value_int64(mxml_node_t *parent, const char *name, int6
     return mxmlNewText(node, 0, buff);
 }
 
+mxml_node_t *set_xmlnode_value_uint64(mxml_node_t *parent, const char *name, uint64_t value)
+{
+    mxml_node_t *node;
+    char buff[COS_MAX_UINT64_STRING_LEN];
+    node = mxmlNewElement(parent, name);
+    apr_snprintf(buff, COS_MAX_UINT64_STRING_LEN, "%" APR_UINT64_T_FMT, value);
+    return mxmlNewText(node, 0, buff);
+}
+
 int get_xmlnode_value_str(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, cos_string_t *value)
 {
     char *node_content;
@@ -2567,6 +2591,17 @@ int get_xmlnode_value_int64(cos_pool_t *p, mxml_node_t *xml_node, const char *xm
         return COS_FALSE;
     }
     *value = cos_atoi64(node_content);
+    return COS_TRUE;
+}
+
+int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, uint64_t *value)
+{
+    char *node_content;
+    node_content = get_xmlnode_value(p, xml_node, xml_path);
+    if (NULL == node_content) {
+        return COS_FALSE;
+    }    
+    *value = cos_atoui64(node_content);
     return COS_TRUE;
 }
 
@@ -2632,6 +2667,7 @@ char *cos_build_checkpoint_xml(cos_pool_t *p, const cos_checkpoint_t *checkpoint
         set_xmlnode_value_int64(part_node, "Size", checkpoint->parts[i].size);
         set_xmlnode_value_int(part_node, "Completed", checkpoint->parts[i].completed);
         set_xmlnode_value_str(part_node, "ETag", &checkpoint->parts[i].etag);
+        set_xmlnode_value_uint64(part_node, "Crc64", checkpoint->parts[i].crc64);
     }
 
     // dump
@@ -2710,10 +2746,101 @@ int cos_checkpoint_parse_from_body(cos_pool_t *p, const char *xml_body, cos_chec
         get_xmlnode_value_int64(p, node, "Size", &checkpoint->parts[index].size);
         get_xmlnode_value_int(p, node, "Completed", &checkpoint->parts[index].completed);
         get_xmlnode_value_str(p, node, "ETag", &checkpoint->parts[index].etag);
+        get_xmlnode_value_uint64(p, node, "Crc64", &checkpoint->parts[index].crc64);
         node = mxmlFindElement(node, parts_node, "Part", NULL, NULL, MXML_DESCEND);
     }
 
     mxmlDelete(root);
 
     return COSE_OK;
+}
+
+int ci_get_operation_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_operation_result_t *res)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *onode = NULL;
+    mxml_node_t *pnode = NULL;
+    mxml_node_t *node = NULL;
+    const char *kOriginInfo = "OriginalInfo";
+    const char *kProcessResults = "ProcessResults";
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        onode = mxmlFindElement(root, root, kOriginInfo, NULL, NULL, MXML_DESCEND);
+        if (onode != NULL) {
+            get_xmlnode_value_str(p, onode, "Key", &res->origin.key);
+            get_xmlnode_value_str(p, onode, "Location", &res->origin.location);
+            get_xmlnode_value_str(p, onode, "ETag", &res->origin.etag);
+            node = mxmlFindElement(onode, onode, "ImageInfo", NULL, NULL, MXML_DESCEND);
+            if (node != NULL) {
+                get_xmlnode_value_str(p, node, "Format", &res->origin.image_info.format);
+                get_xmlnode_value_int(p, node, "Width", &res->origin.image_info.width);
+                get_xmlnode_value_int(p, node, "Height", &res->origin.image_info.height);
+                get_xmlnode_value_int(p, node, "Quality", &res->origin.image_info.quality);
+                get_xmlnode_value_str(p, node, "Ave", &res->origin.image_info.ave);
+                get_xmlnode_value_int(p, node, "Orientation", &res->origin.image_info.orientation);
+            }
+        }
+        pnode = mxmlFindElement(root, root, kProcessResults, NULL, NULL, MXML_DESCEND);
+        if (pnode != NULL) {
+            pnode = mxmlFindElement(pnode, pnode, "Object", NULL, NULL, MXML_DESCEND);
+            if (pnode != NULL) {
+                get_xmlnode_value_str(p, pnode, "Key", &res->object.key);
+                get_xmlnode_value_str(p, pnode, "Location", &res->object.location);
+                get_xmlnode_value_str(p, pnode, "Format", &res->object.format);
+                get_xmlnode_value_int(p, pnode, "Width", &res->object.width);
+                get_xmlnode_value_int(p, pnode, "Height", &res->object.height);
+                get_xmlnode_value_int(p, pnode, "Size", &res->object.size);
+                get_xmlnode_value_int(p, pnode, "Quality", &res->object.quality);
+                get_xmlnode_value_str(p, pnode, "ETag", &res->object.etag);
+                get_xmlnode_value_int(p, pnode, "CodeStatus", &res->object.code_status);
+                node = mxmlFindElement(pnode, pnode, "QRcodeInfo", NULL, NULL, MXML_DESCEND);
+                while (node != NULL) {
+                    mxml_node_t *tmpnode = NULL, *tmp = NULL;
+                    ci_qrcode_info_t *qrcode = ci_create_qrcode_info(p);
+                    get_xmlnode_value_str(p, node, "CodeUrl", &qrcode->code_url);
+                    tmpnode = mxmlFindElement(node, node, "CodeLocation", NULL, NULL, MXML_DESCEND);
+                    if (tmpnode != NULL) {
+                        tmp = cos_serveral_parse_from_xml_node(p, tmpnode, tmpnode, "Point", &qrcode->point[0]);
+                        tmp = cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[1]);
+                        tmp = cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[2]);
+                        cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[3]);
+                    }
+                    cos_list_add_tail(&qrcode->node, &res->object.qrcode_info);
+                    node = mxmlFindElement(node, pnode, "QRcodeInfo", NULL, NULL, MXML_DESCEND);
+                }
+            }
+        }
+        mxmlDelete(root);
+    }
+    return ret;
+}
+
+int ci_get_qrcode_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_qrcode_result_t *res)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *node = NULL;
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        get_xmlnode_value_int(p, root, "CodeStatus", &res->code_status);
+        get_xmlnode_value_str(p, root, "ResultImage", &res->result_image);
+        node = mxmlFindElement(root, root, "QRcodeInfo", NULL, NULL, MXML_DESCEND);
+        while (node != NULL) {
+            mxml_node_t *tmpnode = NULL, *tmp = NULL;
+            ci_qrcode_info_t *qrcode = ci_create_qrcode_info(p);
+            get_xmlnode_value_str(p, node, "CodeUrl", &qrcode->code_url);
+            tmpnode = mxmlFindElement(node, node, "CodeLocation", NULL, NULL, MXML_DESCEND);
+            if (tmpnode != NULL) {
+                tmp = cos_serveral_parse_from_xml_node(p, tmpnode, tmpnode, "Point", &qrcode->point[0]);
+                tmp = cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[1]);
+                tmp = cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[2]);
+                cos_serveral_parse_from_xml_node(p, tmp, tmpnode, "Point", &qrcode->point[3]);
+            }
+            cos_list_add_tail(&qrcode->node, &res->qrcode_info);
+            node = mxmlFindElement(node, root, "QRcodeInfo", NULL, NULL, MXML_DESCEND);
+        }
+        mxmlDelete(root);
+    }
+    return ret;
 }

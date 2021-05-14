@@ -825,6 +825,27 @@ cos_object_key_t *cos_create_cos_object_key(cos_pool_t *p)
     return (cos_object_key_t *)cos_pcalloc(p, sizeof(cos_object_key_t));
 }
 
+ci_qrcode_info_t *ci_create_qrcode_info(cos_pool_t *p)
+{
+    ci_qrcode_info_t *res = (ci_qrcode_info_t *)cos_palloc(p, sizeof(ci_qrcode_info_t));
+    cos_list_init(&res->node);
+    return res;
+}
+
+ci_operation_result_t *ci_create_operation_result(cos_pool_t *p)
+{
+    ci_operation_result_t *res = (ci_operation_result_t *)cos_palloc(p, sizeof(ci_operation_result_t));
+    cos_list_init(&res->object.qrcode_info);
+    return res;
+}
+
+ci_qrcode_result_t *ci_create_qrcode_result(cos_pool_t *p)
+{
+    ci_qrcode_result_t*res = (ci_qrcode_result_t *)cos_palloc(p, sizeof(ci_qrcode_result_t));
+    cos_list_init(&res->qrcode_info);
+    return res;
+}
+
 #if 0
 cos_live_channel_publish_url_t *cos_create_live_channel_publish_url(cos_pool_t *p)
 {

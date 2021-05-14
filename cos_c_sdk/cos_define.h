@@ -500,6 +500,52 @@ typedef struct {
     int days;
 } cos_intelligenttiering_params_t;
 
+typedef struct {
+    cos_string_t format;
+    cos_string_t ave;
+    int width;
+    int height;
+    int quality;
+    int orientation;
+} ci_image_info_t;
+
+typedef struct {
+    cos_string_t key;
+    cos_string_t location;
+    cos_string_t etag;
+    ci_image_info_t image_info;
+} ci_operation_origin_info_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t code_url;
+    cos_string_t point[4];
+} ci_qrcode_info_t;
+
+typedef struct {
+    cos_list_t qrcode_info;  
+    cos_string_t key;
+    cos_string_t location;
+    cos_string_t format;
+    cos_string_t etag;
+    int width;
+    int height;
+    int size;
+    int quality;
+    int code_status;
+} ci_operation_object_result_t;
+
+typedef struct {
+    ci_operation_origin_info_t origin;
+    ci_operation_object_result_t object;
+} ci_operation_result_t;
+
+typedef struct {
+    int code_status;
+    cos_list_t qrcode_info;
+    cos_string_t result_image;
+} ci_qrcode_result_t;
+
 #define COS_AUTH_EXPIRE_DEFAULT 300
 
 #endif

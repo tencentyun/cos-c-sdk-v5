@@ -143,6 +143,22 @@ int cos_open_file_for_write(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
     return COSE_OK;
 }
 
+int cos_open_file_for_write_notrunc(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
+{
+    int s;
+    char buf[256];
+
+    if ((s = apr_file_open(&fb->file, path, APR_CREATE | APR_WRITE,
+                APR_UREAD | APR_UWRITE | APR_GREAD, p)) != APR_SUCCESS) {
+        cos_error_log("apr_file_open failure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
+        assert(fb->file == NULL);
+        return COSE_OPEN_FILE_ERROR;
+    }
+    fb->owner = 1;
+
+    return COSE_OK;
+}
+
 int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_pos, int64_t file_last, cos_file_buf_t *fb)
 {
     int s;

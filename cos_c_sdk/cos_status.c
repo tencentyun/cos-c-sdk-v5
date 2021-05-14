@@ -5,6 +5,7 @@
 const char COS_XML_PARSE_ERROR_CODE[] = "ParseXmlError";
 const char COS_OPEN_FILE_ERROR_CODE[] = "OpenFileFail";
 const char COS_WRITE_FILE_ERROR_CODE[] = "WriteFileFail";
+const char COS_RENAME_FILE_ERROR_CODE[] = "RenameFileFail";
 const char COS_HTTP_IO_ERROR_CODE[] = "HttpIoError";
 const char COS_UNKNOWN_ERROR_CODE[] = "UnknownError";
 const char COS_CLIENT_ERROR_CODE[] = "ClientError";

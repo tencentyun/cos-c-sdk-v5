@@ -55,7 +55,7 @@ static APR_INLINE int cos_is_space_or_cntrl(char c)
     return c <= ' ';
 }
 
-static APR_INLINE int cos_is_null_string(cos_string_t *str)
+static APR_INLINE int cos_is_null_string(const cos_string_t *str)
 {
     if (str == NULL || str->data == NULL || str->len == 0) {
         return COS_TRUE;
