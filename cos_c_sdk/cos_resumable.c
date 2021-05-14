@@ -1075,49 +1075,49 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
     cos_table_t *resp_headers = NULL;
     int part_num;
     char *etag;
-	cos_http_request_t *req = NULL;
-	cos_http_response_t *resp = NULL;
-	cos_table_t *headers = NULL;
-	cos_table_t *paras = NULL;
-	char range_buf[64];
-	const cos_request_options_t *options = NULL;
-	int res = COSE_OK;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *paras = NULL;
+    char range_buf[64];
+    const cos_request_options_t *options = NULL;
+    int res = COSE_OK;
     
     params = (cos_upload_thread_params_t *)data;
     if (apr_atomic_read32(params->failed) > 0) {
         apr_atomic_inc32(params->launched);
         return NULL;
     }
-	options = &params->options;
+    options = &params->options;
     part_num = params->part->index + 1;
     download_file = cos_create_upload_file(params->options.pool);
     cos_str_set(&download_file->filename, params->filepath->data);
     download_file->file_pos = params->part->offset;
     download_file->file_last = params->part->offset + params->part->size;
 
-	headers = cos_table_create_if_null(options, headers, 1);
-	paras = cos_table_create_if_null(options, paras, 0);
+    headers = cos_table_create_if_null(options, headers, 1);
+    paras = cos_table_create_if_null(options, paras, 0);
     apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
-	apr_table_add(headers, COS_RANGE, range_buf);
+    apr_table_add(headers, COS_RANGE, range_buf);
 
-	cos_init_object_request(options, params->bucket, params->object, HTTP_GET, &req, paras, headers, NULL, 0, &resp);
-	s = cos_status_create(options->pool);
-	res = cos_init_read_response_body_to_file_part(options->pool, download_file, resp);
-	if (res != COSE_OK) {
-		cos_file_error_status_set(s, res);
-		apr_atomic_inc32(params->failed);
-		params->result->s = s;
-		apr_queue_push(params->failed_parts, params->result);
-		return s;
-	}
-	s = cos_process_request(options, req, resp);
-	cos_fill_read_response_header(resp, &resp_headers);
+    cos_init_object_request(options, params->bucket, params->object, HTTP_GET, &req, paras, headers, NULL, 0, &resp);
+    s = cos_status_create(options->pool);
+    res = cos_init_read_response_body_to_file_part(options->pool, download_file, resp);
+    if (res != COSE_OK) {
+        cos_file_error_status_set(s, res);
+        apr_atomic_inc32(params->failed);
+        params->result->s = s;
+        apr_queue_push(params->failed_parts, params->result);
+        return s;
+    }
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, &resp_headers);
 
-	cos_warn_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
+    cos_debug_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
 
     etag = apr_pstrdup(params->options.pool, (char*)apr_table_get(resp_headers, "ETag"));
     cos_str_set(&params->result->etag, etag);
-	params->result->crc64 = resp->crc64;
+    params->result->crc64 = resp->crc64;
     apr_atomic_inc32(params->completed);
     apr_queue_push(params->completed_parts, params->result);
     return NULL;
