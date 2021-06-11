@@ -274,6 +274,66 @@ void cos_get_object_uri(const cos_request_options_t *options,
 
 }
 
+const char *cos_gen_object_url(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object)
+{
+    int rc;
+    int32_t proto_len;
+    const char *proto;
+    const char *host;
+    const char *uri;
+    const char *raw_endpoint_str;
+    char uristr[3*COS_MAX_URI_LEN+1];
+    cos_string_t raw_endpoint;
+    int32_t bucket_has_appid = 0;
+
+    proto = starts_with(&options->config->endpoint, COS_HTTP_PREFIX) ?
+        COS_HTTP_PREFIX : "";
+    proto = starts_with(&options->config->endpoint, COS_HTTPS_PREFIX) ?
+        COS_HTTPS_PREFIX : proto;
+
+    proto_len = strlen(proto);
+    raw_endpoint_str = cos_pstrdup(options->pool, &options->config->endpoint) + proto_len;
+    raw_endpoint.len = options->config->endpoint.len - proto_len;
+    raw_endpoint.data = options->config->endpoint.data + proto_len;
+
+    if (options->config->is_cname || 
+            is_valid_ip(raw_endpoint_str))
+    {
+        host = apr_psprintf(options->pool, "%.*s", 
+                raw_endpoint.len, raw_endpoint.data);
+    } else {
+        if (options->config->appid.len == 0 || strcmp(options->config->appid.data, "") == 0) {
+            bucket_has_appid = 1;
+        }
+        else {
+            if (cos_ends_with(bucket, &options->config->appid) && bucket->len > options->config->appid.len) {
+                if (bucket->data[bucket->len - options->config->appid.len - 1] == '-') {
+                    bucket_has_appid = 1;
+                }
+            }
+        }
+        if (bucket_has_appid) {
+            host = apr_psprintf(options->pool, "%.*s.%.*s", 
+                    bucket->len, bucket->data,
+                    raw_endpoint.len, raw_endpoint.data);
+        }
+        else {
+            host = apr_psprintf(options->pool, "%.*s-%.*s.%.*s", 
+                    bucket->len, bucket->data,
+                    options->config->appid.len, options->config->appid.data,
+                    raw_endpoint.len, raw_endpoint.data);
+        }
+    }
+    uri = apr_psprintf(options->pool, "%.*s", object->len, object->data);
+    if (rc = cos_url_encode(uristr, uri, COS_MAX_URI_LEN) != COSE_OK) {
+        return "";
+    }
+    proto = strlen(proto) != 0 ? proto : COS_HTTP_PREFIX;
+    return apr_psprintf(options->pool, "%s%s/%s", proto, host, uristr);
+}
+
 void cos_get_bucket_uri(const cos_request_options_t *options, 
                         const cos_string_t *bucket,
                         cos_http_request_t *req)
