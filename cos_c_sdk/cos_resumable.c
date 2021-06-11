@@ -1126,7 +1126,6 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
 int64_t cos_get_safe_size_for_download(int64_t part_size)
 {
     if (part_size < 4*1024*1024) return 4*1024*1024;
-    else if (part_size > 20*1024*1024) return 20*1024*1024;
     else return part_size;
 }
 
@@ -1202,7 +1201,6 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     apr_file_close(fb->file);
 
     // init download params
-    part_size = cos_get_safe_size_for_download(part_size);
     part_num = cos_get_part_num(file_size, part_size);
     parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
     cos_build_parts(file_size, part_size, parts);
@@ -1393,7 +1391,6 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
     apr_file_close(fb->file);
 
     // init download params
-    part_size = cos_get_safe_size_for_download(part_size);
     part_num = cos_get_part_num(file_size, part_size);
     parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
     cos_get_checkpoint_undo_parts(checkpoint, &part_num, parts);
@@ -1520,6 +1517,7 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
 
     thread_num = cos_get_thread_num(clt_params);
     part_size = clt_params->part_size;
+    part_size = cos_get_safe_size_for_download(part_size);
     if (clt_params->enable_checkpoint) {
         cos_get_checkpoint_path(clt_params, filepath, options->pool, &checkpoint_path);
         s = cos_resumable_download_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, &checkpoint_path, progress_callback);
