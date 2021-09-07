@@ -219,6 +219,7 @@ void test_object()
     cos_buf_t *content = NULL;
     char * str = "This is my test data.";
     cos_string_t file;
+    bool traffic_limit = false;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -235,6 +236,11 @@ void test_object()
 
     cos_list_t download_buffer;
     cos_list_init(&download_buffer);
+    if (traffic_limit) {
+        // 限速值设置范围为819200 - 838860800，即100KB/s - 100MB/s，如果超出该范围将返回400错误
+        headers = cos_table_make(p, 1);
+        cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
+    }
     s = cos_get_object_to_buffer(options, &bucket, &object, 
                        NULL, NULL, &download_buffer, &resp_headers);
     log_status(s);
@@ -339,11 +345,17 @@ void test_put_object_from_file()
     cos_string_t object;
     cos_table_t *resp_headers;
     cos_string_t file;
+    bool traffic_limit = false;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_table_t *headers = NULL;
+    if (traffic_limit) {
+        // 限速值设置范围为819200 - 838860800，即100KB/s - 100MB/s，如果超出该范围将返回400错误
+        headers = cos_table_make(p, 1);
+        cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
+    }
     cos_str_set(&options->config->sts_token, "MyTokenString");
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&file, TEST_OBJECT_NAME4);
@@ -959,6 +971,42 @@ void test_copy()
     cos_copy_object_params_t *params = NULL;
     params = cos_create_copy_object_params(p);
     s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
+    log_status(s);
+
+    cos_pool_destroy(p);
+}
+
+void test_modify_storage_class()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.txt");
+    cos_str_set(&src_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&src_object, "test.txt");
+
+    // 设置x-cos-metadata-directive和x-cos-storage-class头域(替换为自己要更改的存储类型)
+    cos_table_t *headers = cos_table_make(p, 2);
+    apr_table_add(headers, "x-cos-metadata-directive", "Replaced");
+    // 存储类型包括NTELLIGENT_TIERING，MAZ_INTELLIGENT_TIERING，STANDARD_IA，ARCHIVE，DEEP_ARCHIVE
+    apr_table_add(headers, "x-cos-storage-class", "ARCHIVE");
+
+    cos_copy_object_params_t *params = NULL;
+    params = cos_create_copy_object_params(p);
+    s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, headers, params, &resp_headers);
     log_status(s);
 
     cos_pool_destroy(p);
@@ -2175,6 +2223,7 @@ int main(int argc, char *argv[])
     //test_bucket();
     //test_acl();
     //test_copy();
+    //test_modify_storage_class();
     //test_cors();
     //test_versioning();
     //test_replication();
