@@ -219,7 +219,7 @@ void test_object()
     cos_buf_t *content = NULL;
     char * str = "This is my test data.";
     cos_string_t file;
-    bool traffic_limit = false;
+    int traffic_limit = 1;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -345,7 +345,7 @@ void test_put_object_from_file()
     cos_string_t object;
     cos_table_t *resp_headers;
     cos_string_t file;
-    bool traffic_limit = false;
+    int traffic_limit = 1;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
