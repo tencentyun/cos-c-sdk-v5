@@ -242,7 +242,7 @@ void test_object()
         cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
     }
     s = cos_get_object_to_buffer(options, &bucket, &object, 
-                       NULL, NULL, &download_buffer, &resp_headers);
+                       headers, NULL, &download_buffer, &resp_headers);
     log_status(s);
     int64_t len = 0;
     int64_t size = 0;
