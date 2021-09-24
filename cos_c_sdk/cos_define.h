@@ -546,6 +546,105 @@ typedef struct {
     cos_string_t result_image;
 } ci_qrcode_result_t;
 
+typedef struct {
+    cos_string_t mode;
+    int count;
+    float time_interval;
+} ci_video_auditing_job_snapshot_t;
+
+typedef struct {
+    cos_string_t detect_type;
+    ci_video_auditing_job_snapshot_t snapshot;
+    cos_string_t callback;
+    cos_string_t callback_version;
+    cos_string_t biz_type;
+    int detect_content;
+} ci_video_auditing_job_conf_t;
+
+typedef struct {
+    cos_string_t input_object;
+    ci_video_auditing_job_conf_t job_conf;
+} ci_video_auditing_job_options_t;
+
+typedef struct {
+    cos_string_t job_id;
+    cos_string_t state;
+    cos_string_t creation_time;
+} ci_video_auditing_jobs_detail_t;
+
+typedef struct {
+    ci_video_auditing_jobs_detail_t jobs_detail;
+} ci_video_auditing_job_result_t;
+
+typedef struct {
+    int hit_flag;
+    int count;
+} ci_auditing_video_info_t;
+
+typedef struct {
+    int hit_flag;
+    int score;
+    cos_string_t label;
+    cos_string_t sub_lable;
+} ci_auditing_snapshot_info_t;
+
+typedef struct {
+    int hit_flag;
+    int score;
+    cos_string_t key_words;
+} ci_auditing_audio_info_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t url;
+    int snapshot_time;
+    cos_string_t text;
+    
+    ci_auditing_snapshot_info_t porn_info;
+    ci_auditing_snapshot_info_t terrorism_info;
+    ci_auditing_snapshot_info_t politics_info;
+    ci_auditing_snapshot_info_t ads_info;
+} ci_auditing_snapshot_result_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t url;
+    cos_string_t text;
+    int offset_time;
+    int duration;
+
+    ci_auditing_audio_info_t porn_info;
+    ci_auditing_audio_info_t terrorism_info;
+    ci_auditing_audio_info_t politics_info;
+    ci_auditing_audio_info_t ads_info;
+} ci_auditing_audio_section_result_t;
+
+typedef struct {
+    cos_string_t code;
+    cos_string_t message;
+    cos_string_t job_id;
+    cos_string_t state;
+    cos_string_t creation_time;
+    cos_string_t object;
+    cos_string_t snapshot_count;
+    int result;
+
+    ci_auditing_video_info_t porn_info;
+    ci_auditing_video_info_t terrorism_info;
+    ci_auditing_video_info_t politics_info;
+    ci_auditing_video_info_t ads_info;
+
+    // list type: ci_auditing_snapshot_result_t
+    cos_list_t snapshot_info_list;
+    // list type: ci_auditing_audio_section_result_t
+    cos_list_t audio_section_info_list;
+} ci_get_auditing_jobs_detail_t;
+
+typedef struct {
+    ci_get_auditing_jobs_detail_t jobs_detail;
+    cos_string_t nonexist_job_ids;
+} ci_auditing_job_result_t;
+
 #define COS_AUTH_EXPIRE_DEFAULT 300
 
 #endif
