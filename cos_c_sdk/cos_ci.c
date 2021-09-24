@@ -90,6 +90,7 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
     uri.data[video_auditing_uri.len] = '/';
     strncpy(uri.data + video_auditing_uri.len + 1, job_id->data, job_id->len);
     uri.data[uri.len - 1] = '\0';
+    uri.len--;
 
     cos_init_object_request(options, bucket, &uri, HTTP_GET, &req,
             NULL, headers, NULL, 0, &resp);
