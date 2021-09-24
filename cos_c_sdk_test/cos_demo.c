@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
+static char TEST_CI_ENDPOINT[] = "https://ci.ap-guangzhou.myqcloud.com";
 static char *TEST_ACCESS_KEY_ID;                //your secret_id
 static char *TEST_ACCESS_KEY_SECRET;            //your secret_key
 static char TEST_APPID[] = "<APPID>";    //your appid
@@ -2271,7 +2272,7 @@ void test_ci_video_auditing()
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
-    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&options->config->endpoint, TEST_CI_ENDPOINT);     // https://ci.<Region>.myqcloud.com
     cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
     cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
     cos_str_set(&options->config->appid, TEST_APPID);
