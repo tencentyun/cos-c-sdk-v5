@@ -1558,6 +1558,40 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
                                 cos_table_t **resp_headers,
                                 ci_qrcode_result_t **results);
 
+/*
+ * @brief  create a job of video auditing
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   job_options         the options of video auditing config
+ * @param[in]   headers             the headers for request 
+ * @param[out]  resp_headers        cos server response headers
+ * @param[out]  job_result          the result of submit video auditing
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
+                                           const cos_string_t *bucket, 
+                                           const ci_video_auditing_job_options_t *job_options,
+                                           cos_table_t *headers, 
+                                           cos_table_t **resp_headers,
+                                           ci_video_auditing_job_result_t **job_result);
+
+/*
+ * @brief  get job detail of video auditing
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   job_id              the id of video auditing
+ * @param[in]   headers             the headers for request 
+ * @param[out]  resp_headers        cos server response headers
+ * @param[out]  job_result          the result of get video auditing
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
+                                  const cos_string_t *bucket, 
+                                  const cos_string_t *job_id,
+                                  cos_table_t *headers, 
+                                  cos_table_t **resp_headers,
+                                  ci_auditing_job_result_t **job_result);
+
 COS_CPP_END
 
 #endif

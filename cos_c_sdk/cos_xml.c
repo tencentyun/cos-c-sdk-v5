@@ -2844,3 +2844,284 @@ int ci_get_qrcode_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_qrcod
     }
     return ret;
 }
+
+void build_video_auditing_job_body(cos_pool_t *p, const ci_video_auditing_job_options_t *params, cos_list_t *body)
+{
+    cos_buf_t *b;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    mxml_node_t *input_node;
+    mxml_node_t *object_node;
+    mxml_node_t *conf_node;
+    mxml_node_t *detect_type_node;
+    mxml_node_t *callback_node;
+    mxml_node_t *callback_version_node;
+    mxml_node_t *biz_type_node;
+    mxml_node_t *detect_content_node;
+    mxml_node_t *snapshot_node;
+    mxml_node_t *mode_node;
+    mxml_node_t *count_node;
+    mxml_node_t *time_interval_node;
+    char *xml_buff;
+    cos_string_t xml_doc;
+    char *video_auditing_xml;
+
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "Request");
+    input_node = mxmlNewElement(root_node, "Input");
+    object_node = mxmlNewElement(input_node, "Object");
+    mxmlNewTextf(object_node, 0, "%.*s", params->input_object.len, params->input_object.data);
+
+    conf_node = mxmlNewElement(root_node, "Conf");
+    detect_type_node = mxmlNewElement(conf_node, "DetectType");
+    mxmlNewTextf(detect_type_node, 0, "%.*s", params->job_conf.detect_type.len, params->job_conf.detect_type.data);
+    if (params->job_conf.callback.len > 0 && params->job_conf.callback.data != NULL) {
+        callback_node = mxmlNewElement(conf_node, "Callback");
+        mxmlNewTextf(callback_node, 0, "%.*s", params->job_conf.callback.len, params->job_conf.callback.data);
+    }
+    if (params->job_conf.callback_version.len > 0 && params->job_conf.callback_version.data != NULL) {
+        callback_version_node = mxmlNewElement(conf_node, "CallbackVersion");
+        mxmlNewTextf(callback_version_node, 0, "%.*s", params->job_conf.callback_version.len, params->job_conf.callback_version.data);
+    }
+    if (params->job_conf.biz_type.len > 0 && params->job_conf.biz_type.data != NULL) {
+        biz_type_node = mxmlNewElement(conf_node, "BizType");
+        mxmlNewTextf(biz_type_node, 0, "%.*s", params->job_conf.biz_type.len, params->job_conf.biz_type.data);
+    }
+    if (params->job_conf.detect_content != 0) {
+        detect_content_node = mxmlNewElement(conf_node, "DetectContent");
+        mxmlNewTextf(detect_content_node, 0, "%d", params->job_conf.detect_content);
+    }
+
+    snapshot_node  = mxmlNewElement(conf_node, "Snapshot");
+    if (params->job_conf.snapshot.mode.len > 0 && params->job_conf.snapshot.mode.data != NULL) {
+        mode_node = mxmlNewElement(snapshot_node, "Mode");
+        mxmlNewTextf(mode_node, 0, "%.*s", params->job_conf.snapshot.mode.len, params->job_conf.snapshot.mode.data);
+    }
+    if (params->job_conf.snapshot.count > 0) {
+        count_node = mxmlNewElement(snapshot_node, "Count");
+        mxmlNewTextf(count_node, 0, "%d", params->job_conf.snapshot.count);
+    }
+    if (params->job_conf.snapshot.time_interval > 0) {
+        time_interval_node = mxmlNewElement(snapshot_node, "TimeInterval");
+        mxmlNewTextf(time_interval_node, 0, "%.3f", params->job_conf.snapshot.time_interval);
+    }
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    video_auditing_xml = cos_pstrdup(p, &xml_doc);
+
+    cos_list_init(body);
+    b = cos_buf_pack(p, video_auditing_xml, strlen(video_auditing_xml));
+    cos_list_add_tail(&b->node, body);
+
+    free(xml_buff);
+    mxmlDelete(doc);
+}
+
+static void ci_get_request_id(cos_pool_t *p, mxml_node_t *node, cos_status_t *s)
+{
+    cos_string_t req_id = cos_null_string;
+
+    if (s->req_id == NULL || s->req_id[0] == '\0') {
+        get_xmlnode_value_str(p, node, "RequestId", &req_id);
+        if (req_id.data != NULL) {
+            s->req_id = req_id.data;
+        }
+    }
+}
+
+int ci_video_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,  
+                                             ci_video_auditing_job_result_t *res, cos_status_t *s)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *onode = NULL;
+
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        onode = mxmlFindElement(root, root, "JobsDetail", NULL, NULL, MXML_DESCEND);
+        if (onode != NULL) {
+            get_xmlnode_value_str(p, onode, "JobId", &res->jobs_detail.job_id);
+            get_xmlnode_value_str(p, onode, "State", &res->jobs_detail.state);
+            get_xmlnode_value_str(p, onode, "CreationTime", &res->jobs_detail.creation_time);
+        }
+
+        ci_get_request_id(p, root, s);
+
+        mxmlDelete(root);
+    }
+
+    return ret;
+}
+
+static int ci_get_auditing_snapshot_parse(cos_pool_t *p, ci_auditing_job_result_t *res, mxml_node_t *onode)
+{
+    int ret = COSE_OK;
+    mxml_node_t *node = NULL;
+    mxml_node_t *pnode = mxmlFindElement(onode, onode, "Snapshot", NULL, NULL, MXML_DESCEND);
+    cos_list_init(&res->jobs_detail.snapshot_info_list);
+
+    while (pnode) {
+        ci_auditing_snapshot_result_t *snapshot = cos_pcalloc(p ,sizeof(ci_auditing_snapshot_result_t));
+        if (snapshot == NULL) {
+            ret = COSE_OUT_MEMORY;
+            break;
+        }
+
+        get_xmlnode_value_str(p, pnode, "Url", &snapshot->url);
+        get_xmlnode_value_int(p, pnode, "SnapshotTime", &snapshot->snapshot_time);
+        get_xmlnode_value_str(p, pnode, "Text", &snapshot->text);
+
+        node = mxmlFindElement(pnode, pnode, "PornInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &snapshot->porn_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &snapshot->porn_info.score);
+            get_xmlnode_value_str(p, node, "Label", &snapshot->porn_info.label);
+            get_xmlnode_value_str(p, node, "SubLabel", &snapshot->porn_info.sub_lable);
+        }
+        node = mxmlFindElement(pnode, pnode, "TerrorismInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &snapshot->terrorism_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &snapshot->terrorism_info.score);
+            get_xmlnode_value_str(p, node, "Label", &snapshot->terrorism_info.label);
+            get_xmlnode_value_str(p, node, "SubLabel", &snapshot->terrorism_info.sub_lable);
+        }
+        node = mxmlFindElement(pnode, pnode, "PoliticsInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &snapshot->politics_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &snapshot->politics_info.score);
+            get_xmlnode_value_str(p, node, "Label", &snapshot->politics_info.label);
+            get_xmlnode_value_str(p, node, "SubLabel", &snapshot->politics_info.sub_lable);
+        }
+        node = mxmlFindElement(pnode, pnode, "AdsInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &snapshot->ads_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &snapshot->ads_info.score);
+            get_xmlnode_value_str(p, node, "Label", &snapshot->ads_info.label);
+            get_xmlnode_value_str(p, node, "SubLabel", &snapshot->ads_info.sub_lable);
+        }
+        cos_list_add_tail(&snapshot->node, &res->jobs_detail.snapshot_info_list);
+        pnode = mxmlFindElement(pnode, onode, "Snapshot", NULL, NULL, MXML_DESCEND);
+    }
+
+    return ret;
+}
+
+static int ci_get_auditing_audio_section_parse(cos_pool_t *p, ci_auditing_job_result_t *res, mxml_node_t *onode)
+{
+    int ret = COSE_OK;
+    mxml_node_t *node = NULL;
+    mxml_node_t *pnode = mxmlFindElement(onode, onode, "AudioSection", NULL, NULL, MXML_DESCEND);
+    cos_list_init(&res->jobs_detail.audio_section_info_list);
+
+    while (pnode) {
+        ci_auditing_audio_section_result_t *audio_section = cos_pcalloc(p, sizeof(ci_auditing_audio_section_result_t));
+        if (audio_section == NULL) {
+            ret = COSE_OUT_MEMORY;
+            break;
+        }
+
+        get_xmlnode_value_str(p, pnode, "Url", &audio_section->url);
+        get_xmlnode_value_str(p, pnode, "Text", &audio_section->text);
+        get_xmlnode_value_int(p, pnode, "OffsetTime", &audio_section->offset_time);
+        get_xmlnode_value_int(p, pnode, "Duration", &audio_section->duration);
+
+        node = mxmlFindElement(pnode, pnode, "PornInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &audio_section->porn_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &audio_section->porn_info.score);
+            get_xmlnode_value_str(p, node, "Keywords", &audio_section->porn_info.key_words);
+        }
+        node = mxmlFindElement(pnode, pnode, "TerrorismInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &audio_section->terrorism_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &audio_section->terrorism_info.score);
+            get_xmlnode_value_str(p, node, "Keywords", &audio_section->terrorism_info.key_words);
+        }
+        node = mxmlFindElement(pnode, pnode, "PoliticsInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &audio_section->politics_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &audio_section->politics_info.score);
+            get_xmlnode_value_str(p, node, "Keywords", &audio_section->politics_info.key_words);
+        }
+        node = mxmlFindElement(pnode, pnode, "AdsInfo", NULL, NULL, MXML_DESCEND);
+        if (node != NULL) {
+            get_xmlnode_value_int(p, node, "HitFlag", &audio_section->ads_info.hit_flag);
+            get_xmlnode_value_int(p, node, "Score", &audio_section->ads_info.score);
+            get_xmlnode_value_str(p, node, "Keywords", &audio_section->ads_info.key_words);
+        }
+        cos_list_add_tail(&audio_section->node, &res->jobs_detail.audio_section_info_list);
+        pnode = mxmlFindElement(pnode, onode, "AudioSection", NULL, NULL, MXML_DESCEND);
+    }
+
+    return ret;
+}
+
+int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, 
+                                           ci_auditing_job_result_t *res, cos_status_t *s)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *onode = NULL;
+    mxml_node_t *pnode = NULL;
+
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        get_xmlnode_value_str(p, root, "NonExistJobIds", &res->nonexist_job_ids);
+
+        ci_get_request_id(p, root, s);
+
+        onode = mxmlFindElement(root, root, "JobsDetail", NULL, NULL, MXML_DESCEND);
+        if (onode != NULL) {
+            get_xmlnode_value_str(p, onode, "Code", &res->jobs_detail.code);
+            get_xmlnode_value_str(p, onode, "Message", &res->jobs_detail.message);
+            get_xmlnode_value_str(p, onode, "JobId", &res->jobs_detail.job_id);
+            get_xmlnode_value_str(p, onode, "State", &res->jobs_detail.state);
+            get_xmlnode_value_str(p, onode, "CreationTime", &res->jobs_detail.creation_time);
+            get_xmlnode_value_str(p, onode, "Object", &res->jobs_detail.object);
+            get_xmlnode_value_str(p, onode, "SnapshotCount", &res->jobs_detail.snapshot_count);
+            get_xmlnode_value_int(p, onode, "Result", &res->jobs_detail.result);
+
+            pnode = mxmlFindElement(onode, onode, "PornInfo", NULL, NULL, MXML_DESCEND);
+            if (pnode != NULL) {
+                get_xmlnode_value_int(p, pnode, "HitFlag", &res->jobs_detail.porn_info.hit_flag);
+                get_xmlnode_value_int(p, pnode, "Count", &res->jobs_detail.porn_info.count);
+            }
+            pnode = mxmlFindElement(onode, onode, "TerrorismInfo", NULL, NULL, MXML_DESCEND);
+            if (pnode != NULL) {
+                get_xmlnode_value_int(p, pnode, "HitFlag", &res->jobs_detail.terrorism_info.hit_flag);
+                get_xmlnode_value_int(p, pnode, "Count", &res->jobs_detail.terrorism_info.count);
+            }
+            pnode = mxmlFindElement(onode, onode, "PoliticsInfo", NULL, NULL, MXML_DESCEND);
+            if (pnode != NULL) {
+                get_xmlnode_value_int(p, pnode, "HitFlag", &res->jobs_detail.politics_info.hit_flag);
+                get_xmlnode_value_int(p, pnode, "Count", &res->jobs_detail.politics_info.count);
+            }
+            pnode = mxmlFindElement(onode, onode, "AdsInfo", NULL, NULL, MXML_DESCEND);
+            if (pnode != NULL) {
+                get_xmlnode_value_int(p, pnode, "HitFlag", &res->jobs_detail.ads_info.hit_flag);
+                get_xmlnode_value_int(p, pnode, "Count", &res->jobs_detail.ads_info.count);
+            }
+
+            ret = ci_get_auditing_snapshot_parse(p, res, onode);
+            if (ret != COSE_OK) {
+                mxmlDelete(root);
+                return ret;
+            }
+
+            ret = ci_get_auditing_audio_section_parse(p, res, onode);
+            if (ret != COSE_OK) {
+                mxmlDelete(root);
+                return ret;
+            }
+        }
+
+        mxmlDelete(root);
+    }
+    
+    return ret;
+}

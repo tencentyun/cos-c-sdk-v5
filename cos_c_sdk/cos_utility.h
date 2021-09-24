@@ -414,6 +414,11 @@ void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable);
 **/
 void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_port);
 
+/**
+  * @brief  create ci video-auditing job config and init to default 0
+**/
+ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p);
+
 COS_CPP_END
 
 #endif

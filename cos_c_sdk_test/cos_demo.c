@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
 static char *TEST_ACCESS_KEY_ID;                //your secret_id
@@ -2176,6 +2177,138 @@ void test_ci_image_compression()
     }
 }
 
+static void log_video_auditing_result(ci_video_auditing_job_result_t *result)
+{
+    cos_warn_log("jobid: %s", result->jobs_detail.job_id.data);
+    cos_warn_log("state: %s", result->jobs_detail.state.data);
+    cos_warn_log("creation_time: %s", result->jobs_detail.creation_time.data);
+}
+
+static void log_get_auditing_result(ci_auditing_job_result_t *result)
+{
+    int index = 0;
+    ci_auditing_snapshot_result_t *snapshot_info;
+    ci_auditing_audio_section_result_t *audio_section_info;
+
+    cos_warn_log("nonexist_job_ids: %s", result->nonexist_job_ids.data);
+    cos_warn_log("code: %s", result->jobs_detail.code.data);
+    cos_warn_log("message: %s", result->jobs_detail.message.data);
+    cos_warn_log("state: %s", result->jobs_detail.state.data);
+    cos_warn_log("creation_time: %s", result->jobs_detail.creation_time.data);
+    cos_warn_log("object: %s", result->jobs_detail.object.data);
+    cos_warn_log("snapshot_count: %s", result->jobs_detail.snapshot_count.data);
+    cos_warn_log("result: %d", result->jobs_detail.result);
+
+    cos_warn_log("porn_info.hit_flag: %d", result->jobs_detail.porn_info.hit_flag);
+    cos_warn_log("porn_info.count: %d", result->jobs_detail.porn_info.count);
+    cos_warn_log("terrorism_info.hit_flag: %d", result->jobs_detail.terrorism_info.hit_flag);
+    cos_warn_log("terrorism_info.count: %d", result->jobs_detail.terrorism_info.count);
+    cos_warn_log("politics_info.hit_flag: %d", result->jobs_detail.politics_info.hit_flag);
+    cos_warn_log("politics_info.count: %d", result->jobs_detail.politics_info.count);
+    cos_warn_log("ads_info.hit_flag: %d", result->jobs_detail.ads_info.hit_flag);
+    cos_warn_log("ads_info.count: %d", result->jobs_detail.ads_info.count);
+
+    cos_list_for_each_entry(ci_auditing_snapshot_result_t, snapshot_info, &result->jobs_detail.snapshot_info_list, node) {
+        cos_warn_log("snapshot index:%d", ++index);
+        cos_warn_log("snapshot_info->url: %s", snapshot_info->url.data);
+        cos_warn_log("snapshot_info->snapshot_time: %d", snapshot_info->snapshot_time);
+        cos_warn_log("snapshot_info->text: %s", snapshot_info->text.data);
+
+        cos_warn_log("snapshot_info->porn_info.hit_flag: %d", snapshot_info->porn_info.hit_flag);
+        cos_warn_log("snapshot_info->porn_info.score: %d", snapshot_info->porn_info.score);
+        cos_warn_log("snapshot_info->porn_info.label: %s", snapshot_info->porn_info.label.data);
+        cos_warn_log("snapshot_info->porn_info.sub_lable: %s", snapshot_info->porn_info.sub_lable.data);
+        cos_warn_log("snapshot_info->terrorism_info.hit_flag: %d", snapshot_info->terrorism_info.hit_flag);
+        cos_warn_log("snapshot_info->terrorism_info.score: %d", snapshot_info->terrorism_info.score);
+        cos_warn_log("snapshot_info->terrorism_info.label: %s", snapshot_info->terrorism_info.label.data);
+        cos_warn_log("snapshot_info->terrorism_info.sub_lable: %s", snapshot_info->terrorism_info.sub_lable.data);
+        cos_warn_log("snapshot_info->politics_info.hit_flag: %d", snapshot_info->politics_info.hit_flag);
+        cos_warn_log("snapshot_info->politics_info.score: %d", snapshot_info->politics_info.score);
+        cos_warn_log("snapshot_info->politics_info.label: %s", snapshot_info->politics_info.label.data);
+        cos_warn_log("snapshot_info->politics_info.sub_lable: %s", snapshot_info->politics_info.sub_lable.data);
+        cos_warn_log("snapshot_info->ads_info.hit_flag: %d", snapshot_info->ads_info.hit_flag);
+        cos_warn_log("snapshot_info->ads_info.score: %d", snapshot_info->ads_info.score);
+        cos_warn_log("snapshot_info->ads_info.label: %s", snapshot_info->ads_info.label.data);
+        cos_warn_log("snapshot_info->ads_info.sub_lable: %s", snapshot_info->ads_info.sub_lable.data);
+    }
+
+    index = 0;
+    cos_list_for_each_entry(ci_auditing_audio_section_result_t, audio_section_info, &result->jobs_detail.audio_section_info_list, node) {
+        cos_warn_log("audio_section index:%d", ++index);
+        cos_warn_log("audio_section_info->url: %s", audio_section_info->url.data);
+        cos_warn_log("audio_section_info->text: %s", audio_section_info->text.data);
+        cos_warn_log("audio_section_info->offset_time: %d", audio_section_info->offset_time);
+        cos_warn_log("audio_section_info->duration: %d", audio_section_info->duration);
+
+        cos_warn_log("audio_section_info->porn_info.hit_flag: %d", audio_section_info->porn_info.hit_flag);
+        cos_warn_log("audio_section_info->porn_info.score: %d", audio_section_info->porn_info.score);
+        cos_warn_log("audio_section_info->porn_info.key_words: %s", audio_section_info->porn_info.key_words.data);
+        cos_warn_log("audio_section_info->terrorism_info.hit_flag: %d", audio_section_info->terrorism_info.hit_flag);
+        cos_warn_log("audio_section_info->terrorism_info.score: %d", audio_section_info->terrorism_info.score);
+        cos_warn_log("audio_section_info->terrorism_info.key_words: %s", audio_section_info->terrorism_info.key_words.data);
+        cos_warn_log("audio_section_info->politics_info.hit_flag: %d", audio_section_info->politics_info.hit_flag);
+        cos_warn_log("audio_section_info->politics_info.score: %d", audio_section_info->politics_info.score);
+        cos_warn_log("audio_section_info->politics_info.key_words: %s", audio_section_info->politics_info.key_words.data);
+        cos_warn_log("audio_section_info->ads_info.hit_flag: %d", audio_section_info->ads_info.hit_flag);
+        cos_warn_log("audio_section_info->ads_info.score: %d", audio_section_info->ads_info.score);
+        cos_warn_log("audio_section_info->ads_info.key_words: %s", audio_section_info->ads_info.key_words.data);
+    }
+}
+
+void test_ci_video_auditing()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    ci_video_auditing_job_options_t *job_options;
+    ci_video_auditing_job_result_t *job_result;
+    ci_auditing_job_result_t *auditing_result;
+
+    // basic config
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // replace your config, refer to ‘https://cloud.tencent.com/document/product/436/47316’
+    job_options = ci_video_auditing_job_options_create(p);
+    cos_str_set(&job_options->input_object, "test.mp4");
+    cos_str_set(&job_options->job_conf.detect_type, "Porn,Terrorism,Politics,Ads");
+    cos_str_set(&job_options->job_conf.callback_version, "Detail");
+    job_options->job_conf.detect_content = 1;
+    cos_str_set(&job_options->job_conf.snapshot.mode, "Interval");
+    job_options->job_conf.snapshot.time_interval = 1.5;
+    job_options->job_conf.snapshot.count = 10;
+
+    // submit a job of video auditing
+    s = ci_create_video_auditing_job(options, &bucket, job_options, NULL, &resp_headers, &job_result);
+    log_status(s);
+    if (s->code == 200) {
+        log_video_auditing_result(job_result);
+    }
+
+    // wait a memont for video audit finished, modify your wait time
+    sleep(300);
+
+    // get job detail of auditing
+    s = ci_get_auditing_job(options, &bucket, &job_result->jobs_detail.job_id, NULL, &resp_headers, &auditing_result);
+    log_status(s);
+    if (s->code == 200) {
+        log_get_auditing_result(auditing_result);
+    }
+
+    cos_pool_destroy(p);
+}
+
 int main(int argc, char *argv[])
 {
     int exit_code = -1;
@@ -2235,6 +2368,7 @@ int main(int argc, char *argv[])
     //test_ci_image_process();
     //test_ci_image_qrcode();
     //test_ci_image_compression();
+    //test_ci_video_auditing();
 
     //cos_http_io_deinitialize last
     cos_http_io_deinitialize();

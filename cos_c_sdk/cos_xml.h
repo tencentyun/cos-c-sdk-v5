@@ -355,6 +355,12 @@ int cos_live_channel_history_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_
  */
 int ci_get_operation_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_operation_result_t *res);
 int ci_get_qrcode_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_qrcode_result_t *res);
+/*
+ * video auditing
+ */
+void build_video_auditing_job_body(cos_pool_t *p, const ci_video_auditing_job_options_t *params, cos_list_t *body);
+int ci_video_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_video_auditing_job_result_t *res, cos_status_t *s);
+int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_auditing_job_result_t *res, cos_status_t *s);
 
 COS_CPP_END
 

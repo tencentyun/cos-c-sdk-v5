@@ -1532,4 +1532,8 @@ void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable)
     ctl->options->enable_md5 = enable;
 }
 
+ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p)
+{
+    return (ci_video_auditing_job_options_t *)cos_pcalloc(p, sizeof(ci_video_auditing_job_options_t)); 
+}
 
