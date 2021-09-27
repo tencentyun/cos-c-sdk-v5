@@ -2336,7 +2336,7 @@ void test_ci_video_auditing()
     ci_video_auditing_job_result_t *job_result;
     ci_auditing_job_result_t *auditing_result;
 
-    // 基础配置
+    // 基本配置
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2348,7 +2348,7 @@ void test_ci_video_auditing()
     options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
-    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/47316’
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/47316
     job_options = ci_video_auditing_job_options_create(p);
     cos_str_set(&job_options->input_object, "test.mp4");
     cos_str_set(&job_options->job_conf.detect_type, "Porn,Terrorism,Politics,Ads");
@@ -2389,7 +2389,7 @@ void test_ci_media_process_media_bucket()
     ci_media_buckets_request_t *media_buckets_request;
     ci_media_buckets_result_t *media_buckets_result;
 
-    // 基础配置
+    // 基本配置
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2400,7 +2400,7 @@ void test_ci_media_process_media_bucket()
     options->config->is_cname = is_cname;
     options->ctl = cos_http_controller_create(options->pool, 0);
 
-    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/48988’
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/48988
     media_buckets_request = ci_media_buckets_request_create(p);
     cos_str_set(&media_buckets_request->regions, "");
     cos_str_set(&media_buckets_request->bucket_names, "");
@@ -2431,7 +2431,7 @@ void test_ci_media_process_snapshot()
     cos_buf_t *content = NULL;
     cos_string_t pic_file = cos_string("snapshot.jpg");
 
-    // 基础配置
+    // 基本配置
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2444,7 +2444,7 @@ void test_ci_media_process_snapshot()
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test.mp4");
 
-    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/55671’
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/55671
     snapshot_request = ci_snapshot_request_create(p);
     snapshot_request->time = 7.5;
     snapshot_request->width = 0;
@@ -2453,6 +2453,7 @@ void test_ci_media_process_snapshot()
     cos_str_set(&snapshot_request->rotate, "auto");
     cos_str_set(&snapshot_request->mode, "exactframe");
     cos_list_init(&download_buffer);
+
     s = ci_get_snapshot_to_buffer(options, &bucket, &object, snapshot_request, NULL, &download_buffer, &resp_headers);
     log_status(s);
 
@@ -2489,7 +2490,7 @@ void test_ci_media_process_media_info()
     ci_media_info_result_t *media_info;
     cos_string_t object;
 
-    // 基础配置
+    // 基本配置
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2502,7 +2503,7 @@ void test_ci_media_process_media_info()
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test.mp4");
 
-    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/55672’
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/55672
     s = ci_get_media_info(options, &bucket, &object, NULL, &resp_headers, &media_info);
     log_status(s);
     if (s->code == 200) {
