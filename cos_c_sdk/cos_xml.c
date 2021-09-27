@@ -2605,6 +2605,17 @@ int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *x
     return COS_TRUE;
 }
 
+int get_xmlnode_value_float(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, float *value)
+{
+    char *node_content;
+    node_content = get_xmlnode_value(p, xml_node, xml_path);
+    if (NULL == node_content) {
+        return COS_FALSE;
+    }    
+    *value = atof(node_content);
+    return COS_TRUE;
+}
+
 char *cos_build_checkpoint_xml(cos_pool_t *p, const cos_checkpoint_t *checkpoint)
 {
     char *checkpoint_xml;
@@ -3118,6 +3129,159 @@ int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
                 mxmlDelete(root);
                 return ret;
             }
+        }
+
+        mxmlDelete(root);
+    }
+    
+    return ret;
+}
+
+int ci_media_buckets_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, 
+                                           ci_media_buckets_result_t *res, cos_status_t *s)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *pnode = NULL;
+
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        ci_get_request_id(p, root, s);
+
+        get_xmlnode_value_int(p, root, "TotalCount", &res->total_count);
+        get_xmlnode_value_int(p, root, "PageNumber", &res->page_number);
+        get_xmlnode_value_int(p, root, "PageSize", &res->page_size);
+
+        pnode = mxmlFindElement(root, root, "MediaBucketList", NULL, NULL, MXML_DESCEND);
+        cos_list_init(&res->media_bucket_list);
+
+        while (pnode) {
+            ci_media_bucket_list_t *media_bucket = cos_pcalloc(p, sizeof(ci_media_bucket_list_t));
+            if (media_bucket == NULL) {
+                ret = COSE_OUT_MEMORY;
+                mxmlDelete(root);
+                break;
+            }
+
+            get_xmlnode_value_str(p, pnode, "BucketId", &media_bucket->bucket_id);
+            get_xmlnode_value_str(p, pnode, "Name", &media_bucket->name);
+            get_xmlnode_value_str(p, pnode, "Region", &media_bucket->region);
+            get_xmlnode_value_str(p, pnode, "CreateTime", &media_bucket->create_time);
+
+            cos_list_add_tail(&media_bucket->node, &res->media_bucket_list);
+            pnode = mxmlFindElement(pnode, root, "MediaBucketList", NULL, NULL, MXML_DESCEND);
+        }
+
+        mxmlDelete(root);
+    }
+    
+    return ret;
+}
+
+static void ci_media_info_format_parse(cos_pool_t *p, mxml_node_t *pnode, ci_media_info_result_t *res)
+{
+    mxml_node_t *onode = mxmlFindElement(pnode, pnode, "Format", NULL, NULL, MXML_DESCEND);
+    if (onode != NULL) {
+        get_xmlnode_value_int(p, onode, "NumStream", &res->format.num_stream);
+        get_xmlnode_value_int(p, onode, "NumProgram", &res->format.num_program);
+        get_xmlnode_value_str(p, onode, "FormatName", &res->format.format_name);
+        get_xmlnode_value_str(p, onode, "FormatLongName", &res->format.format_long_name);
+        get_xmlnode_value_float(p, onode, "StartTime", &res->format.start_time);
+        get_xmlnode_value_float(p, onode, "Duration", &res->format.duration);
+        get_xmlnode_value_int(p, onode, "Bitrate", &res->format.bit_rate);
+        get_xmlnode_value_int(p, onode, "Size", &res->format.size);
+    }
+}
+
+static void ci_media_info_video_parse(cos_pool_t *p, mxml_node_t *onode, ci_media_info_result_t *res)
+{
+    mxml_node_t *node = mxmlFindElement(onode, onode, "Video", NULL, NULL, MXML_DESCEND);
+    if (node != NULL) {
+        get_xmlnode_value_int(p, node, "Index", &res->stream.video.index);
+        get_xmlnode_value_str(p, node, "CodecName", &res->stream.video.codec_name);
+        get_xmlnode_value_str(p, node, "CodecLongName", &res->stream.video.codec_long_name);
+        get_xmlnode_value_str(p, node, "CodecTimeBase", &res->stream.video.codec_time_base);
+        get_xmlnode_value_str(p, node, "CodecTagString", &res->stream.video.codec_tag_string);
+        get_xmlnode_value_str(p, node, "CodecTag", &res->stream.video.codec_tag);
+        get_xmlnode_value_str(p, node, "Profile", &res->stream.video.profile);
+        get_xmlnode_value_int(p, node, "Height", &res->stream.video.height);
+        get_xmlnode_value_int(p, node, "Width", &res->stream.video.width);
+        get_xmlnode_value_int(p, node, "HasBFrame", &res->stream.video.has_b_frame);
+        get_xmlnode_value_int(p, node, "RefFrames", &res->stream.video.ref_frames);
+        get_xmlnode_value_str(p, node, "Sar", &res->stream.video.sar);
+        get_xmlnode_value_str(p, node, "Dar", &res->stream.video.dar);
+        get_xmlnode_value_str(p, node, "PixFormat", &res->stream.video.pix_format);
+        get_xmlnode_value_str(p, node, "FieldOrder", &res->stream.video.field_order);
+        get_xmlnode_value_int(p, node, "Level", &res->stream.video.level);
+        get_xmlnode_value_int(p, node, "Fps", &res->stream.video.fps);
+        get_xmlnode_value_str(p, node, "AvgFps", &res->stream.video.avg_fps);
+        get_xmlnode_value_str(p, node, "Timebase", &res->stream.video.timebase);
+        get_xmlnode_value_float(p, node, "StartTime", &res->stream.video.start_time);
+        get_xmlnode_value_float(p, node, "Duration", &res->stream.video.duration);
+        get_xmlnode_value_float(p, node, "Bitrate", &res->stream.video.bit_rate);
+        get_xmlnode_value_int(p, node, "NumFrames", &res->stream.video.num_frames);
+        get_xmlnode_value_str(p, node, "Language", &res->stream.video.language);
+    }
+}
+
+static void ci_media_info_audio_parse(cos_pool_t *p, mxml_node_t *onode, ci_media_info_result_t *res)
+{
+    mxml_node_t *node = mxmlFindElement(onode, onode, "Audio", NULL, NULL, MXML_DESCEND);
+    if (node != NULL) {
+        get_xmlnode_value_int(p, node, "Index", &res->stream.audio.index);
+        get_xmlnode_value_str(p, node, "CodecName", &res->stream.audio.codec_name);
+        get_xmlnode_value_str(p, node, "CodecLongName", &res->stream.audio.codec_long_name);
+        get_xmlnode_value_str(p, node, "CodecTimeBase", &res->stream.audio.codec_time_base);
+        get_xmlnode_value_str(p, node, "CodecTagString", &res->stream.audio.codec_tag_string);
+        get_xmlnode_value_str(p, node, "CodecTag", &res->stream.audio.codec_tag);
+        get_xmlnode_value_str(p, node, "SampleFmt", &res->stream.audio.sample_fmt);
+        get_xmlnode_value_int(p, node, "SampleRate", &res->stream.audio.sample_rate);
+        get_xmlnode_value_int(p, node, "Channel", &res->stream.audio.channel);
+        get_xmlnode_value_str(p, node, "ChannelLayout", &res->stream.audio.channel_layout);
+        get_xmlnode_value_str(p, node, "Timebase", &res->stream.audio.timebase);
+        get_xmlnode_value_float(p, node, "StartTime", &res->stream.audio.start_time);
+        get_xmlnode_value_float(p, node, "Duration", &res->stream.audio.duration);
+        get_xmlnode_value_float(p, node, "Bitrate", &res->stream.audio.bit_rate);
+        get_xmlnode_value_str(p, node, "Language", &res->stream.audio.language);
+    }
+}
+
+static void ci_media_info_subtitle_parse(cos_pool_t *p, mxml_node_t *onode, ci_media_info_result_t *res)
+{
+    mxml_node_t *node = mxmlFindElement(onode, onode, "Subtitle", NULL, NULL, MXML_DESCEND);
+    if (node != NULL) {
+        get_xmlnode_value_int(p, node, "Index", &res->stream.subtitle.index);
+        get_xmlnode_value_str(p, node, "Language", &res->stream.subtitle.language);
+    }
+}
+
+static void ci_media_info_stream_parse(cos_pool_t *p, mxml_node_t *pnode, ci_media_info_result_t *res)
+{
+    mxml_node_t *onode = NULL;
+
+    onode = mxmlFindElement(pnode, pnode, "Stream", NULL, NULL, MXML_DESCEND);
+    if (onode != NULL) {
+        ci_media_info_video_parse(p, onode, res);
+
+        ci_media_info_audio_parse(p, onode, res);
+
+        ci_media_info_subtitle_parse(p, onode, res);
+    }
+}
+
+int ci_media_info_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_media_info_result_t *res)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *pnode = NULL;
+
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        pnode = mxmlFindElement(root, root, "MediaInfo", NULL, NULL, MXML_DESCEND);
+        if (pnode != NULL) {
+            ci_media_info_format_parse(p, pnode, res);
+
+            ci_media_info_stream_parse(p, pnode, res);
         }
 
         mxmlDelete(root);

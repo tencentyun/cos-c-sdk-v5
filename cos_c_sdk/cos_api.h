@@ -1592,6 +1592,76 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
                                   cos_table_t **resp_headers,
                                   ci_auditing_job_result_t **job_result);
 
+/*
+ * @brief  describe the buckets that enable media process
+ * @param[in]   options             the cos request options
+ * @param[in]   media_request       the media buckets request params
+ * @param[in]   headers             the headers for request 
+ * @param[out]  resp_headers        cos server response headers
+ * @param[out]  media_result        the result of describe media buckets
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
+                                        const ci_media_buckets_request_t *media_request,
+                                        cos_table_t *headers, 
+                                        cos_table_t **resp_headers,
+                                        ci_media_buckets_result_t **media_result);
+
+/*
+ * @brief  get snapshot in media to buffer
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object              the cos object name
+ * @param[in]   snapshot_request    the snapshot request params
+ * @param[in]   headers             the headers for request 
+ * @param[out]  buffer              the buffer containing snapshot content
+ * @param[out]  resp_headers        cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
+                                        const cos_string_t *bucket, 
+                                        const cos_string_t *object,
+                                        const ci_get_snapshot_request_t *snapshot_request,
+                                        cos_table_t *headers, 
+                                        cos_list_t *buffer, 
+                                        cos_table_t **resp_headers);
+
+/*
+ * @brief  get snapshot in media to file
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object              the cos object name
+ * @param[in]   snapshot_request    the snapshot request params
+ * @param[in]   headers             the headers for request 
+ * @param[out]  filename            the filename storing snapshot content
+ * @param[out]  resp_headers        cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
+                                      const cos_string_t *bucket, 
+                                      const cos_string_t *object,
+                                      const ci_get_snapshot_request_t *snapshot_request,
+                                      cos_table_t *headers, 
+                                      cos_string_t *filename, 
+                                      cos_table_t **resp_headers);
+
+/*
+ * @brief  get media info
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object              the cos object name
+ * @param[in]   headers             the headers for request 
+ * @param[out]  resp_headers        cos server response headers
+ * @param[out]  media_result        the result of media info
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *ci_get_media_info(const cos_request_options_t *options,
+                                const cos_string_t *bucket, 
+                                const cos_string_t *object,
+                                cos_table_t *headers, 
+                                cos_table_t **resp_headers,
+                                ci_media_info_result_t **media_result);
+
 COS_CPP_END
 
 #endif

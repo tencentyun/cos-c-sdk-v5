@@ -222,6 +222,23 @@ void cos_get_service_uri(const cos_request_options_t *options,
     req->uri = apr_psprintf(options->pool, "%s", "");
 }
 
+static void cos_get_media_buckets_uri(const cos_request_options_t *options,
+                               cos_http_request_t *req)
+{
+    static const char *media_bucket_uri = "mediabucket";
+    int32_t proto_len;
+    cos_string_t raw_endpoint;
+
+    generate_proto(options, req);
+    proto_len = strlen(req->proto);
+    raw_endpoint.len = options->config->endpoint.len - proto_len;
+    raw_endpoint.data = options->config->endpoint.data + proto_len;
+    req->host = apr_psprintf(options->pool, "%.*s", raw_endpoint.len, raw_endpoint.data);
+
+    req->resource = apr_psprintf(options->pool, "%s", media_bucket_uri);
+    req->uri = apr_psprintf(options->pool, "%s", media_bucket_uri);
+}
+
 void cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
@@ -278,7 +295,6 @@ const char *cos_gen_object_url(const cos_request_options_t *options,
                                 const cos_string_t *bucket,
                                 const cos_string_t *object)
 {
-    int rc;
     int32_t proto_len;
     const char *proto;
     const char *host;
@@ -327,7 +343,7 @@ const char *cos_gen_object_url(const cos_request_options_t *options,
         }
     }
     uri = apr_psprintf(options->pool, "%.*s", object->len, object->data);
-    if (rc = cos_url_encode(uristr, uri, COS_MAX_URI_LEN) != COSE_OK) {
+    if (cos_url_encode(uristr, uri, COS_MAX_URI_LEN) != COSE_OK) {
         return "";
     }
     proto = strlen(proto) != 0 ? proto : COS_HTTP_PREFIX;
@@ -1048,6 +1064,17 @@ void cos_init_service_request(const cos_request_options_t *options,
     cos_get_service_uri(options, all_region, *req);
 }
 
+void cos_init_media_buckets_request(const cos_request_options_t *options,
+                              http_method_e method,
+                              cos_http_request_t **req,
+                              cos_table_t *params,
+                              cos_table_t *headers,
+                              cos_http_response_t **resp)
+{
+    cos_init_request(options, method, req, params, headers, resp);
+    cos_get_media_buckets_uri(options, *req);
+}
+
 void cos_init_bucket_request(const cos_request_options_t *options, 
                              const cos_string_t *bucket,
                              http_method_e method, 
@@ -1535,5 +1562,15 @@ void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable)
 ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p)
 {
     return (ci_video_auditing_job_options_t *)cos_pcalloc(p, sizeof(ci_video_auditing_job_options_t)); 
+}
+
+ci_media_buckets_request_t* ci_media_buckets_request_create(cos_pool_t *p)
+{
+    return (ci_media_buckets_request_t *)cos_pcalloc(p, sizeof(ci_media_buckets_request_t)); 
+}
+
+ci_get_snapshot_request_t* ci_snapshot_request_create(cos_pool_t *p)
+{
+    return (ci_get_snapshot_request_t *)cos_pcalloc(p, sizeof(ci_get_snapshot_request_t)); 
 }
 

@@ -645,6 +645,120 @@ typedef struct {
     cos_string_t nonexist_job_ids;
 } ci_auditing_job_result_t;
 
+/**
+  * @brief  ci_describe_media_buckets() func params
+**/
+typedef struct {
+    cos_string_t regions;
+    cos_string_t bucket_names;
+    cos_string_t bucket_name;
+    cos_string_t page_number;
+    cos_string_t page_size;
+} ci_media_buckets_request_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t bucket_id;
+    cos_string_t name;
+    cos_string_t region;
+    cos_string_t create_time;
+} ci_media_bucket_list_t;
+
+typedef struct {
+    int total_count;
+    int page_number;
+    int page_size;
+    // list type: ci_media_bucket_list_t
+    cos_list_t media_bucket_list;
+} ci_media_buckets_result_t;
+
+/**
+  * @brief  ci_get_snapshot_to_buffer() / ci_get_snapshot_to_file() func params
+**/
+typedef struct {
+    float time;
+    int width;
+    int height;
+    cos_string_t format;   // jpg(default)/png
+    cos_string_t rotate;   // auto(default)/off
+    cos_string_t mode;     // keyframe/exactframe(default)
+} ci_get_snapshot_request_t;
+
+/**
+  * @brief  ci_get_media_info() func params
+**/
+typedef struct {
+    int index;
+    cos_string_t codec_name;
+    cos_string_t codec_long_name;
+    cos_string_t codec_time_base;
+    cos_string_t codec_tag_string;
+    cos_string_t codec_tag;
+    cos_string_t profile;
+    int height;
+    int width;
+    int has_b_frame;
+    int ref_frames;
+    cos_string_t sar;
+    cos_string_t dar;
+    cos_string_t pix_format;
+    cos_string_t field_order;
+    int level;
+    int fps;
+    cos_string_t avg_fps;
+    cos_string_t timebase;
+    float start_time;
+    float duration;
+    float bit_rate;
+    int num_frames;
+    cos_string_t language;
+} ci_media_video_t;
+
+typedef struct {
+    int index;
+    cos_string_t codec_name;
+    cos_string_t codec_long_name;
+    cos_string_t codec_time_base;
+    cos_string_t codec_tag_string;
+    cos_string_t codec_tag;
+    cos_string_t sample_fmt;
+    int sample_rate;
+    int channel;
+    cos_string_t channel_layout;
+    cos_string_t timebase;
+    float start_time;
+    float duration;
+    float bit_rate;
+    cos_string_t language;
+} ci_media_audio_t;
+
+typedef struct {
+    int index;
+    cos_string_t language;
+} ci_media_subtitle_t;
+
+typedef struct {
+    ci_media_video_t video;
+    ci_media_audio_t audio;
+    ci_media_subtitle_t subtitle;
+} ci_media_stream_info_t;
+
+typedef struct {
+    int num_stream;
+    int num_program;
+    cos_string_t format_name;
+    cos_string_t format_long_name;
+    float start_time;
+    float duration;
+    int bit_rate;
+    int size;
+} ci_media_stream_format_t;
+
+typedef struct {
+    ci_media_stream_info_t stream;
+    ci_media_stream_format_t format;
+} ci_media_info_result_t;
+
 #define COS_AUTH_EXPIRE_DEFAULT 300
 
 #endif

@@ -578,15 +578,9 @@ void multipart_upload_file_from_buffer()
     cos_table_t *resp_headers = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t upload_id;
-    cos_upload_file_t *upload_file = NULL;
     cos_status_t *s = NULL;
-    cos_list_upload_part_params_t *params = NULL;
     cos_list_t complete_part_list;
-    cos_list_part_content_t *part_content = NULL;
     cos_complete_part_content_t *complete_part_content = NULL;
-    int part_num = 1;
-    int64_t pos = 0;
-    int64_t file_length = 0;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -610,7 +604,6 @@ void multipart_upload_file_from_buffer()
     }
 
     //upload part from buffer
-    int res = COSE_OK;
     char *str = "This is my test data....";
     cos_list_t buffer;
     cos_buf_t *content;
@@ -1933,7 +1926,6 @@ void test_directory()
             break;
         }
         cos_list_object_content_t *content = NULL;
-        char *line = NULL;
         cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
             s = cos_delete_object(options, &bucket, &content->key, &resp_headers);
             log_status(s);
@@ -2042,7 +2034,6 @@ void test_ci_image_process()
     cos_string_t file;
     cos_table_t *resp_headers;
     cos_table_t *headers = NULL;
-    cos_table_t *params = NULL;
     ci_operation_result_t *results = NULL;
 
     cos_pool_create(&p, NULL);
@@ -2084,7 +2075,6 @@ void test_ci_image_qrcode()
     cos_string_t file;
     cos_table_t *resp_headers;
     cos_table_t *headers = NULL;
-    cos_table_t *params = NULL;
     ci_operation_result_t *results = NULL;
     ci_qrcode_info_t *content = NULL;
     ci_qrcode_result_t *result2 = NULL;
@@ -2256,6 +2246,84 @@ static void log_get_auditing_result(ci_auditing_job_result_t *result)
     }
 }
 
+static void log_media_buckets_result(ci_media_buckets_result_t *result)
+{
+    int index = 0;
+    ci_media_bucket_list_t *media_bucket;
+
+    cos_warn_log("total_count: %d", result->total_count);
+    cos_warn_log("page_number: %d", result->page_number);
+    cos_warn_log("page_size: %d", result->page_size);
+
+    cos_list_for_each_entry(ci_media_bucket_list_t, media_bucket, &result->media_bucket_list, node) {
+        cos_warn_log("media_bucket index:%d", ++index);
+        cos_warn_log("media_bucket->bucket_id: %s", media_bucket->bucket_id.data);
+        cos_warn_log("media_bucket->name: %s", media_bucket->name.data);
+        cos_warn_log("media_bucket->region: %s", media_bucket->region.data);
+        cos_warn_log("media_bucket->create_time: %s", media_bucket->create_time.data);
+    }
+}
+
+static void log_media_info_result(ci_media_info_result_t *result)
+{
+    // format
+    cos_warn_log("format.num_stream: %d", result->format.num_stream);
+    cos_warn_log("format.num_program: %d", result->format.num_program);
+    cos_warn_log("format.format_name: %s", result->format.format_name.data);
+    cos_warn_log("format.format_long_name: %s", result->format.format_long_name.data);
+    cos_warn_log("format.start_time: %f", result->format.start_time);
+    cos_warn_log("format.duration: %f", result->format.duration);
+    cos_warn_log("format.bit_rate: %d", result->format.bit_rate);
+    cos_warn_log("format.size: %d", result->format.size);
+
+    // stream.video
+    cos_warn_log("stream.video.index: %d", result->stream.video.index);
+    cos_warn_log("stream.video.codec_name: %s", result->stream.video.codec_name.data);
+    cos_warn_log("stream.video.codec_long_name: %s", result->stream.video.codec_long_name.data);
+    cos_warn_log("stream.video.codec_time_base: %s", result->stream.video.codec_time_base.data);
+    cos_warn_log("stream.video.codec_tag_string: %s", result->stream.video.codec_tag_string.data);
+    cos_warn_log("stream.video.codec_tag: %s", result->stream.video.codec_tag.data);
+    cos_warn_log("stream.video.profile: %s", result->stream.video.profile.data);
+    cos_warn_log("stream.video.height: %d", result->stream.video.height);
+    cos_warn_log("stream.video.width: %d", result->stream.video.width);
+    cos_warn_log("stream.video.has_b_frame: %d", result->stream.video.has_b_frame);
+    cos_warn_log("stream.video.ref_frames: %d", result->stream.video.ref_frames);
+    cos_warn_log("stream.video.sar: %s", result->stream.video.sar.data);
+    cos_warn_log("stream.video.dar: %s", result->stream.video.dar.data);
+    cos_warn_log("stream.video.pix_format: %s", result->stream.video.pix_format.data);
+    cos_warn_log("stream.video.field_order: %s", result->stream.video.field_order.data);
+    cos_warn_log("stream.video.level: %d", result->stream.video.level);
+    cos_warn_log("stream.video.fps: %d", result->stream.video.fps);
+    cos_warn_log("stream.video.avg_fps: %s", result->stream.video.avg_fps.data);
+    cos_warn_log("stream.video.timebase: %s", result->stream.video.timebase.data);
+    cos_warn_log("stream.video.start_time: %f", result->stream.video.start_time);
+    cos_warn_log("stream.video.duration: %f", result->stream.video.duration);
+    cos_warn_log("stream.video.bit_rate: %f", result->stream.video.bit_rate);
+    cos_warn_log("stream.video.num_frames: %d", result->stream.video.num_frames);
+    cos_warn_log("stream.video.language: %s", result->stream.video.language.data);
+
+    // stream.audio
+    cos_warn_log("stream.audio.index: %d", result->stream.audio.index);
+    cos_warn_log("stream.audio.codec_name: %s", result->stream.audio.codec_name.data);
+    cos_warn_log("stream.audio.codec_long_name: %s", result->stream.audio.codec_long_name.data);
+    cos_warn_log("stream.audio.codec_time_base: %s", result->stream.audio.codec_time_base.data);
+    cos_warn_log("stream.audio.codec_tag_string: %s", result->stream.audio.codec_tag_string.data);
+    cos_warn_log("stream.audio.codec_tag: %s", result->stream.audio.codec_tag.data);
+    cos_warn_log("stream.audio.sample_fmt: %s", result->stream.audio.sample_fmt.data);
+    cos_warn_log("stream.audio.sample_rate: %d", result->stream.audio.sample_rate);
+    cos_warn_log("stream.audio.channel: %d", result->stream.audio.channel);
+    cos_warn_log("stream.audio.channel_layout: %s", result->stream.audio.channel_layout.data);
+    cos_warn_log("stream.audio.timebase: %s", result->stream.audio.timebase.data);
+    cos_warn_log("stream.audio.start_time: %f", result->stream.audio.start_time);
+    cos_warn_log("stream.audio.duration: %f", result->stream.audio.duration);
+    cos_warn_log("stream.audio.bit_rate: %f", result->stream.audio.bit_rate);
+    cos_warn_log("stream.audio.language: %s", result->stream.audio.language.data);
+
+    // stream.subtitle
+    cos_warn_log("stream.subtitle.index: %d", result->stream.subtitle.index);
+    cos_warn_log("stream.subtitle.language: %s", result->stream.subtitle.language.data);
+}
+
 void test_ci_video_auditing()
 {
     cos_pool_t *p = NULL;
@@ -2268,7 +2336,7 @@ void test_ci_video_auditing()
     ci_video_auditing_job_result_t *job_result;
     ci_auditing_job_result_t *auditing_result;
 
-    // basic config
+    // 基础配置
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2280,7 +2348,7 @@ void test_ci_video_auditing()
     options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
-    // replace your config, refer to ‘https://cloud.tencent.com/document/product/436/47316’
+    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/47316’
     job_options = ci_video_auditing_job_options_create(p);
     cos_str_set(&job_options->input_object, "test.mp4");
     cos_str_set(&job_options->job_conf.detect_type, "Porn,Terrorism,Politics,Ads");
@@ -2290,23 +2358,158 @@ void test_ci_video_auditing()
     job_options->job_conf.snapshot.time_interval = 1.5;
     job_options->job_conf.snapshot.count = 10;
 
-    // submit a job of video auditing
+    // 提交一个视频审核任务
     s = ci_create_video_auditing_job(options, &bucket, job_options, NULL, &resp_headers, &job_result);
     log_status(s);
     if (s->code == 200) {
         log_video_auditing_result(job_result);
     }
 
-    // wait a memont for video audit finished, modify your wait time
+    // 等待视频审核任务完成，此处可修改您的等待时间
     sleep(300);
 
-    // get job detail of auditing
+    // 获取审核任务结果
     s = ci_get_auditing_job(options, &bucket, &job_result->jobs_detail.job_id, NULL, &resp_headers, &auditing_result);
     log_status(s);
     if (s->code == 200) {
         log_get_auditing_result(auditing_result);
     }
 
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_media_bucket()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers;
+    ci_media_buckets_request_t *media_buckets_request;
+    ci_media_buckets_result_t *media_buckets_result;
+
+    // 基础配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_CI_ENDPOINT);     // https://ci.<Region>.myqcloud.com
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+
+    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/48988’
+    media_buckets_request = ci_media_buckets_request_create(p);
+    cos_str_set(&media_buckets_request->regions, "");
+    cos_str_set(&media_buckets_request->bucket_names, "");
+    cos_str_set(&media_buckets_request->bucket_name, "");
+    cos_str_set(&media_buckets_request->page_number, "1");
+    cos_str_set(&media_buckets_request->page_size, "10");
+    s = ci_describe_media_buckets(options, media_buckets_request, NULL, &resp_headers, &media_buckets_result);
+    log_status(s);
+    if (s->code == 200) {
+        log_media_buckets_result(media_buckets_result);
+    }
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_snapshot()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    cos_list_t download_buffer;
+    cos_string_t object;
+    ci_get_snapshot_request_t *snapshot_request;
+    cos_buf_t *content = NULL;
+    cos_string_t pic_file = cos_string("snapshot.jpg");
+
+    // 基础配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);   
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+
+    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/55671’
+    snapshot_request = ci_snapshot_request_create(p);
+    snapshot_request->time = 7.5;
+    snapshot_request->width = 0;
+    snapshot_request->height = 0;
+    cos_str_set(&snapshot_request->format, "jpg");
+    cos_str_set(&snapshot_request->rotate, "auto");
+    cos_str_set(&snapshot_request->mode, "exactframe");
+    cos_list_init(&download_buffer);
+    s = ci_get_snapshot_to_buffer(options, &bucket, &object, snapshot_request, NULL, &download_buffer, &resp_headers);
+    log_status(s);
+
+    int64_t len = 0;
+    int64_t size = 0;
+    int64_t pos = 0;
+    cos_list_for_each_entry(cos_buf_t, content, &download_buffer, node) {
+        len += cos_buf_size(content);
+    }
+    char *buf = cos_pcalloc(p, (apr_size_t)(len + 1));
+    buf[len] = '\0';
+    cos_list_for_each_entry(cos_buf_t, content, &download_buffer, node) {
+        size = cos_buf_size(content);
+        memcpy(buf + pos, content->pos, (size_t)size);
+        pos += size;
+    }
+    cos_warn_log("Download len:%ld data=%s", len, buf);
+
+    s = ci_get_snapshot_to_file(options, &bucket, &object, snapshot_request, NULL, &pic_file, &resp_headers);
+    log_status(s);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_media_info()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    ci_media_info_result_t *media_info;
+    cos_string_t object;
+
+    // 基础配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);   
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+
+    // 替换为自己的配置信息，参考文档‘https://cloud.tencent.com/document/product/436/55672’
+    s = ci_get_media_info(options, &bucket, &object, NULL, &resp_headers, &media_info);
+    log_status(s);
+    if (s->code == 200) {
+        log_media_info_result(media_info);
+    }
+
+    // 销毁内存池
     cos_pool_destroy(p);
 }
 
@@ -2370,6 +2573,9 @@ int main(int argc, char *argv[])
     //test_ci_image_qrcode();
     //test_ci_image_compression();
     //test_ci_video_auditing();
+    //test_ci_media_process_media_bucket();
+    //test_ci_media_process_snapshot();
+    //test_ci_media_process_media_info();
 
     //cos_http_io_deinitialize last
     cos_http_io_deinitialize();

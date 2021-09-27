@@ -61,6 +61,12 @@ void cos_init_service_request(const cos_request_options_t *options, http_method_
         cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, const int all_region, cos_http_response_t **resp);
 
 /**
+  * @brief  init ci media_buckets request
+**/
+void cos_init_media_buckets_request(const cos_request_options_t *options, http_method_e method,
+        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, cos_http_response_t **resp);
+
+/**
   * @brief  init cos bucket request
 **/
 void cos_init_bucket_request(const cos_request_options_t *options, const cos_string_t *bucket,
@@ -418,6 +424,16 @@ void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_p
   * @brief  create ci video-auditing job config and init to default 0
 **/
 ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p);
+
+/**
+  * @brief  create ci media_buckets request and init to default 0
+**/
+ci_media_buckets_request_t* ci_media_buckets_request_create(cos_pool_t *p);
+
+/**
+  * @brief  create ci get snapshot request and init to default 0
+**/
+ci_get_snapshot_request_t* ci_snapshot_request_create(cos_pool_t *p);
 
 COS_CPP_END
 

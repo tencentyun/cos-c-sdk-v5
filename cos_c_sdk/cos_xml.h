@@ -138,6 +138,7 @@ int get_xmlnode_value_str(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_
 int get_xmlnode_value_int(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, int *value);
 int get_xmlnode_value_int64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, int64_t *value);
 int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, uint64_t *value);
+int get_xmlnode_value_float(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, float *value);
 
 /**
   * @brief  build xml for checkpoint
@@ -361,6 +362,11 @@ int ci_get_qrcode_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_qrcod
 void build_video_auditing_job_body(cos_pool_t *p, const ci_video_auditing_job_options_t *params, cos_list_t *body);
 int ci_video_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_video_auditing_job_result_t *res, cos_status_t *s);
 int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_auditing_job_result_t *res, cos_status_t *s);
+/*
+ * media process
+ */
+int ci_media_buckets_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_media_buckets_result_t *res, cos_status_t *s);
+int ci_media_info_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_media_info_result_t *res);
 
 COS_CPP_END
 
