@@ -20,6 +20,8 @@ typedef struct {
 #define cos_tolower(c)      (char) ((c >= 'A' && c <= 'Z') ? (c | 0x20) : c)
 #define cos_toupper(c)      (char) ((c >= 'a' && c <= 'z') ? (c & ~0x20) : c)
 
+#define cos_string_valid(str) ((str)->data != NULL && (str)->len > 0)
+
 static APR_INLINE void cos_string_tolower(cos_string_t *str)
 {
     int i = 0;

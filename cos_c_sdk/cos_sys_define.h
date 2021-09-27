@@ -82,6 +82,12 @@ typedef apr_array_header_t cos_array_header_t;
         apr_table_add(t, key, value_str);               \
     } while(0)
 
+#define cos_table_add_float(t, key, value) do {       \
+        char value_str[64];                             \
+        apr_snprintf(value_str, sizeof(value_str), "%f", value);\
+        apr_table_add(t, key, value_str);               \
+    } while(0)
+
 #define cos_table_set_int64(t, key, value) do {       \
         char value_str[64];                             \
         apr_snprintf(value_str, sizeof(value_str), "%" APR_INT64_T_FMT, value);\
