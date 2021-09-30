@@ -290,23 +290,30 @@ void test_object()
     cos_str_set(&object, TEST_OBJECT_NAME3);
     s = cos_delete_object(options, &bucket, &object, &resp_headers);
     log_status(s);
-    
+
+    // append object
     cos_str_set(&object, TEST_OBJECT_NAME3);
     int32_t count = sizeof(TEST_APPEND_NAMES)/sizeof(char*);
     int32_t index = 0;
+    int64_t position = 0;
+    s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
+    if(s->code == 200) {
+        char *content_length_str = (char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH);
+        if (content_length_str != NULL) {
+            position = atol(content_length_str);
+        }
+    }
     for (; index < count; index++)
     {
-        int64_t position = 0;
         cos_str_set(&file, TEST_APPEND_NAMES[index]);
-        s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
+        s = cos_append_object_from_file(options, &bucket, &object, 
+                                        position, &file, NULL, &resp_headers);
         if(s->code == 200) {
-            char *content_length_str = (char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH);
+            char *content_length_str = (char*)apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION);
             if (content_length_str != NULL) {
                 position = atol(content_length_str);
             }
         }
-        s = cos_append_object_from_file(options, &bucket, &object, 
-                                        position, &file, NULL, &resp_headers);
         log_status(s);
     }
 
