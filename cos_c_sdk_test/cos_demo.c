@@ -7,14 +7,21 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+// endpoint 是 COS 访问域名信息，详情请参见 https://cloud.tencent.com/document/product/436/6224 文档
 static char TEST_COS_ENDPOINT[] = "cos.ap-guangzhou.myqcloud.com";
+// 数据万象的访问域名，详情请参见 https://cloud.tencent.com/document/product/460/31066 文档
 static char TEST_CI_ENDPOINT[] = "https://ci.ap-guangzhou.myqcloud.com";
+// 开发者拥有的项目身份ID/密钥，可在 https://console.cloud.tencent.com/cam/capi 页面获取
 static char *TEST_ACCESS_KEY_ID;                //your secret_id
 static char *TEST_ACCESS_KEY_SECRET;            //your secret_key
+// 开发者访问 COS 服务时拥有的用户维度唯一资源标识，用以标识资源，可在 https://console.cloud.tencent.com/cam/capi 页面获取
 static char TEST_APPID[] = "<APPID>";    //your appid
 static char TEST_BUCKET_NAME[] = "<bucketname-appid>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+// 对象拥有者，比如用户UIN：100000000001
 static char TEST_UIN[] = "<Uin>";    //your uin
+// 地域信息，枚举值可参见 https://cloud.tencent.com/document/product/436/6224 文档，例如：ap-beijing、ap-hongkong、eu-frankfurt 等
 static char TEST_REGION[] = "ap-guangzhou";    //region in endpoint
+// 对象键，对象（Object）在存储桶（Bucket）中的唯一标识。有关对象与对象键的进一步说明，请参见 https://cloud.tencent.com/document/product/436/13324 文档
 static char TEST_OBJECT_NAME1[] = "1.txt";
 static char TEST_OBJECT_NAME2[] = "test2.dat";
 static char TEST_OBJECT_NAME3[] = "test3.dat";
@@ -58,7 +65,7 @@ void log_status(cos_status_t *s)
 void test_sign()
 {
     cos_pool_t *p = NULL;
-    const unsigned char secret_key[] = "AKIDZfbOA78asKUYBcXFrJD0a1ICvR98JM";
+    const unsigned char secret_key[] = "your secret_key";
     const unsigned char time_str[] = "1480932292;1481012292";
     unsigned char sign_key[40];
     cos_buf_t *fmt_str;
