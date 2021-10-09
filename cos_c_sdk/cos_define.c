@@ -59,6 +59,7 @@ const char COS_DELETE[] = "delete";
 const char COS_LOGGING[] = "logging";
 const char COS_INVENTORY[] = "inventory";
 const char COS_TAGGING[] = "tagging";
+const char COS_REFERER[] = "referer";
 const char COS_YES[] = "yes";
 const char COS_OBJECT_TYPE_NORMAL[] = "normal";
 const char COS_OBJECT_TYPE_APPENDABLE[] = "appendable";

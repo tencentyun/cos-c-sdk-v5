@@ -308,13 +308,15 @@ void test_object()
         cos_str_set(&file, TEST_APPEND_NAMES[index]);
         s = cos_append_object_from_file(options, &bucket, &object, 
                                         position, &file, NULL, &resp_headers);
+        log_status(s);
+
+        s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
         if(s->code == 200) {
-            char *content_length_str = (char*)apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION);
+            char *content_length_str = (char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH);
             if (content_length_str != NULL) {
                 position = atol(content_length_str);
             }
         }
-        log_status(s);
     }
 
     
@@ -1856,6 +1858,70 @@ void test_tagging()
     cos_pool_destroy(pool);
 }
 
+static void log_get_referer(cos_referer_params_t *result)
+{
+    int index = 0;
+    cos_referer_domain_t *domain;
+
+    cos_warn_log("status: %s", result->status.data);
+    cos_warn_log("referer_type: %s", result->referer_type.data);
+    cos_warn_log("empty_refer_config: %s", result->empty_refer_config.data);
+
+    cos_list_for_each_entry(cos_referer_domain_t, domain, &result->domain_list, node) {
+        cos_warn_log("domain index:%d", ++index);
+        cos_warn_log("domain: %s", domain->domain.data);
+    }
+}
+
+void test_referer()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_referer_params_t *params = NULL;
+    cos_referer_domain_t *domain = NULL;
+    cos_referer_params_t *result = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/32492
+    params = cos_create_referer_params(pool);
+    cos_str_set(&params->status, "Enabled");
+    cos_str_set(&params->referer_type, "White-List");
+    cos_str_set(&params->empty_refer_config, "Allow");
+    domain = cos_create_referer_domain(pool);
+    cos_str_set(&domain->domain, "www.qq.com");
+    cos_list_add_tail(&domain->node, &params->domain_list);
+    domain = cos_create_referer_domain(pool);
+    cos_str_set(&domain->domain, "*.tencent.com");
+    cos_list_add_tail(&domain->node, &params->domain_list);
+
+    // put referer
+    status = cos_put_bucket_referer(options, &bucket, params, &resp_headers);
+    log_status(status);
+
+    // get referer
+    result = cos_create_referer_params(pool);
+    status = cos_get_bucket_referer(options, &bucket, result, &resp_headers);
+    log_status(status);
+    if (status->code == 200) {
+        log_get_referer(result);
+    }
+
+    cos_pool_destroy(pool);
+}
+
 void test_intelligenttiering()
 {
     cos_pool_t *pool = NULL;
@@ -2548,6 +2614,7 @@ int main(int argc, char *argv[])
 
     //test_intelligenttiering();
     //test_tagging();
+    //test_referer();
     //test_logging();
     //test_inventory();
     //test_put_object_from_file_with_sse();
