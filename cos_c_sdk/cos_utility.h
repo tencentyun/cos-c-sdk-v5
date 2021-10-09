@@ -279,6 +279,10 @@ cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p);
 cos_tagging_params_t *cos_create_tagging_params(cos_pool_t *p);
 cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p);
 
+// @brief  create referer params
+cos_referer_params_t *cos_create_referer_params(cos_pool_t *p);
+cos_referer_domain_t *cos_create_referer_domain(cos_pool_t *p);
+
 // @brief  create intelligenttiering params
 cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t *p);
 

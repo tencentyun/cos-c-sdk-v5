@@ -872,6 +872,21 @@ cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p)
     return params;
 }
 
+cos_referer_params_t *cos_create_referer_params(cos_pool_t *p)
+{
+    cos_referer_params_t *params = NULL;
+    params = (cos_referer_params_t*) cos_pcalloc(p, sizeof(cos_referer_params_t));
+    cos_list_init(&params->domain_list);
+    return params;
+}
+
+cos_referer_domain_t *cos_create_referer_domain(cos_pool_t *p)
+{
+    cos_referer_domain_t *params = NULL;
+    params = (cos_referer_domain_t*) cos_pcalloc(p, sizeof(cos_referer_domain_t));
+    return params;
+}
+
 cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t *p)
 {
     cos_intelligenttiering_params_t *params = NULL;

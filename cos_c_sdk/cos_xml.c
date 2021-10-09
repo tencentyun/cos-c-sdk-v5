@@ -77,6 +77,19 @@ char *get_xmlnode_value(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_pa
     return value;
 }
 
+char *get_spec_xmlnode_value(cos_pool_t *p, mxml_node_t *xml_node)
+{
+    char *value = NULL;
+    const char *node_content;
+
+    node_content = mxmlGetOpaque(xml_node);
+    if (node_content != NULL) {
+        value = apr_pstrdup(p, node_content);
+    }
+
+    return value;
+}
+
 void cos_get_service_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_get_service_params_t *params)
 {
     const char *content;
@@ -1286,6 +1299,51 @@ char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params)
     return tagging_xml;
 }
 
+void build_referer_body(cos_pool_t *p, cos_referer_params_t *params, cos_list_t *body)
+{
+    char *referer_xml;
+    cos_buf_t *b;
+
+    referer_xml = build_referer_xml(p, params);
+    cos_list_init(body);
+    b = cos_buf_pack(p, referer_xml, strlen(referer_xml));
+    cos_list_add_tail(&b->node, body);
+}
+
+char *build_referer_xml(cos_pool_t *p, cos_referer_params_t *params) 
+{ 
+    char *referer_xml;
+    char *xml_buff;
+    cos_string_t xml_doc;
+    mxml_node_t *doc;
+    mxml_node_t *root_node;
+    mxml_node_t *domain_list_node;
+    cos_referer_domain_t *domain = NULL;
+
+    doc = mxmlNewXML("1.0");
+    root_node = mxmlNewElement(doc, "RefererConfiguration");
+    build_xml_node(root_node, "Status", &params->status);
+    build_xml_node(root_node, "RefererType", &params->referer_type);
+    build_xml_node(root_node, "EmptyReferConfiguration", &params->empty_refer_config);
+    domain_list_node = mxmlNewElement(root_node, "DomainList");
+    cos_list_for_each_entry(cos_referer_domain_t, domain, &params->domain_list, node) {
+        build_xml_node(domain_list_node, "Domain", &domain->domain);
+    }
+
+    xml_buff = new_xml_buff(doc);
+    if (xml_buff == NULL) {
+        mxmlDelete(doc);
+        return NULL;
+    }
+    cos_str_set(&xml_doc, xml_buff);
+    referer_xml = cos_pstrdup(p, &xml_doc);
+
+    free(xml_buff);
+    mxmlDelete(doc);
+
+    return referer_xml;
+}
+
 void build_intelligenttiering_body(cos_pool_t *p, cos_intelligenttiering_params_t *params, cos_list_t *body)
 {
     char *xml;
@@ -1880,6 +1938,36 @@ int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_p
     }
  
     return res;
+}
+
+int cos_get_referer_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_referer_params_t *params)
+{
+    int ret;
+    mxml_node_t *root = NULL;
+    mxml_node_t *pnode = NULL;
+    mxml_node_t *onode = NULL;
+    cos_referer_domain_t *domain;
+
+    ret = get_xmldoc(bc, &root);
+    if (ret == COSE_OK) {
+        get_xmlnode_value_str(p, root, "Status", &params->status);
+        get_xmlnode_value_str(p, root, "RefererType", &params->referer_type);
+        get_xmlnode_value_str(p, root, "EmptyReferConfiguration", &params->empty_refer_config);
+        pnode = mxmlFindElement(root, root, "DomainList", NULL, NULL, MXML_DESCEND);
+        if (pnode != NULL) {
+            onode = mxmlFindElement(pnode, pnode, "Domain", NULL, NULL, MXML_DESCEND);
+            while (onode != NULL) {
+                domain = cos_create_referer_domain(p);
+                get_spec_xmlnode_value_str(p, onode, &domain->domain);
+                cos_list_add_tail(&domain->node, &params->domain_list);
+                onode = mxmlFindElement(onode, pnode, "Domain", NULL, NULL, MXML_DESCEND);
+            }
+        }
+
+        mxmlDelete(root);
+    }
+
+    return ret;
 }
 
 int cos_get_intelligenttiering_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_intelligenttiering_params_t *params)
@@ -2613,6 +2701,17 @@ int get_xmlnode_value_float(cos_pool_t *p, mxml_node_t *xml_node, const char *xm
         return COS_FALSE;
     }    
     *value = atof(node_content);
+    return COS_TRUE;
+}
+
+int get_spec_xmlnode_value_str(cos_pool_t *p, mxml_node_t *xml_node, cos_string_t *value)
+{
+    char *node_content;
+    node_content = get_spec_xmlnode_value(p, xml_node);
+    if (NULL == node_content) {
+        return COS_FALSE;
+    }
+    cos_str_set(value, node_content);
     return COS_TRUE;
 }
 

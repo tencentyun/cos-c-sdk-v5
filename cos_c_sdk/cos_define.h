@@ -82,6 +82,7 @@ extern const char COS_DOMAIN[];
 extern const char COS_LOGGING[];
 extern const char COS_INVENTORY[];
 extern const char COS_TAGGING[];
+extern const char COS_REFERER[];
 extern const char COS_DELETE[];
 extern const char COS_YES[];
 extern const char COS_OBJECT_TYPE_NORMAL[];
@@ -494,6 +495,19 @@ typedef struct {
 typedef struct {
     cos_list_t node;
 } cos_tagging_params_t;
+
+typedef struct {
+    cos_list_t node;
+    cos_string_t domain;
+} cos_referer_domain_t;
+
+typedef struct {
+    cos_string_t status;                // "Enabled" or "Disabled"
+    cos_string_t referer_type;          // "Black-List" or "White-List"
+    // list type: cos_referer_domain_t
+    cos_list_t domain_list;
+    cos_string_t empty_refer_config;    // "Allow" or "Deny"(default)
+} cos_referer_params_t;
 
 typedef struct {
     cos_string_t status;

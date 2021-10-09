@@ -460,11 +460,37 @@ cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-
 cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
                                     const cos_string_t *bucket,
                                     cos_tagging_params_t *tagging_params,
                                     cos_table_t **resp_headers);
+
+/*
+ * @brief  put cos bucket referer
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   tagging_params  the cos bucket referer configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_bucket_referer(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
+                                     cos_referer_params_t *referer_params,
+                                     cos_table_t **resp_headers);
+
+/*
+ * @brief  get cos bucket referer
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[out]  tagging_params  the cos bucket referer configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_bucket_referer(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
+                                     cos_referer_params_t *referer_params,
+                                     cos_table_t **resp_headers);
+
 /*
  * @brief  delete cos bucket tagging
  * @param[in]   options       the cos request options

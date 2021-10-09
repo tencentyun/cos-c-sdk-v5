@@ -15,6 +15,7 @@ COS_CPP_START
 **/
 int get_xmldoc(cos_list_t *bc, mxml_node_t **root);
 char *get_xmlnode_value(cos_pool_t *p, mxml_node_t * root, const char *xml_path);
+char *get_spec_xmlnode_value(cos_pool_t *p, mxml_node_t * root);
 
 /**
   * @brief  build xml body for complete_multipart_upload
@@ -112,6 +113,12 @@ char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params);
 void build_tagging_body(cos_pool_t *p, cos_tagging_params_t *params, cos_list_t *body);
 char *build_tagging_xml(cos_pool_t *p, cos_tagging_params_t *params);
 
+/**
+ *  @brief  build xml body for bucket referer
+ */
+void build_referer_body(cos_pool_t *p, cos_referer_params_t *params, cos_list_t *body);
+char *build_referer_xml(cos_pool_t *p, cos_referer_params_t *params);
+
 
 void build_intelligenttiering_body(cos_pool_t *p, cos_intelligenttiering_params_t *params, cos_list_t *body);
 char *build_intelligenttiering_xml(cos_pool_t *p, cos_intelligenttiering_params_t *params);
@@ -139,6 +146,8 @@ int get_xmlnode_value_int(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_
 int get_xmlnode_value_int64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, int64_t *value);
 int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, uint64_t *value);
 int get_xmlnode_value_float(cos_pool_t *p, mxml_node_t *xml_node, const char *xml_path, float *value);
+
+int get_spec_xmlnode_value_str(cos_pool_t *p, mxml_node_t *xml_node, cos_string_t *value);
 
 /**
   * @brief  build xml for checkpoint
@@ -287,6 +296,11 @@ int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_invento
 int cos_list_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_inventory_params_t *params);
 
 int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_params_t *params);
+
+/**
+  * @brief parse bucket referer from xml body
+**/
+int cos_get_referer_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_referer_params_t *params);
 
 int cos_get_intelligenttiering_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_intelligenttiering_params_t *params);
 
