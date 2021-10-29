@@ -110,6 +110,9 @@ extern const int MAX_SUFFIX_LEN;
 extern const char COS_CONTENT_SHA1[];
 extern const char COS_RANGE[];
 extern const char COS_INTELLIGENTTIERING[];
+extern const char *SIGN_HEADER[];
+extern const int SIGN_HEADER_NUM;
+extern const char X_COS_HEADER[];
 
 
 

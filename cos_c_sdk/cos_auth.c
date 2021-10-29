@@ -48,8 +48,21 @@ int cos_get_string_to_sign(cos_pool_t *p,
     int time_str_len = 0;
     unsigned char hexdigest[40];
     unsigned char sign_key[40];
+    cos_table_t *sort_headers;
+    cos_table_t *sort_params;
+    cos_string_t params_str = cos_null_string;
+    cos_string_t header_str = cos_null_string;
+    cos_string_t paramslist_str;
+    cos_string_t header_list_str;
+    int res;
 
     cos_str_null(signstr);
+
+    // used copy to sort for build http param(must be copy, otherwise apr_table_get() will be abnormal)
+    sort_headers = apr_table_copy(p, headers);
+    sort_params = apr_table_copy(p, params);
+    cos_table_sort_by_dict(sort_headers);
+    cos_table_sort_by_dict(sort_params);
 
     fmt_str = cos_create_buf(p, 1024);
     if (NULL == fmt_str) {
@@ -72,14 +85,19 @@ int cos_get_string_to_sign(cos_pool_t *p,
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1); 
 
     // query-parameters
+    res = cos_table_to_string(p, sort_params, &params_str, sign_content_query_params);
+    if (res != COSE_OK) {
+        return res;
+    }
+    cos_buf_append_string(p, fmt_str, params_str.data, params_str.len);
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
     
-    
-    // Host
-    cos_buf_append_string(p, fmt_str, "host=", sizeof("host=")-1);
-    if (headers != NULL && (value = apr_table_get(headers, COS_HOST)) != NULL) {            
-        cos_buf_append_string(p, fmt_str, value, strlen(value));    
-    }                                                               
+    // headers
+    res = cos_table_to_string(p, sort_headers, &header_str, sign_content_header);  
+    if (res != COSE_OK) {
+        return res;
+    }
+    cos_buf_append_string(p, fmt_str, header_str.data, header_str.len);                                                         
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);  
 
     // Format-String sha1hash
@@ -96,10 +114,17 @@ int cos_get_string_to_sign(cos_pool_t *p,
     cos_get_hmac_sha1_hexdigest(sign_key, (unsigned char*)secret_key->data, secret_key->len, time_str, time_str_len);
     cos_get_hmac_sha1_hexdigest(hexdigest, sign_key, sizeof(sign_key), sign_str->pos, cos_buf_size(sign_str));
 
-    value = apr_psprintf(p, "q-sign-algorithm=sha1&q-ak=%.*s&q-sign-time=%.*s&q-key-time=%.*s&q-header-list=host&q-url-param-list=&q-signature=%.*s",
+    cos_str_set(&header_list_str, "");
+    (void)cos_table_key_to_string(p, sort_headers, &header_list_str, sign_content_header);
+    cos_str_set(&paramslist_str, "");
+    (void)cos_table_key_to_string(p, sort_params, &paramslist_str, sign_content_query_params);
+
+    value = apr_psprintf(p, "q-sign-algorithm=sha1&q-ak=%.*s&q-sign-time=%.*s&q-key-time=%.*s&q-header-list=%.*s&q-url-param-list=%.*s&q-signature=%.*s",
                          secret_id->len, secret_id->data,
                          time_str_len, (char*)time_str,
                          time_str_len, (char*)time_str,
+                         header_list_str.len, header_list_str.data,
+                         paramslist_str.len, paramslist_str.data,
                          (int)sizeof(hexdigest), hexdigest);
 
     // result

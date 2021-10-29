@@ -818,6 +818,75 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     return COSE_OK;    
 }
 
+int cos_gen_presigned_url_safe(const cos_request_options_t *options,
+                          const cos_string_t *bucket, 
+                          const cos_string_t *object,
+                          const int64_t expire,
+                          http_method_e method,
+                          cos_table_t *headers,
+                          cos_table_t *params,
+                          int sign_host,
+                          cos_string_t *presigned_url)
+{
+    cos_string_t signstr;
+    int res;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    char uristr[3*COS_MAX_URI_LEN+1];
+    char param[3*COS_MAX_QUERY_ARG_LEN+1];
+    char *url = NULL;
+    const char *proto;
+    cos_string_t query_str;
+
+    uristr[0] = '\0';
+    param[0] = '\0';
+    cos_str_null(&signstr);
+
+    params = cos_table_create_if_null(options, params, 1);
+    headers = cos_table_create_if_null(options, headers, 1);
+
+    cos_init_object_request(options, bucket, object, method, 
+                            &req, params, headers, NULL, 0, &resp);
+    if (sign_host && req->host) {
+        apr_table_set(req->headers, COS_HOST, req->host);
+    }
+    res = cos_gen_sign_string(options, bucket, object, expire, req, &signstr);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_gen_sign_string, res=%d", res);
+        return res;
+    }
+
+    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_url_encode, res=%d", res);
+        return res;
+    }
+
+    res = cos_url_encode(param, signstr.data, COS_MAX_QUERY_ARG_LEN);
+    if (res != COSE_OK) {
+        cos_error_log("failed to call cos_url_encode, res=%d", res);
+        return res;
+    }
+
+    proto = req->proto != NULL && strlen(req->proto) != 0 ? req->proto : COS_HTTP_PREFIX;
+
+    cos_str_set(&query_str, "?");
+    if ((res = cos_query_params_to_string(options->pool, params, &query_str)) != COSE_OK) {
+        return res;
+    }
+    url = apr_psprintf(options->pool, "%s%s/%s%.*s%ssign=%s",
+                       proto,
+                       req->host,
+                       uristr,
+                       query_str.len,
+                       query_str.data,
+                       query_str.len > 1 ? "&" : "",
+                       param);
+    cos_str_set(presigned_url, url);
+
+    return COSE_OK;    
+}
+
 // 云上数据处理 https://cloud.tencent.com/document/product/460/18147
 cos_status_t *ci_image_process(const cos_request_options_t *options,
                                 const cos_string_t *bucket,

@@ -1,5 +1,7 @@
 #include "cos_sys_util.h"
 #include "cos_log.h"
+#include "cos_define.h"
+#include <ctype.h>
 
 static const char *g_s_wday[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -10,6 +12,9 @@ static const char *g_s_mon[] = {
 };
 
 static const char g_s_gmt_format[] = "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT";
+
+static cos_table_t *g_sign_header_table = NULL;
+static cos_pool_t *g_table_pool = NULL;
 
 int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root)
 {
@@ -101,6 +106,62 @@ int cos_url_encode(char *dest, const char *src, int maxSrcSize)
     return COSE_OK;
 }
 
+static int table_dict_cmp(const void * a, const void * b)
+{
+   return strcmp(((cos_table_entry_t*)a)->key, ((cos_table_entry_t*)b)->key);
+}
+
+void cos_table_sort_by_dict(cos_table_t *table)
+{
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+
+    if (apr_is_empty_table(table)) {
+        return;
+    }
+
+    tarr = cos_table_elts(table);
+    telts = (cos_table_entry_t*)tarr->elts;
+
+    qsort((void *)telts, tarr->nelts, tarr->elt_size, table_dict_cmp);
+}
+
+void cos_init_sign_header_table()
+{
+    int idx = 0;
+
+    if (g_sign_header_table != NULL && !apr_is_empty_table(g_sign_header_table)) {
+        return;
+    }
+
+    cos_pool_create(&g_table_pool, NULL);
+    g_sign_header_table = cos_table_make(g_table_pool, SIGN_HEADER_NUM);
+    for (; idx < SIGN_HEADER_NUM; idx++) {
+        apr_table_add(g_sign_header_table, SIGN_HEADER[idx], "");
+    }
+}
+
+void cos_deinit_sign_header_table()
+{
+    if (g_sign_header_table != NULL) {
+        apr_table_clear(g_sign_header_table);
+        g_sign_header_table = NULL;
+    }
+
+    if (g_table_pool != NULL) {
+        cos_pool_destroy(g_table_pool);
+        g_table_pool = NULL;
+    }
+}
+
+static void cos_strlow(char *str)
+{
+    while (*str) {
+        *str = tolower(*str);
+        str++;
+    }
+}
+
 int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_string_t *querystr)
 {
     int rs;
@@ -144,6 +205,126 @@ int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_str
         }
         cos_buf_append_string(p, querybuf, abuf, len);
         sep = '&';
+    }
+
+    // result
+    querystr->data = (char *)querybuf->pos;
+    querystr->len = cos_buf_size(querybuf);
+    
+    return COSE_OK;
+}
+
+static int is_sign_header(const char *header)
+{
+    return (apr_table_get(g_sign_header_table, header) != NULL) || 
+            (strstr(header, X_COS_HEADER) == header);
+}
+
+static int is_empty_header_value(char *value)
+{
+    return value != NULL && *value == '\0';
+}
+
+int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type)
+{
+    int rs;
+    int pos;
+    int len;
+    char *sep = "";
+    char ebuf[COS_MAX_QUERY_ARG_LEN*3+1];
+    char abuf[COS_MAX_QUERY_ARG_LEN*6+128];
+    int max_len;
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+    cos_buf_t *querybuf;
+
+    if (apr_is_empty_table(table)) {
+        return COSE_OK;
+    }
+
+    max_len = sizeof(abuf)-1;
+    querybuf = cos_create_buf(p, COS_MAX_QUERY_ARG_LEN);
+    cos_str_null(querystr);
+
+    tarr = cos_table_elts(table);
+    telts = (cos_table_entry_t*)tarr->elts;
+    
+    for (pos = 0; pos < tarr->nelts; ++pos) {
+        if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
+            cos_error_log("table params args too big, key:%s.", telts[pos].key);
+            return COSE_INVALID_ARGUMENT;
+        }
+        cos_strlow(ebuf);
+
+        if (sign_type == sign_content_header) {
+            if (!is_sign_header(ebuf) || is_empty_header_value(telts[pos].val)) {
+                continue;
+            }
+        }
+
+        len = apr_snprintf(abuf, max_len, "%s%s", sep, ebuf);
+        if (telts[pos].val != NULL) {
+            if ((rs = cos_url_encode(ebuf, telts[pos].val, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
+                cos_error_log("table params args too big, value:%s.", telts[pos].val);
+                return COSE_INVALID_ARGUMENT;
+            }
+            len += apr_snprintf(abuf+len, max_len-len, "=%s", ebuf);
+            if (len >= COS_MAX_QUERY_ARG_LEN) {
+                cos_error_log("table params args too big, %s.", abuf);
+                return COSE_INVALID_ARGUMENT;
+            }
+        }
+        cos_buf_append_string(p, querybuf, abuf, len);
+        sep = "&";
+    }
+
+    // result
+    querystr->data = (char *)querybuf->pos;
+    querystr->len = cos_buf_size(querybuf);
+    
+    return COSE_OK;
+}
+
+int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type)
+{
+    int rs;
+    int pos;
+    int len;
+    char *sep = "";
+    char ebuf[COS_MAX_QUERY_ARG_LEN*3+1];
+    char abuf[COS_MAX_QUERY_ARG_LEN*6+128];
+    int max_len;
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+    cos_buf_t *querybuf;
+
+    if (apr_is_empty_table(table)) {
+        return COSE_OK;
+    }
+
+    max_len = sizeof(abuf)-1;
+    querybuf = cos_create_buf(p, 256);
+    cos_str_null(querystr);
+
+    tarr = cos_table_elts(table);
+    telts = (cos_table_entry_t*)tarr->elts;
+    
+    for (pos = 0; pos < tarr->nelts; ++pos) {
+        if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
+            cos_error_log("table params args too big, key:%s.", telts[pos].key);
+            return COSE_INVALID_ARGUMENT;
+        }
+        cos_strlow(ebuf);
+
+        if (sign_type == sign_content_header) {
+            if (!is_sign_header(ebuf) || is_empty_header_value(telts[pos].val)) {
+                continue;
+            }
+        }
+
+        len = apr_snprintf(abuf, max_len, "%s%s", sep, ebuf);
+        cos_buf_append_string(p, querybuf, abuf, len);
+        sep = ";";
     }
 
     // result

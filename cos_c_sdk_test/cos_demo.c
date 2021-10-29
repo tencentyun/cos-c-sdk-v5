@@ -1424,6 +1424,8 @@ void test_presigned_url()
     cos_string_t bucket;
     cos_string_t object;
     cos_string_t presigned_url;
+    cos_table_t *params;
+    cos_table_t *headers;
     
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -1432,8 +1434,15 @@ void test_presigned_url()
     cos_str_set(&object, TEST_OBJECT_NAME1);
 
     cos_gen_presigned_url(options, &bucket, &object, 300, HTTP_GET, &presigned_url);
+    printf("presigned_url: %s\n", presigned_url.data);
 
-    printf("presigned url: %s\n", presigned_url.data);
+    // 添加您自己的params和headers
+    params = cos_table_make(options->pool, 0);
+    headers = cos_table_make(options->pool, 0);
+
+    // 强烈建议sign_host为1，这样强制把host头域加入签名列表，防止越权访问问题
+    cos_gen_presigned_url_safe(options, &bucket, &object, 300, HTTP_GET, headers, params, 0, &presigned_url);
+    printf("presigned_url_safe: %s\n", presigned_url.data);
 
     cos_pool_destroy(p);
     
@@ -2650,6 +2659,7 @@ int main(int argc, char *argv[])
     //test_copy_with_part_copy();
     //test_move();
     //test_directory();
+    //test_presigned_url();
     //test_ci_base_image_process();
     //test_ci_image_process();
     //test_ci_image_qrcode();
