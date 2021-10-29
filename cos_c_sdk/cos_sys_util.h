@@ -12,6 +12,12 @@
 
 COS_CPP_START
 
+
+typedef enum {
+    sign_content_header,
+    sign_content_query_params
+} sign_content_type_e;
+
 int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root);
 
 void cos_gnome_sort(const char **headers, int size);
@@ -88,6 +94,19 @@ void cos_get_hmac_sha1_hexdigest(unsigned char hexdigest[40], const unsigned cha
                                                const unsigned char *message, int message_len);
 
 void cos_get_sha1_hexdigest(unsigned char hexdigest[40], const unsigned char *message, int message_len);
+
+/*
+ * @brief query params and header to sign format string.
+**/
+void cos_table_sort_by_dict(cos_table_t *table);
+int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type);
+int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type);
+
+/*
+ * @brief init/deinit sign header table.
+**/
+void cos_init_sign_header_table();
+void cos_deinit_sign_header_table();
 
 
 COS_CPP_END

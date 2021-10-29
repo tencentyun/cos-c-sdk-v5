@@ -84,3 +84,31 @@ const int COS_MAX_PART_NUM = 10000;
 const int COS_PER_RET_NUM = 1000;
 const int MAX_SUFFIX_LEN = 1024;
 const char COS_INTELLIGENTTIERING[] = "intelligenttiering";
+
+const char *SIGN_HEADER[] = {
+    "cache-control",
+    "content-disposition",
+    "content-encoding",
+    "content-length",
+    "content-md5",
+    "content-type",
+    "expect",
+    "expires",
+    "host",
+    "if-match",
+    "if-modified-since",
+    "if-none-match",
+    "if-unmodified-since",
+    "origin",
+    "range",
+    "response-cache-control",
+    "response-content-disposition",
+    "response-content-encoding",
+    "response-content-language",
+    "response-content-type",
+    "response-expires",
+    "transfer-encoding",
+    "versionid"
+};
+const int SIGN_HEADER_NUM = (int)(sizeof(SIGN_HEADER) / sizeof(SIGN_HEADER[0]));
+const char X_COS_HEADER[] = "x-cos-";

@@ -1,6 +1,7 @@
 #include "cos_log.h"
 #include "cos_http_io.h"
 #include "cos_sys_define.h"
+#include "cos_sys_util.h"
 #include <apr_thread_mutex.h>
 #include <apr_file_io.h>
 
@@ -327,6 +328,8 @@ int cos_http_io_initialize(const char *user_agent_info, int flags)
     cos_set_default_request_options(req_options);
     cos_set_default_transport_options(trans_options);
 
+    cos_init_sign_header_table();
+
     return COSE_OK;
 }
 
@@ -347,6 +350,9 @@ void cos_http_io_deinitialize()
         cos_pool_destroy(cos_global_pool);
         cos_global_pool = NULL;
     }
+
+    cos_deinit_sign_header_table();
+    
     apr_terminate();
 }
 

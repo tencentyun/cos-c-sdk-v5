@@ -1555,6 +1555,29 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
                           http_method_e method,
                           cos_string_t *presigned_url);
 
+/*
+ * @brief  generate a presigned cos url safety
+ * @param[in]   options             the cos request options
+ * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object              the cos object name
+ * @param[in]   expire              the signature expire time, count as seconds
+ * @param[in]   method              http request method, defined in enum http_method_e 
+ * @param[in]   headers             the headers for request    
+ * @param[in]   params              the params for request
+ * @param[in]   sign_host           whether to sign host
+ * @param[out]  presigned_url       the output of a presigned cos url 
+ * @return  defined in enum cos_error_code_e
+ */
+int cos_gen_presigned_url_safe(const cos_request_options_t *options,
+                          const cos_string_t *bucket, 
+                          const cos_string_t *object,
+                          const int64_t expire,
+                          http_method_e method,
+                          cos_table_t *headers,
+                          cos_table_t *params,
+                          int sign_host,
+                          cos_string_t *presigned_url);
+
 const char *cos_gen_object_url(const cos_request_options_t *options,
                                 const cos_string_t *bucket,
                                 const cos_string_t *object);
