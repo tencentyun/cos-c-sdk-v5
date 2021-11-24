@@ -1810,7 +1810,7 @@ void test_inventory()
     cos_pool_destroy(pool);
 }
 
-void test_tagging()
+void test_bucket_tagging()
 {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1862,6 +1862,66 @@ void test_tagging()
 
     // delete tagging
     status = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
+    log_status(status);
+
+    cos_pool_destroy(pool);
+}
+
+void test_object_tagging()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t version_id = cos_string("");
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    // put object tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    status = cos_put_object_tagging(options, &bucket, &object, &version_id, NULL, params, &resp_headers);
+    log_status(status);
+
+    // get object tagging
+    result = cos_create_tagging_params(pool);
+    status = cos_get_object_tagging(options, &bucket, &object, &version_id, NULL, result, &resp_headers);
+    log_status(status);
+
+    tag = NULL;
+    cos_list_for_each_entry(cos_tagging_tag_t, tag, &result->node, node) {
+        printf("taging key: %s\n", tag->key.data);
+        printf("taging value: %s\n", tag->value.data);
+
+    } 
+
+    // delete tagging
+    status = cos_delete_object_tagging(options, &bucket, &object, &version_id, NULL, &resp_headers);
     log_status(status);
 
     cos_pool_destroy(pool);
@@ -2622,7 +2682,8 @@ int main(int argc, char *argv[])
     cos_log_set_output(NULL);
 
     //test_intelligenttiering();
-    //test_tagging();
+    //test_bucket_tagging();
+    //test_object_tagging();
     //test_referer();
     //test_logging();
     //test_inventory();
