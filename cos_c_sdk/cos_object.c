@@ -778,6 +778,9 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     char param[3*COS_MAX_QUERY_ARG_LEN+1];
     char *url = NULL;
     const char *proto;
+    char *delimiter;
+    cos_string_t unenc_uri = cos_null_string;
+    char *enc_uri;
 
     uristr[0] = '\0';
     param[0] = '\0';
@@ -794,7 +797,16 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
         return res;
     }
 
-    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    enc_uri = req->uri;
+    if (options->config->is_cname) {
+        if ((delimiter = strchr(req->uri, '/')) != NULL) {
+            enc_uri = delimiter + 1;
+            unenc_uri.data = req->uri;
+            unenc_uri.len = enc_uri - req->uri;
+        }
+    }
+    strncpy(uristr, unenc_uri.data, unenc_uri.len);
+    res = cos_url_encode(uristr + unenc_uri.len, enc_uri, COS_MAX_URI_LEN);
     if (res != COSE_OK) {
         cos_error_log("failed to call cos_url_encode, res=%d", res);
         return res;
@@ -837,6 +849,9 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
     char *url = NULL;
     const char *proto;
     cos_string_t query_str;
+    char *delimiter;
+    cos_string_t unenc_uri = cos_null_string;
+    char *enc_uri;
 
     uristr[0] = '\0';
     param[0] = '\0';
@@ -856,7 +871,16 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
         return res;
     }
 
-    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    enc_uri = req->uri;
+    if (options->config->is_cname) {
+        if ((delimiter = strchr(req->uri, '/')) != NULL) {
+            enc_uri = delimiter + 1;
+            unenc_uri.data = req->uri;
+            unenc_uri.len = enc_uri - req->uri;
+        }
+    }
+    strncpy(uristr, unenc_uri.data, unenc_uri.len);
+    res = cos_url_encode(uristr + unenc_uri.len, enc_uri, COS_MAX_URI_LEN);
     if (res != COSE_OK) {
         cos_error_log("failed to call cos_url_encode, res=%d", res);
         return res;
