@@ -64,6 +64,19 @@ cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
                                 cos_table_t *header,
                                 cos_table_t **resp_headers);
 
+/*
+ * @brief  check cos bucket is exist or nonexist
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   bucket_exist  the status of bucket exist, refer to enum cos_bucket_exist_status_e
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_check_bucket_exist(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
+                                     cos_bucket_exist_status_e *bucket_exist,
+                                     cos_table_t **resp_headers);
+
 
 /*
  * @brief  create cos bucket
@@ -740,6 +753,23 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
                               cos_table_t **resp_headers);
 
 /*
+ * @brief  check cos object is exist or nonexist
+ * @param[in]   options       the cos request options
+ * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object        the cos object name
+ * @param[in]   headers       the headers for request
+ * @param[in]   object_exist  the status of object exist, refer to enum cos_object_exist_status_e
+ * @param[out]  resp_headers  cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_check_object_exist(const cos_request_options_t *options, 
+                                     const cos_string_t *bucket, 
+                                     const cos_string_t *object,
+                                     cos_table_t *headers, 
+                                     cos_object_exist_status_e *object_exist,
+                                     cos_table_t **resp_headers);
+
+/*
  * @brief  delete cos object
  * @param[in]   options             the cos request options
  * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
@@ -1396,6 +1426,62 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
                                             cos_table_t *params,
                                             cos_resumable_clt_params_t *clt_params,
                                             cos_progress_callback progress_callback);
+
+/*
+ * @brief  put cos object tagging
+ * @param[in]   options         the cos request options
+ * @param[in]   bucket          the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object          the cos object name
+ * @param[in]   version_id      the versionid of cos object, latest version set to NULL or ""
+ * @param[in]   headers         the headers for request 
+ * @param[in]   tagging_params  the cos bucket tagging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    const cos_string_t *object,
+                                    const cos_string_t *version_id,
+                                    cos_table_t *headers,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+
+/*
+ * @brief  get cos object tagging
+ * @param[in]   options         the cos request options
+ * @param[in]   bucket          the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object          the cos object name
+ * @param[in]   version_id      the versionid of cos object, latest version set to NULL or ""
+ * @param[in]   headers         the headers for request 
+ * @param[out]  tagging_params  the cos bucket tagging configuration 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_get_object_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    const cos_string_t *object,
+                                    const cos_string_t *version_id,
+                                    cos_table_t *headers,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers);
+
+/*
+ * @brief  delete cos object tagging
+ * @param[in]   options         the cos request options
+ * @param[in]   bucket          the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+ * @param[in]   object          the cos object name
+ * @param[in]   version_id      the versionid of cos object, latest version set to NULL or ""
+ * @param[in]   headers         the headers for request 
+ * @param[out]  resp_headers    cos server response headers
+ * @return  cos_status_t, code is 2xx success, other failure
+ */
+cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
+                                       const cos_string_t *bucket,
+                                       const cos_string_t *object,
+                                       const cos_string_t *version_id,
+                                       cos_table_t *headers,
+                                       cos_table_t **resp_headers);
+
 #if 0
 /*
  * @brief  cos create live channel

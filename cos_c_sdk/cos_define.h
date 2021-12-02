@@ -113,6 +113,7 @@ extern const char COS_INTELLIGENTTIERING[];
 extern const char *SIGN_HEADER[];
 extern const int SIGN_HEADER_NUM;
 extern const char X_COS_HEADER[];
+extern const char COS_VERSION_ID[];
 
 
 
@@ -777,5 +778,17 @@ typedef struct {
 } ci_media_info_result_t;
 
 #define COS_AUTH_EXPIRE_DEFAULT 300
+
+typedef enum {
+    COS_BUCKET_NON_EXIST          = 0,   /*< bucket non-exist*/
+    COS_BUCKET_EXIST              = 1,   /*< bucket exist*/
+    COS_BUCKET_UNKNOWN_EXIST      = 2,   /*< unknown status, maybe the req of head has no auth or failed */
+} cos_bucket_exist_status_e;
+
+typedef enum {
+    COS_OBJECT_NON_EXIST          = 0,   /*< object non-exist*/
+    COS_OBJECT_EXIST              = 1,   /*< object exist*/
+    COS_OBJECT_UNKNOWN_EXIST      = 2,   /*< unknown status, maybe the req of head has no auth or failed */
+} cos_object_exist_status_e;
 
 #endif

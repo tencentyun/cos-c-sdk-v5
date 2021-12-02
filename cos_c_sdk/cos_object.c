@@ -237,6 +237,27 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
     return s;
 }
 
+cos_status_t *cos_check_object_exist(const cos_request_options_t *options, 
+                                     const cos_string_t *bucket, 
+                                     const cos_string_t *object,
+                                     cos_table_t *headers, 
+                                     cos_object_exist_status_e *object_exist,
+                                     cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+
+    s = cos_head_object(options, bucket, object, headers, resp_headers);
+    if (s->code == 200 || s->code == 304 || s->code == 412) {
+        *object_exist = COS_OBJECT_EXIST;
+    } else if (s->code == 404) {
+        *object_exist = COS_OBJECT_NON_EXIST;
+    } else {
+        *object_exist = COS_OBJECT_UNKNOWN_EXIST;
+    }
+
+    return s;
+}
+
 cos_status_t *cos_delete_object(const cos_request_options_t *options,
                                 const cos_string_t *bucket, 
                                 const cos_string_t *object, 
@@ -732,6 +753,131 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     return s;
 }
 
+static void cos_add_version_id_params(cos_pool_t *p, 
+                                     const cos_string_t *version_id, 
+                                     cos_table_t *query_params)
+{
+    char *version = NULL;
+
+    if (version_id && version_id->len > 0 && version_id->data != NULL) {
+        version = apr_psprintf(p, "%.*s", version_id->len, version_id->data);
+        apr_table_add(query_params, COS_VERSION_ID, version);
+    }
+}
+
+cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    const cos_string_t *object,
+                                    const cos_string_t *version_id,
+                                    cos_table_t *headers,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+
+    cos_list_t body;
+    unsigned char *md5 = NULL;
+    char *buf = NULL;
+    int64_t body_len;
+    char *b64_value = NULL;
+    int b64_buf_len = (20 + 1) * 4 / 3;
+    int b64_len;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_TAGGING, "");
+    cos_add_version_id_params(options->pool, version_id, query_params);
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+            query_params, headers, NULL, 0, &resp);
+
+    build_tagging_body(options->pool, tagging_params, &body);
+
+    //add Content-MD5
+    body_len = cos_buf_list_len(&body);
+    buf = cos_buf_list_content(options->pool, &body);
+    md5 = cos_md5(options->pool, buf, (apr_size_t)body_len);
+    b64_value = cos_pcalloc(options->pool, b64_buf_len);
+    b64_len = cos_base64_encode(md5, 16, b64_value);
+    b64_value[b64_len] = '\0';
+    apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+
+    apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
+
+    cos_write_request_body_from_buffer(&body, req);
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+
+    return s;
+}
+
+cos_status_t *cos_get_object_tagging(const cos_request_options_t *options,
+                                    const cos_string_t *bucket,
+                                    const cos_string_t *object,
+                                    const cos_string_t *version_id,
+                                    cos_table_t *headers,
+                                    cos_tagging_params_t *tagging_params,
+                                    cos_table_t **resp_headers)
+{
+    int res;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_TAGGING, "");
+    cos_add_version_id_params(options->pool, version_id, query_params);
+
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_object_request(options, bucket, object, HTTP_GET, &req,
+            query_params, headers, NULL, 0, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    res = cos_get_tagging_parse_from_body(options->pool, &resp->body, tagging_params);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+    return s;
+}
+
+cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
+                                       const cos_string_t *bucket,
+                                       const cos_string_t *object,
+                                       const cos_string_t *version_id,
+                                       cos_table_t *headers,
+                                       cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_TAGGING, "");
+    cos_add_version_id_params(options->pool, version_id, query_params);
+    
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_init_object_request(options, bucket, object, HTTP_DELETE, &req, 
+            query_params, headers, NULL, 0, &resp);
+
+    s = cos_process_request(options, req, resp);
+    cos_fill_read_response_header(resp, resp_headers);
+
+    return s;
+}
+
 int cos_gen_sign_string(const cos_request_options_t *options,
                         const cos_string_t *bucket, 
                         const cos_string_t *object,
@@ -778,6 +924,9 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     char param[3*COS_MAX_QUERY_ARG_LEN+1];
     char *url = NULL;
     const char *proto;
+    char *delimiter;
+    cos_string_t unenc_uri = cos_null_string;
+    char *enc_uri;
 
     uristr[0] = '\0';
     param[0] = '\0';
@@ -794,7 +943,16 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
         return res;
     }
 
-    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    enc_uri = req->uri;
+    if (options->config->is_cname) {
+        if ((delimiter = strchr(req->uri, '/')) != NULL) {
+            enc_uri = delimiter + 1;
+            unenc_uri.data = req->uri;
+            unenc_uri.len = enc_uri - req->uri;
+        }
+    }
+    strncpy(uristr, unenc_uri.data, unenc_uri.len);
+    res = cos_url_encode(uristr + unenc_uri.len, enc_uri, COS_MAX_URI_LEN);
     if (res != COSE_OK) {
         cos_error_log("failed to call cos_url_encode, res=%d", res);
         return res;
@@ -837,6 +995,9 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
     char *url = NULL;
     const char *proto;
     cos_string_t query_str;
+    char *delimiter;
+    cos_string_t unenc_uri = cos_null_string;
+    char *enc_uri;
 
     uristr[0] = '\0';
     param[0] = '\0';
@@ -856,7 +1017,16 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
         return res;
     }
 
-    res = cos_url_encode(uristr, req->uri, COS_MAX_URI_LEN);
+    enc_uri = req->uri;
+    if (options->config->is_cname) {
+        if ((delimiter = strchr(req->uri, '/')) != NULL) {
+            enc_uri = delimiter + 1;
+            unenc_uri.data = req->uri;
+            unenc_uri.len = enc_uri - req->uri;
+        }
+    }
+    strncpy(uristr, unenc_uri.data, unenc_uri.len);
+    res = cos_url_encode(uristr + unenc_uri.len, enc_uri, COS_MAX_URI_LEN);
     if (res != COSE_OK) {
         cos_error_log("failed to call cos_url_encode, res=%d", res);
         return res;

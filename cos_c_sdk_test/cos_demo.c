@@ -37,6 +37,25 @@ static char TEST_MULTIPART_OBJECT3[] = "multipart3.dat";
 static char TEST_MULTIPART_OBJECT4[] = "multipart4.dat";
 
 
+static void print_headers(cos_table_t *headers)
+{
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+    int i = 0;
+
+    if (apr_is_empty_table(headers)) {
+        return;
+    }
+
+    tarr = cos_table_elts(headers);
+    telts = (cos_table_entry_t*)tarr->elts;
+
+    printf("header:\n");
+    for (; i < tarr->nelts; i++) {
+        telts = (cos_table_entry_t*)(tarr->elts + i * tarr->elt_size);
+        printf("%s: %s\n", telts->key, telts->val);
+    }
+}
 
 void init_test_config(cos_config_t *config, int is_cname)
 {
@@ -319,7 +338,38 @@ void test_object()
         }
     }
 
-    
+    cos_pool_destroy(p);
+}
+
+void test_check_object_exist()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_object_exist_status_e object_exist;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    // 检查对象是否存在
+    s = cos_check_object_exist(options, &bucket, &object, headers, &object_exist, &resp_headers);
+    if (object_exist == COS_OBJECT_NON_EXIST) {
+        printf("object: %.*s non exist.\n", object.len, object.data);
+    } else if (object_exist == COS_OBJECT_EXIST) {
+        printf("object: %.*s exist.\n", object.len, object.data);
+    } else {
+        printf("object: %.*s unknown status.\n", object.len, object.data);
+        log_status(s);
+    }
+
     cos_pool_destroy(p);
 }
 
@@ -1475,6 +1525,42 @@ void test_head_bucket()
     cos_pool_destroy(pool);
 }
 
+void test_check_bucket_exist()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers = NULL;
+    cos_bucket_exist_status_e bucket_exist;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    
+    // 检查桶是否存在
+    status = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
+    log_status(status);
+    if (bucket_exist == COS_BUCKET_NON_EXIST) {
+        printf("bucket: %.*s non exist.\n", bucket.len, bucket.data);
+    } else if (bucket_exist == COS_BUCKET_EXIST) {
+        printf("bucket: %.*s exist.\n", bucket.len, bucket.data);
+    } else {
+        printf("bucket: %.*s unknown status.\n", bucket.len, bucket.data);
+        log_status(status);
+    }
+
+    cos_pool_destroy(pool);
+}
+
 void test_get_service()
 {
     cos_pool_t *pool = NULL;
@@ -1810,7 +1896,7 @@ void test_inventory()
     cos_pool_destroy(pool);
 }
 
-void test_tagging()
+void test_bucket_tagging()
 {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1862,6 +1948,66 @@ void test_tagging()
 
     // delete tagging
     status = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
+    log_status(status);
+
+    cos_pool_destroy(pool);
+}
+
+void test_object_tagging()
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *status = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t version_id = cos_string("");
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    // put object tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    status = cos_put_object_tagging(options, &bucket, &object, &version_id, NULL, params, &resp_headers);
+    log_status(status);
+
+    // get object tagging
+    result = cos_create_tagging_params(pool);
+    status = cos_get_object_tagging(options, &bucket, &object, &version_id, NULL, result, &resp_headers);
+    log_status(status);
+
+    tag = NULL;
+    cos_list_for_each_entry(cos_tagging_tag_t, tag, &result->node, node) {
+        printf("taging key: %s\n", tag->key.data);
+        printf("taging value: %s\n", tag->value.data);
+
+    } 
+
+    // delete tagging
+    status = cos_delete_object_tagging(options, &bucket, &object, &version_id, NULL, &resp_headers);
     log_status(status);
 
     cos_pool_destroy(pool);
@@ -2622,13 +2768,15 @@ int main(int argc, char *argv[])
     cos_log_set_output(NULL);
 
     //test_intelligenttiering();
-    //test_tagging();
+    //test_bucket_tagging();
+    //test_object_tagging();
     //test_referer();
     //test_logging();
     //test_inventory();
     //test_put_object_from_file_with_sse();
     //test_get_object_to_file_with_sse();
     //test_head_bucket();
+    //test_check_bucket_exist();
     //test_get_service();
     //test_website();
     //test_domain();
@@ -2640,6 +2788,7 @@ int main(int argc, char *argv[])
     //test_put_object_from_file();
     //test_sign();
     //test_object();
+    //test_check_object_exist();
     //multipart_upload_file_from_file();
     //multipart_upload_file_from_buffer();
     //abort_multipart_upload();

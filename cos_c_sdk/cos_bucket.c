@@ -77,6 +77,25 @@ cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
     return s;
 }
 
+cos_status_t *cos_check_bucket_exist(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
+                                     cos_bucket_exist_status_e *bucket_exist,
+                                     cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+
+    s = cos_do_head_bucket(options, bucket, NULL, resp_headers);
+    if (s->code == 200) {
+        *bucket_exist = COS_BUCKET_EXIST;
+    } else if (s->code == 404) {
+        *bucket_exist = COS_BUCKET_NON_EXIST;
+    } else {
+        *bucket_exist = COS_BUCKET_UNKNOWN_EXIST;
+    }
+
+    return s;
+}
+
 cos_status_t *cos_create_bucket(const cos_request_options_t *options, 
                                 const cos_string_t *bucket, 
                                 cos_acl_e cos_acl, 
