@@ -237,6 +237,27 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
     return s;
 }
 
+cos_status_t *cos_check_object_exist(const cos_request_options_t *options, 
+                                     const cos_string_t *bucket, 
+                                     const cos_string_t *object,
+                                     cos_table_t *headers, 
+                                     cos_object_exist_status_e *object_exist,
+                                     cos_table_t **resp_headers)
+{
+    cos_status_t *s = NULL;
+
+    s = cos_head_object(options, bucket, object, headers, resp_headers);
+    if (s->code == 200 || s->code == 304 || s->code == 412) {
+        *object_exist = COS_OBJECT_EXIST;
+    } else if (s->code == 404) {
+        *object_exist = COS_OBJECT_NON_EXIST;
+    } else {
+        *object_exist = COS_OBJECT_UNKNOWN_EXIST;
+    }
+
+    return s;
+}
+
 cos_status_t *cos_delete_object(const cos_request_options_t *options,
                                 const cos_string_t *bucket, 
                                 const cos_string_t *object, 
