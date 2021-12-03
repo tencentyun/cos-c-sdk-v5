@@ -1082,6 +1082,7 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
     char range_buf[64];
     const cos_request_options_t *options = NULL;
     int res = COSE_OK;
+    char *error_msg = NULL;
     
     params = (cos_upload_thread_params_t *)data;
     if (apr_atomic_read32(params->failed) > 0) {
@@ -1100,7 +1101,7 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
     apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
     apr_table_add(headers, COS_RANGE, range_buf);
 
-    cos_init_object_request(options, params->bucket, params->object, HTTP_GET, &req, paras, headers, NULL, 0, &resp);
+    (void)cos_init_object_request(options, params->bucket, params->object, HTTP_GET, &req, paras, headers, NULL, 0, &resp, &error_msg);
     s = cos_status_create(options->pool);
     res = cos_init_read_response_body_to_file_part(options->pool, download_file, resp);
     if (res != COSE_OK) {

@@ -116,6 +116,66 @@ static cos_content_type_t file_type[] = {
     {NULL, NULL}
 };
 
+static char *cos_invaild_params_error_msg[] = {
+    "endpoint is null or empty, please check it",
+    "appid is null or empty, please check it",
+    "bucket is null or empty, please check it",
+    "ak is start with space or end with space, please check it",
+    "sk is start with space or end with space, please check it",
+};
+
+static uintptr_t ignore_bucket_check_ptr = -1;
+
+static int is_ak_or_sk_valid(cos_string_t *str)
+{
+    char *data;
+    int len;
+
+    if (!cos_is_null_string(str)) {
+        data = str->data;
+        len = str->len;
+
+        if (isspace(data[0]) || isspace(data[len - 1])) {
+            return COS_FALSE;
+        }
+    }
+
+    return COS_TRUE;
+}
+
+static int is_config_params_vaild(const cos_request_options_t *options,
+                                  const cos_string_t *bucket,
+                                  char **error_msg)
+{
+    if (cos_is_null_string(&options->config->endpoint)) {
+        *error_msg = cos_invaild_params_error_msg[0];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+    if (cos_is_null_string(&options->config->appid)) {
+        *error_msg = cos_invaild_params_error_msg[1];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+    if ((uintptr_t)bucket != ignore_bucket_check_ptr && cos_is_null_string(bucket)) {
+        *error_msg = cos_invaild_params_error_msg[2];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+    if (!is_ak_or_sk_valid(&options->config->access_key_id)) {
+        *error_msg = cos_invaild_params_error_msg[3];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+    if (!is_ak_or_sk_valid(&options->config->access_key_secret)) {
+        *error_msg = cos_invaild_params_error_msg[4];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+
+    return COS_TRUE;
+}
+
 int starts_with(const cos_string_t *str, const char *prefix) {
     uint32_t i;
     if(NULL != str && prefix && str->len > 0 && strlen(prefix)) {
@@ -201,12 +261,18 @@ void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_p
     ctl->options->host_port = host_port;
 }
 
-void cos_get_service_uri(const cos_request_options_t *options,
+int cos_get_service_uri(const cos_request_options_t *options,
                          const int all_region,
-                         cos_http_request_t *req)
+                         cos_http_request_t *req,
+                         char **error_msg)
 {
     int32_t proto_len;
     cos_string_t raw_endpoint;
+
+    // check params
+    if (!is_config_params_vaild(options, (cos_string_t *)ignore_bucket_check_ptr, error_msg)) {
+        return COS_FALSE;
+    }
 
     generate_proto(options, req);
     if (all_region == 1) {
@@ -220,14 +286,22 @@ void cos_get_service_uri(const cos_request_options_t *options,
 
     req->resource = apr_psprintf(options->pool, "%s", "");
     req->uri = apr_psprintf(options->pool, "%s", "");
+
+    return COS_TRUE;
 }
 
-static void cos_get_media_buckets_uri(const cos_request_options_t *options,
-                               cos_http_request_t *req)
+static int cos_get_media_buckets_uri(const cos_request_options_t *options,
+                               cos_http_request_t *req,
+                               char **error_msg)
 {
     static const char *media_bucket_uri = "mediabucket";
     int32_t proto_len;
     cos_string_t raw_endpoint;
+
+    // check params
+    if (!is_config_params_vaild(options, (cos_string_t *)ignore_bucket_check_ptr, error_msg)) {
+        return COS_FALSE;
+    }
 
     generate_proto(options, req);
     proto_len = strlen(req->proto);
@@ -237,17 +311,25 @@ static void cos_get_media_buckets_uri(const cos_request_options_t *options,
 
     req->resource = apr_psprintf(options->pool, "%s", media_bucket_uri);
     req->uri = apr_psprintf(options->pool, "%s", media_bucket_uri);
+
+    return COS_TRUE;
 }
 
-void cos_get_object_uri(const cos_request_options_t *options,
+int cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
-                        cos_http_request_t *req)
+                        cos_http_request_t *req,
+                        char **error_msg)
 {
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
     int32_t bucket_has_appid = 0;
+
+    // check params
+    if (!is_config_params_vaild(options, bucket, error_msg)) {
+        return COS_FALSE;
+    }
 
     generate_proto(options, req);
 
@@ -288,7 +370,8 @@ void cos_get_object_uri(const cos_request_options_t *options,
     }
     req->uri = apr_psprintf(options->pool, "%.*s",
                             object->len, object->data);
-
+    
+    return COS_TRUE;
 }
 
 const char *cos_gen_object_url(const cos_request_options_t *options,
@@ -350,14 +433,20 @@ const char *cos_gen_object_url(const cos_request_options_t *options,
     return apr_psprintf(options->pool, "%s%s/%s", proto, host, uristr);
 }
 
-void cos_get_bucket_uri(const cos_request_options_t *options, 
+int cos_get_bucket_uri(const cos_request_options_t *options, 
                         const cos_string_t *bucket,
-                        cos_http_request_t *req)
+                        cos_http_request_t *req,
+                        char **error_msg)
 {
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
     int32_t bucket_has_appid = 0;
+
+    // check params
+    if (!is_config_params_vaild(options, bucket, error_msg)) {
+        return COS_FALSE;
+    }
 
     generate_proto(options, req);
 
@@ -397,6 +486,8 @@ void cos_get_bucket_uri(const cos_request_options_t *options,
         }
     }
     req->uri = apr_psprintf(options->pool, "%s", "");
+
+    return COS_TRUE;
 }
 
 #if 0
@@ -1067,42 +1158,45 @@ void cos_init_request(const cos_request_options_t *options,
     (*req)->query_params = params;
 }
 
-void cos_init_service_request(const cos_request_options_t *options,
+int cos_init_service_request(const cos_request_options_t *options,
                               http_method_e method,
                               cos_http_request_t **req,
                               cos_table_t *params,
                               cos_table_t *headers,
                               const int all_region,
-                              cos_http_response_t **resp)
+                              cos_http_response_t **resp,
+                              char **error_msg)
 {
     cos_init_request(options, method, req, params, headers, resp);
-    cos_get_service_uri(options, all_region, *req);
+    return cos_get_service_uri(options, all_region, *req, error_msg);
 }
 
-void cos_init_media_buckets_request(const cos_request_options_t *options,
+int cos_init_media_buckets_request(const cos_request_options_t *options,
                               http_method_e method,
                               cos_http_request_t **req,
                               cos_table_t *params,
                               cos_table_t *headers,
-                              cos_http_response_t **resp)
+                              cos_http_response_t **resp,
+                              char **error_msg)
 {
     cos_init_request(options, method, req, params, headers, resp);
-    cos_get_media_buckets_uri(options, *req);
+    return cos_get_media_buckets_uri(options, *req, error_msg);
 }
 
-void cos_init_bucket_request(const cos_request_options_t *options, 
+int cos_init_bucket_request(const cos_request_options_t *options, 
                              const cos_string_t *bucket,
                              http_method_e method, 
                              cos_http_request_t **req, 
                              cos_table_t *params, 
                              cos_table_t *headers,
-                             cos_http_response_t **resp)
+                             cos_http_response_t **resp,
+                             char **error_msg)
 {
     cos_init_request(options, method, req, params, headers, resp);
-    cos_get_bucket_uri(options, bucket, *req);
+    return cos_get_bucket_uri(options, bucket, *req, error_msg);
 }
 
-void cos_init_object_request(const cos_request_options_t *options, 
+int cos_init_object_request(const cos_request_options_t *options, 
                              const cos_string_t *bucket,
                              const cos_string_t *object, 
                              http_method_e method, 
@@ -1111,7 +1205,8 @@ void cos_init_object_request(const cos_request_options_t *options,
                              cos_table_t *headers,
                              cos_progress_callback cb,
                              uint64_t init_crc,
-                             cos_http_response_t **resp)
+                             cos_http_response_t **resp,
+                             char **error_msg)
 {
     cos_init_request(options, method, req, params, headers, resp);
     if (HTTP_GET == method) {
@@ -1121,7 +1216,7 @@ void cos_init_object_request(const cos_request_options_t *options,
         (*req)->crc64 = init_crc;
     }
 
-    cos_get_object_uri(options, bucket, object, *req);
+    return cos_get_object_uri(options, bucket, object, *req, error_msg);
 }
 
 #if 0

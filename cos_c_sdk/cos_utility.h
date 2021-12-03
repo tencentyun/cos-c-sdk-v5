@@ -15,6 +15,13 @@ COS_CPP_START
         }\
     } while(0)
 
+#define cos_invalid_param_status_set(options, s, error_msg) do { \
+        if (s == NULL) { \
+          s = cos_status_create(options->pool); \
+        } \
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, error_msg); \
+    } while(0)
+
 /**
   * @brief  check hostname ends with specific cos domain suffix.
 **/
@@ -57,29 +64,30 @@ void cos_init_request(const cos_request_options_t *options, http_method_e method
 /**
   * @brief  init cos service request
 **/
-void cos_init_service_request(const cos_request_options_t *options, http_method_e method,
-        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, const int all_region, cos_http_response_t **resp);
+int cos_init_service_request(const cos_request_options_t *options, http_method_e method,
+        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, const int all_region, 
+        cos_http_response_t **resp, char **error_msg);
 
 /**
   * @brief  init ci media_buckets request
 **/
-void cos_init_media_buckets_request(const cos_request_options_t *options, http_method_e method,
-        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, cos_http_response_t **resp);
+int cos_init_media_buckets_request(const cos_request_options_t *options, http_method_e method,
+        cos_http_request_t **req, cos_table_t *params, cos_table_t *headers, cos_http_response_t **resp, char **error_msg);
 
 /**
   * @brief  init cos bucket request
 **/
-void cos_init_bucket_request(const cos_request_options_t *options, const cos_string_t *bucket,
+int cos_init_bucket_request(const cos_request_options_t *options, const cos_string_t *bucket,
         http_method_e method, cos_http_request_t **req, cos_table_t *params, cos_table_t *headers,
-        cos_http_response_t **resp);
+        cos_http_response_t **resp, char **error_msg);
  
 /**
   * @brief  init cos object request
 **/
-void cos_init_object_request(const cos_request_options_t *options, const cos_string_t *bucket,
+int cos_init_object_request(const cos_request_options_t *options, const cos_string_t *bucket,
         const cos_string_t *object, http_method_e method, cos_http_request_t **req, 
         cos_table_t *params, cos_table_t *headers, cos_progress_callback cb, uint64_t initcrc,
-        cos_http_response_t **resp);
+        cos_http_response_t **resp, char **error_msg);
 
 /**
   * @brief  init cos live channel request
@@ -117,24 +125,27 @@ cos_status_t *cos_process_signed_request(const cos_request_options_t *options,
 /**
   * @brief  get object uri using third-level domain if hostname is cos domain, otherwise second-level domain
 **/
-void cos_get_object_uri(const cos_request_options_t *options,
+int cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
-                        cos_http_request_t *req);
+                        cos_http_request_t *req,
+                        char **error_msg);
 
 /**
   * @brief   bucket uri using third-level domain if hostname is cos domain, otherwise second-level domain
 **/
-void cos_get_bucket_uri(const cos_request_options_t *options, 
+int cos_get_bucket_uri(const cos_request_options_t *options, 
                         const cos_string_t *bucket,
-                        cos_http_request_t *req);
+                        cos_http_request_t *req,
+                        char **error_msg);
 
 /**
   * @brief  service uri
 **/
-void cos_get_service_uri(const cos_request_options_t *options,
+int cos_get_service_uri(const cos_request_options_t *options,
                          const int all_region,
-                         cos_http_request_t *req);
+                         cos_http_request_t *req,
+                         char **error_msg);
 
 /**
   * @brief  get rtmp uri using third-level domain if hostname is cos domain, otherwise second-level domain
