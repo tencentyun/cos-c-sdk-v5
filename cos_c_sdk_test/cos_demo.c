@@ -272,6 +272,7 @@ void test_object()
     s = cos_get_object_to_buffer(options, &bucket, &object, 
                        headers, NULL, &download_buffer, &resp_headers);
     log_status(s);
+    print_headers(resp_headers);
     int64_t len = 0;
     int64_t size = 0;
     int64_t pos = 0;
@@ -1548,7 +1549,6 @@ void test_check_bucket_exist()
     
     // 检查桶是否存在
     status = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
-    log_status(status);
     if (bucket_exist == COS_BUCKET_NON_EXIST) {
         printf("bucket: %.*s non exist.\n", bucket.len, bucket.data);
     } else if (bucket_exist == COS_BUCKET_EXIST) {
