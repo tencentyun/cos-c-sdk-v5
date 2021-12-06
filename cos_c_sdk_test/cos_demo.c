@@ -16,7 +16,8 @@ static char *TEST_ACCESS_KEY_ID;                //your secret_id
 static char *TEST_ACCESS_KEY_SECRET;            //your secret_key
 // 开发者访问 COS 服务时拥有的用户维度唯一资源标识，用以标识资源，可在 https://console.cloud.tencent.com/cam/capi 页面获取
 static char TEST_APPID[] = "<APPID>";    //your appid
-static char TEST_BUCKET_NAME[] = "<bucketname-appid>";    //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
+//the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666，可在 https://console.cloud.tencent.com/cos5/bucket 查看
+static char TEST_BUCKET_NAME[] = "<bucketname-appid>";    
 // 对象拥有者，比如用户UIN：100000000001
 static char TEST_UIN[] = "<Uin>";    //your uin
 // 地域信息，枚举值可参见 https://cloud.tencent.com/document/product/436/6224 文档，例如：ap-beijing、ap-hongkong、eu-frankfurt 等
