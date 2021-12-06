@@ -70,6 +70,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define cos_table_elts(t) apr_table_elts(t)
 #define cos_is_empty_table(t) apr_is_empty_table(t)
 #define cos_table_make(p, n) apr_table_make(p, n)
+#define cos_table_add(t, key, value) apr_table_add(t, key, value)
 #define cos_table_add_int(t, key, value) do {       \
         char value_str[64];                             \
         apr_snprintf(value_str, sizeof(value_str), "%d", value);\
