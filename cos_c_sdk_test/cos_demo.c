@@ -2178,6 +2178,66 @@ void test_directory()
     cos_pool_destroy(p);
 }
 
+void test_download_directory()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t file_name;
+    cos_string_t suffix = cos_string("/");
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    int is_truncated = 1;
+    cos_string_t marker;
+    apr_status_t status;
+
+    //初始化请求选项
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //list object (get bucket)
+    cos_list_object_params_t *list_params = NULL;
+    list_params = cos_create_list_object_params(p);
+    cos_str_set(&list_params->prefix, "folder/");   //替换为您自己的目录名称
+    cos_str_set(&marker, "");
+    while (is_truncated) {
+        list_params->marker = marker;
+        s = cos_list_object(options, &bucket, list_params, &resp_headers);
+        log_status(s);
+        if (!cos_status_is_ok(s)) {
+            printf("list object failed, req_id:%s\n", s->req_id);
+            break;
+        }
+        cos_list_object_content_t *content = NULL;
+        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
+            cos_str_set(&file_name, content->key.data);
+            if (cos_ends_with(&content->key, &suffix)) {
+                //如果是目录需要先创建, 0x0755权限可以自己按需修改，参考apr_file_info.h中定义
+                status = apr_dir_make(content->key.data, 0x0755, options->pool);
+                if (status != APR_SUCCESS && !APR_STATUS_IS_EEXIST(status)) {
+                    printf("mkdir: %s failed, status: %d\n", content->key.data, status);
+                }
+            } else {
+                //下载对象到本地目录，这里默认下载在程序运行的当前目录
+                s = cos_get_object_to_file(options, &bucket, &content->key, headers, params, &file_name, &resp_headers);
+                if (!cos_status_is_ok(s)) {
+                    printf("get object[%s] failed, req_id:%s\n", content->key.data, s->req_id);
+                }
+            }
+        }
+        is_truncated = list_params->truncated;
+        marker = list_params->next_marker;
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p);
+}
+
 void test_move()
 {
     cos_pool_t *p = NULL;
@@ -2812,6 +2872,7 @@ int main(int argc, char *argv[])
     //test_copy_with_part_copy();
     //test_move();
     //test_directory();
+    //test_download_directory();
     //test_presigned_url();
     //test_ci_base_image_process();
     //test_ci_image_process();
