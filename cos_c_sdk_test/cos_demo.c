@@ -2203,7 +2203,7 @@ void test_download_directory()
     //list object (get bucket)
     cos_list_object_params_t *list_params = NULL;
     list_params = cos_create_list_object_params(p);
-    cos_str_set(&list_params->prefix, "folder/");
+    cos_str_set(&list_params->prefix, "folder/");   //替换为您自己的目录名称
     cos_str_set(&marker, "");
     while (is_truncated) {
         list_params->marker = marker;
@@ -2234,6 +2234,7 @@ void test_download_directory()
         marker = list_params->next_marker;
     }
 
+    //销毁内存池
     cos_pool_destroy(p);
 }
 
