@@ -3,7 +3,6 @@
 #include "cos_log.h"
 #include <stdint.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -51,7 +50,7 @@ static void print_headers(cos_table_t *headers)
     tarr = cos_table_elts(headers);
     telts = (cos_table_entry_t*)tarr->elts;
 
-    printf("header:\n");
+    printf("headers:\n");
     for (; i < tarr->nelts; i++) {
         telts = (cos_table_entry_t*)(tarr->elts + i * tarr->elt_size);
         printf("%s: %s\n", telts->key, telts->val);
@@ -179,6 +178,41 @@ void test_bucket()
     cos_pool_destroy(p);    
 }
 
+void test_list_objects()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //获取对象列表
+    cos_list_object_params_t *list_params = NULL;
+    cos_list_object_content_t *content = NULL;
+    list_params = cos_create_list_object_params(p);
+    s = cos_list_object(options, &bucket, list_params, &resp_headers);
+    if (cos_status_is_ok(s)) {
+        printf("list object succeeded\n");
+        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
+            printf("object: %.*s\n", content->key.len, content->key.data);
+        }
+    } else {
+        printf("list object failed\n");
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
 void test_bucket_lifecycle()
 {
     cos_pool_t *p = NULL;
@@ -233,6 +267,130 @@ void test_bucket_lifecycle()
     cos_pool_destroy(p);    
 }
 
+void test_put_object_with_limit()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers = NULL;
+    cos_table_t *headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //限速值设置范围为819200 - 838860800，即100KB/s - 100MB/s，如果超出该范围将返回400错误
+    headers = cos_table_make(p, 1);
+    cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
+
+    //上传对象
+    cos_str_set(&file, "test_file.bin");
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+    s = cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
+    if (cos_status_is_ok(s)) {
+        printf("put object succeeded\n");
+    } else {
+        printf("put object failed\n");
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
+void test_get_object_with_limit()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers = NULL;
+    cos_table_t *headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //限速值设置范围为819200 - 838860800，即100KB/s - 100MB/s，如果超出该范围将返回400错误
+    headers = cos_table_make(p, 1);
+    cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
+
+    //下载对象
+    cos_str_set(&file, "test_file.bin");
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+    s = cos_get_object_to_file(options, &bucket, &object, headers, NULL, &file, &resp_headers);
+    if (cos_status_is_ok(s)) {
+        printf("get object succeeded\n");
+    } else {
+        printf("get object failed\n");
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
+void test_gen_object_url()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+        
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+
+    printf("url:%s\n", cos_gen_object_url(options, &bucket, &object));
+
+    cos_pool_destroy(p);
+}
+
+void test_create_dir()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_list_t buffer;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "folder/");
+
+    //上传文件夹
+    cos_list_init(&buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &object, 
+            &buffer, headers, &resp_headers);
+    if (cos_status_is_ok(s)) {
+        printf("put object succeeded\n");
+    } else {
+        printf("put object failed\n");
+    }
+    cos_pool_destroy(p);
+}
 
 void test_object()
 {
@@ -312,7 +470,29 @@ void test_object()
     s = cos_delete_object(options, &bucket, &object, &resp_headers);
     log_status(s);
 
-    // append object
+    cos_pool_destroy(p);
+}
+
+void test_append_object()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //追加上传对象
     cos_str_set(&object, TEST_OBJECT_NAME3);
     int32_t count = sizeof(TEST_APPEND_NAMES)/sizeof(char*);
     int32_t index = 0;
@@ -340,7 +520,40 @@ void test_object()
         }
     }
 
-    cos_pool_destroy(p);
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
+void test_head_object()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers = NULL;
+
+    //创建内存池
+    cos_pool_create(&p, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //获取对象元数据
+    cos_str_set(&object, TEST_OBJECT_NAME1);
+    s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
+    print_headers(resp_headers);
+    if (cos_status_is_ok(s)) {
+        printf("head object succeeded\n");
+    } else {
+        printf("head object failed\n");
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p); 
 }
 
 void test_check_object_exist()
@@ -426,12 +639,10 @@ void test_put_object_from_file()
         headers = cos_table_make(p, 1);
         cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
     }
-    cos_str_set(&options->config->sts_token, "MyTokenString");
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&file, TEST_OBJECT_NAME4);
     cos_str_set(&object, TEST_OBJECT_NAME4);
-    //s = cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
-    s = cos_do_put_object_from_file(options, &bucket, &object, &file, headers, NULL, progress_callback, &resp_headers, NULL);
+    s = cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
     log_status(s);
 
     cos_pool_destroy(p);
@@ -823,12 +1034,9 @@ void list_multipart()
         }
     } else {
         printf("List upload part failed\n"); 
-    }  
-
-     
+    }   
     
     cos_pool_destroy(p);
-    return;
 }
 
 void test_resumable()
@@ -1021,22 +1229,32 @@ void test_copy()
     cos_string_t src_object;
     cos_string_t src_endpoint;
     cos_table_t *resp_headers = NULL;
-   
+
+    //创建内存池
     cos_pool_create(&p, NULL);
+
+    //初始化请求选项
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, "test_copy.txt");
-    cos_str_set(&src_bucket, "mybucket-1253685564");
-    cos_str_set(&src_endpoint, "cn-south.myqcloud.com");
-    cos_str_set(&src_object, "test.txt");
+
+    //设置对象复制
+    cos_str_set(&object, TEST_OBJECT_NAME2);
+    cos_str_set(&src_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
+    cos_str_set(&src_object, TEST_OBJECT_NAME1);
 
     cos_copy_object_params_t *params = NULL;
     params = cos_create_copy_object_params(p);
     s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
-    log_status(s);
+    if (cos_status_is_ok(s)) {
+        printf("put object copy succeeded\n");
+    } else {
+        printf("put object copy failed\n");
+    }
 
-    cos_pool_destroy(p);
+    //销毁内存池
+    cos_pool_destroy(p); 
 }
 
 void test_modify_storage_class()
@@ -1056,10 +1274,10 @@ void test_modify_storage_class()
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, "test.txt");
+    cos_str_set(&object, TEST_OBJECT_NAME1);
     cos_str_set(&src_bucket, TEST_BUCKET_NAME);
     cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
-    cos_str_set(&src_object, "test.txt");
+    cos_str_set(&src_object, TEST_OBJECT_NAME1);
 
     // 设置x-cos-metadata-directive和x-cos-storage-class头域(替换为自己要更改的存储类型)
     cos_table_t *headers = cos_table_make(p, 2);
@@ -1212,7 +1430,7 @@ void test_part_copy()
 
     //upload part copy 1
     upload_part_copy_params1 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params1->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    cos_str_set(&upload_part_copy_params1->copy_source, "bucket-appid.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
     cos_str_set(&upload_part_copy_params1->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params1->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params1->upload_id, upload_id.data);
@@ -1228,7 +1446,7 @@ void test_part_copy()
     resp_headers = NULL;
     range_end2 = get_file_size(local_filename) - 1;
     upload_part_copy_params2 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params2->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    cos_str_set(&upload_part_copy_params2->copy_source, "bucket-appid.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
     cos_str_set(&upload_part_copy_params2->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params2->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params2->upload_id, upload_id.data);
@@ -1545,9 +1763,7 @@ void test_check_bucket_exist()
 
     //初始化请求选项
     options = cos_request_options_create(pool);
-    options->config = cos_config_create(options->pool);
     init_test_request_options(options, is_cname);
-    options->ctl = cos_http_controller_create(options->pool, 0);
 
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     
@@ -1624,10 +1840,7 @@ void test_website()
 
     //初始化请求选项
     options = cos_request_options_create(pool);
-    options->config = cos_config_create(options->pool);
-
     init_test_request_options(options, is_cname);
-    options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
     //创建website参数
@@ -1755,10 +1968,7 @@ void test_logging()
 
     //初始化请求选项
     options = cos_request_options_create(pool);
-    options->config = cos_config_create(options->pool);
-
     init_test_request_options(options, is_cname);
-    options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
     //创建logging参数
@@ -1917,10 +2127,7 @@ void test_bucket_tagging()
 
     //初始化请求选项
     options = cos_request_options_create(pool);
-    options->config = cos_config_create(options->pool);
-
     init_test_request_options(options, is_cname);
-    options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
     // put tagging
@@ -2049,9 +2256,7 @@ void test_referer()
 
     //初始化请求选项
     options = cos_request_options_create(pool);
-    options->config = cos_config_create(options->pool);
     init_test_request_options(options, is_cname);
-    options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
     // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/32492
@@ -2121,40 +2326,27 @@ void test_intelligenttiering()
     cos_pool_destroy(pool);
 }
 
-void test_directory()
+void test_delete_directory()
 {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
-    cos_string_t object;
-    cos_string_t file;
     cos_table_t *resp_headers;
-    cos_table_t *headers = NULL;
-    cos_list_t buffer;
     int is_truncated = 1;
     cos_string_t marker;
+    cos_list_t deleted_object_list;
+    int is_quiet = COS_TRUE;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, "folder/");
-    cos_list_init(&buffer);
-    s = cos_put_object_from_buffer(options, &bucket, &object, 
-                   &buffer, headers, &resp_headers);
-    log_status(s);
-
-    cos_str_set(&file, "examplefile");
-    cos_str_set(&object, "folder/exampleobject");
-    s = cos_put_object_from_file(options, &bucket, &object, &file, NULL, &resp_headers);
-    log_status(s);
 
     //list object (get bucket)
     cos_list_object_params_t *list_params = NULL;
     list_params = cos_create_list_object_params(p);
-    cos_str_set(&list_params->encoding_type, "url");
     cos_str_set(&list_params->prefix, "folder/");
     cos_str_set(&marker, "");
     while (is_truncated) {
@@ -2164,17 +2356,108 @@ void test_directory()
             printf("list object failed, req_id:%s\n", s->req_id);
             break;
         }
-        cos_list_object_content_t *content = NULL;
-        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
-            s = cos_delete_object(options, &bucket, &content->key, &resp_headers);
-            log_status(s);
-            if (!cos_status_is_ok(s)) {
-                printf("delete object[%s] failed, req_id:%s\n", content->key.data, s->req_id);
-            }
+
+        s = cos_delete_objects(options, &bucket, &list_params->object_list, is_quiet, &resp_headers, &deleted_object_list);
+        log_status(s);
+        if (!cos_status_is_ok(s)) {
+            printf("delete objects failed, req_id:%s\n", s->req_id);
         }
+
         is_truncated = list_params->truncated;
         marker = list_params->next_marker;
     }
+    cos_pool_destroy(p);
+}
+
+void test_list_directory()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    int is_truncated = 1;
+    cos_string_t marker;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    
+    //list object (get bucket)
+    cos_list_object_params_t *list_params = NULL;
+    list_params = cos_create_list_object_params(p);
+    // prefix表示列出的object的key以prefix开始
+    cos_str_set(&list_params->prefix, "folder/");
+    // deliter表示分隔符, 设置为/表示列出当前目录下的object, 设置为空表示列出所有的object
+    cos_str_set(&list_params->delimiter, "/");
+    // 设置最大遍历出多少个对象, 一次listobject最大支持1000
+    list_params->max_ret = 1000;
+    cos_str_set(&marker, "");
+    while (is_truncated) {
+        list_params->marker = marker;
+        s = cos_list_object(options, &bucket, list_params, &resp_headers);
+        if (!cos_status_is_ok(s)) {
+            printf("list object failed, req_id:%s\n", s->req_id);
+            break;
+        }
+        // list_params->object_list 返回列出的object对象。
+        cos_list_object_content_t *content = NULL;
+        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
+            printf("object: %s\n", content->key.data);
+        }
+        // list_params->common_prefix_list 表示被delimiter截断的路径, 如delimter设置为/, common prefix则表示所有子目录的路径
+        cos_list_object_common_prefix_t *common_prefix = NULL;
+        cos_list_for_each_entry(cos_list_object_common_prefix_t, common_prefix, &list_params->common_prefix_list, node) {
+            printf("common prefix: %s\n", common_prefix->prefix.data);
+        }
+
+        is_truncated = list_params->truncated;
+        marker = list_params->next_marker;
+    }    
+    cos_pool_destroy(p);
+}
+
+void test_list_all_objects()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    int is_truncated = 1;
+    cos_string_t marker;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    
+    //list object (get bucket)
+    cos_list_object_params_t *list_params = NULL;
+    list_params = cos_create_list_object_params(p);
+    // 设置最大遍历出多少个对象, 一次listobject最大支持1000
+    list_params->max_ret = 1000;
+    cos_str_set(&marker, "");
+    while (is_truncated) {
+        list_params->marker = marker;
+        cos_list_init(&list_params->object_list);
+        s = cos_list_object(options, &bucket, list_params, &resp_headers);
+        if (!cos_status_is_ok(s)) {
+            printf("list object failed, req_id:%s\n", s->req_id);
+            break;
+        }
+        // list_params->object_list 返回列出的object对象。
+        cos_list_object_content_t *content = NULL;
+        cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
+            printf("object: %s\n", content->key.data);
+        }
+
+        is_truncated = list_params->truncated;
+        marker = list_params->next_marker;
+    }    
     cos_pool_destroy(p);
 }
 
@@ -2255,18 +2538,12 @@ void test_move()
     
     //初始化请求选项
     options = cos_request_options_create(p);
-    options->config = cos_config_create(options->pool);
-    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
-    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
-    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
-    cos_str_set(&options->config->appid, TEST_APPID);
-    options->config->is_cname = is_cname;
-    options->ctl = cos_http_controller_create(options->pool, 0);
+    init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     
     //设置对象复制
     cos_str_set(&object, TEST_OBJECT_NAME1);
-    cos_str_set(&src_endpoint, "ap-guangzhou.myqcloud.com");
+    cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
     cos_str_set(&src_object, TEST_OBJECT_NAME2);
     
     cos_copy_object_params_t *params = NULL;
@@ -2815,8 +3092,6 @@ void test_ci_media_process_media_info()
 
 int main(int argc, char *argv[])
 {
-    int exit_code = -1;
-
     // 通过环境变量获取 SECRETID 和 SECRETKEY
     TEST_ACCESS_KEY_ID     = getenv("COS_SECRETID");
     TEST_ACCESS_KEY_SECRET = getenv("COS_SECRETKEY");
@@ -2852,6 +3127,15 @@ int main(int argc, char *argv[])
     //test_put_object_from_file();
     //test_sign();
     //test_object();
+    //test_put_object_with_limit();
+    //test_get_object_with_limit();
+    //test_head_object();
+    //test_gen_object_url();
+    //test_list_objects();
+    //test_list_directory();
+    //test_list_all_objects();
+    //test_create_dir();
+    //test_append_object();
     //test_check_object_exist();
     //multipart_upload_file_from_file();
     //multipart_upload_file_from_buffer();
@@ -2871,7 +3155,7 @@ int main(int argc, char *argv[])
     //test_part_copy();
     //test_copy_with_part_copy();
     //test_move();
-    //test_directory();
+    //test_delete_directory();
     //test_download_directory();
     //test_presigned_url();
     //test_ci_base_image_process();
@@ -2886,6 +3170,6 @@ int main(int argc, char *argv[])
     //cos_http_io_deinitialize last
     cos_http_io_deinitialize();
 
-    return exit_code;
+    return 0;
 }
 
