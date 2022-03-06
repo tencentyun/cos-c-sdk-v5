@@ -2719,7 +2719,6 @@ char *cos_build_checkpoint_xml(cos_pool_t *p, const cos_checkpoint_t *checkpoint
 {
     char *checkpoint_xml;
     char *xml_buff;
-    cos_string_t xml_doc;
     mxml_node_t *doc;
     mxml_node_t *root_node;
     mxml_node_t *local_node;
@@ -2727,6 +2726,8 @@ char *cos_build_checkpoint_xml(cos_pool_t *p, const cos_checkpoint_t *checkpoint
     mxml_node_t *cpparts_node;
     mxml_node_t *parts_node;
     int i = 0;
+
+    (void)p;
 
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "Checkpoint");
@@ -2785,10 +2786,8 @@ char *cos_build_checkpoint_xml(cos_pool_t *p, const cos_checkpoint_t *checkpoint
     if (xml_buff == NULL) {
         return NULL;
     }
-    cos_str_set(&xml_doc, xml_buff);
-    checkpoint_xml = cos_pstrdup(p, &xml_doc);
+    checkpoint_xml = xml_buff;
 
-    free(xml_buff);
     mxmlDelete(doc);
 
     return checkpoint_xml;
