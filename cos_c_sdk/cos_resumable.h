@@ -133,7 +133,7 @@ int cos_is_upload_checkpoint_valid(cos_pool_t *pool, cos_checkpoint_t *checkpoin
 
 void cos_update_checkpoint(cos_pool_t *pool, cos_checkpoint_t *checkpoint, int32_t part_index, cos_string_t *etag, uint64_t crc64);
 
-void cos_get_checkpoint_undo_parts(cos_checkpoint_t *checkpoint, int *part_num, cos_checkpoint_part_t *parts);
+void cos_get_checkpoint_undo_parts(cos_checkpoint_t *checkpoint, int *part_num, cos_checkpoint_part_t *parts, int64_t *consume_bytes);
 
 void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data);
 
