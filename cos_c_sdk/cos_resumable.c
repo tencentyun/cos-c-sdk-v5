@@ -1115,6 +1115,13 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
 
     cos_debug_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
 
+    if (!cos_status_is_ok(s)) {
+        apr_atomic_inc32(params->failed);
+        params->result->s = s;
+        apr_queue_push(params->failed_parts, params->result);
+        return s;
+    }
+
     etag = apr_pstrdup(params->options.pool, (char*)apr_table_get(resp_headers, "ETag"));
     cos_str_set(&params->result->etag, etag);
     params->result->crc64 = resp->crc64;
