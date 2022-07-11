@@ -131,7 +131,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define CR     (char) 13
 #define CRLF   "\x0d\x0a"
 
-#define COS_VERSION    "5.0.11"
+#define COS_VERSION    "5.0.14"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
 #define COS_HTTP_PREFIX   "http://"
