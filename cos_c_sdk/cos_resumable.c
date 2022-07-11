@@ -1192,9 +1192,10 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     }
     file_size = cos_atoi64(value);
     crc64_str = apr_table_get(resp_headers, COS_HASH_CRC64_ECMA);
+    part_num = cos_get_part_num(file_size, part_size);
 
     // checkpoint
-    checkpoint = cos_create_checkpoint_content(parent_pool);
+    checkpoint = cos_create_checkpoint_content_with_partnum(parent_pool, part_num);
     cos_build_download_checkpoint(options->pool, checkpoint, filepath, object->data, file_size, "", "", part_size);
 
     // Open and truncate the file
@@ -1208,7 +1209,6 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     apr_file_close(fb->file);
 
     // init download params
-    part_num = cos_get_part_num(file_size, part_size);
     parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
     cos_build_parts(file_size, part_size, parts);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
@@ -1360,9 +1360,10 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
         return ret;
     }
     file_size = cos_atoi64(object_size_str);
+    part_num = cos_get_part_num(file_size, part_size);
 
     // checkpoint
-    checkpoint = cos_create_checkpoint_content(parent_pool);
+    checkpoint = cos_create_checkpoint_content_with_partnum(parent_pool, part_num);
     if (cos_does_file_exist(checkpoint_path, parent_pool)) {
         apr_finfo_t tmp_finfo;
         if (COSE_OK == cos_load_checkpoint(parent_pool, checkpoint_path, checkpoint) && 
@@ -1398,7 +1399,6 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
     apr_file_close(fb->file);
 
     // init download params
-    part_num = cos_get_part_num(file_size, part_size);
     parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
     cos_get_checkpoint_undo_parts(checkpoint, &part_num, parts, &consume_bytes);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);

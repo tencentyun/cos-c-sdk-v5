@@ -1090,6 +1090,21 @@ cos_checkpoint_t *cos_create_checkpoint_content(cos_pool_t *p)
     return cp;
 }
 
+cos_checkpoint_t *cos_create_checkpoint_content_with_partnum(cos_pool_t *p, int part_num) 
+{
+    cos_checkpoint_t *cp;
+    cp = (cos_checkpoint_t *)cos_pcalloc(p, sizeof(cos_checkpoint_t));
+    cp->parts = (cos_checkpoint_part_t *)cos_pcalloc(p, sizeof(cos_checkpoint_part_t) * cos_max(part_num, COS_MAX_PART_NUM));
+    cos_str_set(&cp->md5, "");
+    cos_str_set(&cp->file_path, "");
+    cos_str_set(&cp->file_md5, "");
+    cos_str_set(&cp->object_name, "");
+    cos_str_set(&cp->object_last_modified, "");
+    cos_str_set(&cp->object_etag, "");
+    cos_str_set(&cp->upload_id, "");
+    return cp;
+}
+
 cos_resumable_clt_params_t *cos_create_resumable_clt_params_content(cos_pool_t *p, int64_t part_size, int32_t thread_num,
                                                                     int enable_checkpoint, const char *checkpoint_path)
 {

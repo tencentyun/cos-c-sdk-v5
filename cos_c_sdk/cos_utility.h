@@ -345,6 +345,7 @@ cos_live_channel_configuration_t *cos_create_live_channel_configuration_content(
   * @return cos checkpoint content
 **/
 cos_checkpoint_t *cos_create_checkpoint_content(cos_pool_t *p);
+cos_checkpoint_t *cos_create_checkpoint_content_with_partnum(cos_pool_t *p, int part_num);
 
 /**
   * @brief  create cos resumable clt params content
