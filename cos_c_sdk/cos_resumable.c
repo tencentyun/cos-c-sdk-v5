@@ -108,6 +108,7 @@ void cos_build_parts(int64_t file_size, int64_t part_size, cos_checkpoint_part_t
 void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part_num, 
                              cos_pool_t *parent_pool, cos_request_options_t *options, 
                              cos_string_t *bucket, cos_string_t *object, cos_string_t *filepath,
+                             cos_table_t *headers, cos_table_t *params, 
                              cos_string_t *upload_id, cos_checkpoint_part_t *parts,
                              cos_part_task_result_t *result) 
 {
@@ -133,6 +134,8 @@ void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part
         thr_params[i].bucket = bucket;
         thr_params[i].object = object;
         thr_params[i].filepath = filepath;
+        thr_params[i].headers = headers;
+        thr_params[i].params = params;
         thr_params[i].upload_id = upload_id;
         thr_params[i].part = parts + i;
         thr_params[i].result = result + i;
@@ -409,6 +412,9 @@ void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data)
     cos_upload_thread_params_t *params = NULL;
     cos_upload_file_t *upload_file = NULL;
     cos_table_t *resp_headers = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *paras = NULL;
+    cos_request_options_t *options = NULL;
     int part_num;
     char *etag;
     
@@ -419,13 +425,19 @@ void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data)
     }
 
     part_num = params->part->index + 1;
-    upload_file = cos_create_upload_file(params->options.pool);
+    options = &params->options;
+    upload_file = cos_create_upload_file(options->pool);
     cos_str_set(&upload_file->filename, params->filepath->data);
     upload_file->file_pos = params->part->offset;
     upload_file->file_last = params->part->offset + params->part->size;
 
-    s = cos_upload_part_from_file(&params->options, params->bucket, params->object, params->upload_id,
-        part_num, upload_file, &resp_headers);
+    headers = params->headers ? apr_table_copy(options->pool, params->headers) : NULL;
+    paras = params->params ? apr_table_copy(options->pool, params->params) : NULL;
+    headers = cos_table_create_if_null(options, headers, 0);
+    paras = cos_table_create_if_null(options, paras, 0);
+
+    s = cos_do_upload_part_from_file(options, params->bucket, params->object, params->upload_id,
+        part_num, upload_file, NULL, headers, paras, &resp_headers, NULL);
     if (!cos_status_is_ok(s)) {
         apr_atomic_inc32(params->failed);
         params->result->s = s;
@@ -433,7 +445,7 @@ void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data)
         return s;
     }
 
-    etag = apr_pstrdup(params->options.pool, (char*)apr_table_get(resp_headers, "ETag"));
+    etag = apr_pstrdup(options->pool, (char*)apr_table_get(resp_headers, "ETag"));
     cos_str_set(&params->result->etag, etag);
     apr_atomic_inc32(params->completed);
     apr_queue_push(params->completed_parts, params->result);
@@ -488,7 +500,8 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
     cos_build_parts(finfo->size, part_size, parts);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
     thr_params = (cos_upload_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_upload_thread_params_t) * part_num);
-    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath, &upload_id, parts, results);
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath,
+                             headers , params, &upload_id, parts, results);
     
     // init upload
     cos_pool_create(&subpool, parent_pool);
@@ -684,7 +697,8 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
     cos_get_checkpoint_undo_parts(checkpoint, &part_num, parts, &consume_bytes);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
     thr_params = (cos_upload_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_upload_thread_params_t) * part_num);
-    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath, &upload_id, parts, results);
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath,
+                             headers, params, &upload_id, parts, results);
 
     // upload parts    
     rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);
@@ -1094,6 +1108,8 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
     cos_str_set(&download_file->filename, params->filepath->data);
     download_file->file_pos = params->part->offset;
     download_file->file_last = params->part->offset + params->part->size;
+    headers = params->headers ? apr_table_copy(options->pool, params->headers) : NULL;
+    paras = params->params ? apr_table_copy(options->pool, params->params) : NULL;
 
     headers = cos_table_create_if_null(options, headers, 1);
     paras = cos_table_create_if_null(options, paras, 0);
@@ -1213,7 +1229,8 @@ cos_status_t *cos_resumable_download_file_without_cp(cos_request_options_t *opti
     cos_build_parts(file_size, part_size, parts);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
     thr_params = (cos_transport_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_transport_thread_params_t) * part_num);
-    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, &upload_id, parts, results);
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, 
+                            headers, params, &upload_id, parts, results);
 
     // download parts    
     rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);
@@ -1403,7 +1420,8 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
     cos_get_checkpoint_undo_parts(checkpoint, &part_num, parts, &consume_bytes);
     results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
     thr_params = (cos_transport_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_transport_thread_params_t) * part_num);
-    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, &upload_id, parts, results);
+    cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, &tmp_filename, 
+                            headers, params, &upload_id, parts, results);
 
     // download parts    
     rv = apr_thread_pool_create(&thrp, 0, thread_num, parent_pool);

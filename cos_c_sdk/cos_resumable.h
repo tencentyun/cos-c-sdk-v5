@@ -58,6 +58,9 @@ typedef struct {
     cos_checkpoint_part_t *part;
     cos_part_task_result_t *result;
 
+    cos_table_t *headers;
+    cos_table_t *params;
+
     apr_uint32_t *launched;        // the number of launched part tasks, use atomic
     apr_uint32_t *failed;          // the number of failed part tasks, use atomic
     apr_uint32_t *completed;       // the number of completed part tasks, use atomic
@@ -104,6 +107,7 @@ void cos_build_parts(int64_t file_size, int64_t part_size, cos_checkpoint_part_t
 void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part_num, 
                              cos_pool_t *parent_pool, cos_request_options_t *options, 
                              cos_string_t *bucket, cos_string_t *object, cos_string_t *filepath,
+                             cos_table_t *headers, cos_table_t *params,
                              cos_string_t *upload_id, cos_checkpoint_part_t *parts,
                              cos_part_task_result_t *result);
 
