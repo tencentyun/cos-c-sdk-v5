@@ -108,7 +108,7 @@ int cos_url_encode(char *dest, const char *src, int maxSrcSize)
 
 static int table_dict_cmp(const void * a, const void * b)
 {
-   return strcmp(((cos_table_entry_t*)a)->key, ((cos_table_entry_t*)b)->key);
+   return strcasecmp(((cos_table_entry_t*)a)->key, ((cos_table_entry_t*)b)->key);
 }
 
 void cos_table_sort_by_dict(cos_table_t *table)
