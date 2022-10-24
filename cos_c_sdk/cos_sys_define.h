@@ -107,7 +107,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define COS_MD5_STRING_LEN 32
 #define COS_MAX_URI_LEN 2048
 #define COS_MAX_HEADER_LEN 8192
-#define COS_MAX_QUERY_ARG_LEN 2048
+#define COS_MAX_QUERY_ARG_LEN 1024
 #define COS_MAX_GMT_TIME_LEN 128
 
 #define COS_MAX_XML_NODE_VALUE_LEN 1024
