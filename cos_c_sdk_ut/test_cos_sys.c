@@ -96,6 +96,7 @@ void test_cos_get_object_uri_with_cname(CuTest *tc) {
     cos_string_t bucket;
     cos_string_t object;
     cos_http_request_t req;
+    char error_msg[256] = {0};
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -106,7 +107,7 @@ void test_cos_get_object_uri_with_cname(CuTest *tc) {
     cos_str_set(&bucket, "bucket-1");
     cos_str_set(&object, "key-2");
     
-    cos_get_object_uri(options, &bucket, &object, &req);
+    cos_get_object_uri(options, &bucket, &object, &req, &error_msg);
     CuAssertStrEquals(tc, "", req.proto);
     CuAssertStrEquals(tc, "key-2", req.uri);
     CuAssertStrEquals(tc, "img.abc.com", req.host);
@@ -122,6 +123,7 @@ void test_cos_get_object_uri_with_ip(CuTest *tc) {
     cos_string_t bucket;
     cos_string_t object;
     cos_http_request_t req;
+    char error_msg[256] = {0};
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -132,7 +134,7 @@ void test_cos_get_object_uri_with_ip(CuTest *tc) {
     cos_str_set(&bucket, "bucket-1");
     cos_str_set(&object, "key-2");
     
-    cos_get_object_uri(options, &bucket, &object, &req);
+    cos_get_object_uri(options, &bucket, &object, &req, &error_msg);
     CuAssertStrEquals(tc, "http://", req.proto);
     CuAssertStrEquals(tc, "key-2", req.uri);
     CuAssertStrEquals(tc, "140.205.63.8", req.host);
@@ -147,6 +149,7 @@ void test_cos_get_bucket_uri_with_ip(CuTest *tc) {
     cos_request_options_t *options;
     cos_string_t bucket;
     cos_http_request_t req;
+    char error_msg[256] = {0};
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -156,7 +159,7 @@ void test_cos_get_bucket_uri_with_ip(CuTest *tc) {
 
     cos_str_set(&bucket, "bucket-1");
     
-    cos_get_bucket_uri(options, &bucket, &req);
+    cos_get_bucket_uri(options, &bucket, &req, &error_msg);
     CuAssertStrEquals(tc, "", req.proto);
     CuAssertStrEquals(tc, "", req.uri);
     CuAssertStrEquals(tc, "140.205.63.8", req.host);
@@ -172,6 +175,7 @@ void test_cos_get_bucket_uri_with_cname(CuTest *tc) {
     cos_request_options_t *options;
     cos_string_t bucket;
     cos_http_request_t req;
+    char error_msg[256] = {0};
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -181,7 +185,7 @@ void test_cos_get_bucket_uri_with_cname(CuTest *tc) {
 
     cos_str_set(&bucket, "bucket-1");
     
-    cos_get_bucket_uri(options, &bucket, &req);
+    cos_get_bucket_uri(options, &bucket, &req, &error_msg);
     CuAssertStrEquals(tc, "https://", req.proto);
     CuAssertStrEquals(tc, "", req.uri);
     CuAssertStrEquals(tc, "img.abc.com", req.host);
