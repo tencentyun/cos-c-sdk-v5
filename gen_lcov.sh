@@ -7,7 +7,7 @@ rm UTReport -rf
 rm UTResport.tar
 #cd build
 #cmake -DENABLE_COVERAGE=ON ..
-cmake . -DCMAKE_BUILD_TYPE=Coverage
+cmake . -DCMAKE_BUILD_TYPE=Coverage -DBUILD_UNITTEST=ON
 make
 
 # init
@@ -18,7 +18,7 @@ lcov -d CMakeFiles -b . -no-external -initial -c -o arvinzhu_init.info
 
 # run
 cd build/Coverage/bin
-./ut.sh
+./cos_c_sdk_ut
 # second
 cd ../../..
 lcov -d CMakeFiles -b . -no-external -c -o arvinzhu.info

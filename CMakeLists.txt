@@ -4,6 +4,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 set(CMAKE_VERSION 1.0.1)
 
+option(BUILD_UNITTEST "Build unittest" OFF)
+
 # default C / CXX flags
 set(CMAKE_C_FLAGS " -g -ggdb -O0 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
 set(CMAKE_CXX_FLAGS " -g -ggdb -O0 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
@@ -122,3 +124,9 @@ INSTALL(FILES
   DESTINATION include/cos_c_sdk)
 
 add_subdirectory(cos_c_sdk_test)
+
+if(BUILD_UNITTEST)
+    message(STATUS "Build unittest")
+
+    add_subdirectory(cos_c_sdk_ut)
+endif()
