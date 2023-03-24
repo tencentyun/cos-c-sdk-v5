@@ -56,6 +56,7 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
     if (!cos_init_object_request(options, bucket, &video_auditing_uri, HTTP_POST, &req,
             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
+        *job_result = NULL;
         return s;
     }
     
@@ -66,6 +67,7 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
     s = cos_process_request(options, req, resp);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
+        *job_result = NULL;
         return s;
     }
 
