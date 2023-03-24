@@ -1190,12 +1190,86 @@ void test_resumable_download(CuTest *tc)
     
 }
 
+void test_resumable_download_file_with_cp(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_resumable_clt_params_t *clt_params;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *str = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "3m.bin");
+
+    cos_list_init(&buffer);
+    str = cos_palloc(p, 0x300000);
+    content = cos_buf_pack(options->pool, str, 0x300000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &object, &buffer, NULL, &resp_headers);
+
+    clt_params = cos_create_resumable_clt_params_content(p, 1*1024*1024, 3, COS_TRUE, NULL);
+    s = cos_resumable_download_file(options, &bucket, &object, &object, NULL, NULL, clt_params, NULL);
+    CuAssertIntEquals(tc, 0, s->code);
+
+    s = cos_delete_object(options, &bucket, &object, &resp_headers);
+
+    cos_pool_destroy(p);
+}
+
+void test_resumable_copy_mt(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *str = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy_dst.txt");
+    cos_str_set(&src_object, "test_copy_src.txt");
+    cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
+
+    cos_list_init(&buffer);
+    str = cos_palloc(p, 0x500000);
+    content = cos_buf_pack(options->pool, str, 0x500000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &src_object, &buffer, NULL, &resp_headers);
+
+    s = cos_upload_object_by_part_copy_mt(options, &bucket, &src_object, &src_endpoint, &bucket, &object, 1024*1024, 3, NULL);
+    CuAssertIntEquals(tc, 0, s->code);
+
+    cos_pool_destroy(p);
+}
+
 
 CuSuite *test_cos_resumable()
 {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_resumable_setup);
+    SUITE_ADD_TEST(suite, test_resumable_copy_mt);
+    SUITE_ADD_TEST(suite, test_resumable_download_file_with_cp);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_thread_num);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_checkpoint_path);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_file_info);

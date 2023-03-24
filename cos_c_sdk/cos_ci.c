@@ -48,11 +48,13 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
     cos_http_response_t *resp = NULL;
     cos_list_t body;
     char *error_msg = NULL;
+    cos_table_t *query_params = NULL;
 
     headers = cos_table_create_if_null(options, headers, 1);
+    query_params = cos_table_create_if_null(options, query_params, 0);
 
     if (!cos_init_object_request(options, bucket, &video_auditing_uri, HTTP_POST, &req,
-            NULL, headers, NULL, 0, &resp, &error_msg)) {
+            query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
@@ -93,15 +95,17 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     char *error_msg = NULL;
+    cos_table_t *query_params = NULL;
 
     headers = cos_table_create_if_null(options, headers, 0);
+    query_params = cos_table_create_if_null(options, query_params, 0);
 
     uri.data = apr_psprintf(options->pool, "%.*s/%.*s", video_auditing_uri.len, video_auditing_uri.data,
             job_id->len, job_id->data);
     uri.len = strlen(uri.data);
 
     if (!cos_init_object_request(options, bucket, &uri, HTTP_GET, &req,
-            NULL, headers, NULL, 0, &resp, &error_msg)) {
+            query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }

@@ -187,7 +187,7 @@ static void CuFailInternal(CuTest* tc, const char* file, int line, CuString* str
 
     tc->failed = 1;
     tc->message = string->buffer;
-    if (tc->jumpBuf != 0) longjmp(*(tc->jumpBuf), 0);
+    //if (tc->jumpBuf != 0) longjmp(*(tc->jumpBuf), 0);
 }
 
 void CuFail_Line(CuTest* tc, const char* file, int line, const char* message2, const char* message)

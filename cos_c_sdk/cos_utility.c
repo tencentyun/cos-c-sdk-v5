@@ -152,11 +152,6 @@ static int is_config_params_vaild(const cos_request_options_t *options,
         cos_error_log("config params invaild, msg: %s", *error_msg);
         return COS_FALSE;
     }
-    if (cos_is_null_string(&options->config->appid)) {
-        *error_msg = cos_invaild_params_error_msg[1];
-        cos_error_log("config params invaild, msg: %s", *error_msg);
-        return COS_FALSE;
-    }
     if ((uintptr_t)bucket != ignore_bucket_check_ptr && cos_is_null_string(bucket)) {
         *error_msg = cos_invaild_params_error_msg[2];
         cos_error_log("config params invaild, msg: %s", *error_msg);

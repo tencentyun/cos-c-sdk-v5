@@ -137,8 +137,12 @@ void test_list_multipart_upload(CuTest *tc)
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_list_init(&params->upload_list);
-    cos_str_set(&params->key_marker, params->next_key_marker.data);
-    cos_str_set(&params->upload_id_marker, params->next_upload_id_marker.data);
+    if (params->next_key_marker.data) {
+        cos_str_set(&params->key_marker, params->next_key_marker.data);
+    }
+    if (params->next_upload_id_marker.data) {
+        cos_str_set(&params->upload_id_marker, params->next_upload_id_marker.data);
+    }
 
     s = cos_list_multipart_upload(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
@@ -175,6 +179,7 @@ void test_multipart_upload(CuTest *tc)
     cos_complete_part_content_t *complete_content2 = NULL;
     cos_table_t *complete_resp_headers = NULL;
     cos_table_t *head_resp_headers = NULL;
+    cos_buf_t *content = NULL;
     int part_num = 1;
     int part_num1 = 2;
     char *expect_part_num_marker = "1";
@@ -193,7 +198,8 @@ void test_multipart_upload(CuTest *tc)
 
     //upload part
     cos_list_init(&buffer);
-    make_random_body(p, 1000, &buffer);
+    content = cos_buf_pack(options->pool, cos_palloc(p, 0x300000), 0x300000);
+    cos_list_add_tail(&content->node, &buffer);
 
     s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
         part_num, &buffer, &upload_part_resp_headers);
@@ -201,7 +207,8 @@ void test_multipart_upload(CuTest *tc)
     CuAssertPtrNotNull(tc, upload_part_resp_headers);
 
     cos_list_init(&buffer);
-    make_random_body(p, 1000, &buffer);
+    content = cos_buf_pack(options->pool, cos_palloc(p, 0x200000), 0x200000);
+    cos_list_add_tail(&content->node, &buffer);
     s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
         part_num1, &buffer, &upload_part_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
@@ -228,7 +235,9 @@ void test_multipart_upload(CuTest *tc)
     }
 
     cos_list_init(&params->part_list);
-    cos_str_set(&params->part_number_marker, params->next_part_number_marker.data);
+    if (params->next_part_number_marker.data) {
+        cos_str_set(&params->part_number_marker, params->next_part_number_marker.data);
+    }
     s = cos_list_upload_part(options, &bucket, &object, &upload_id, params, &list_part_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     //CuAssertIntEquals(tc, 0, params->truncated);
