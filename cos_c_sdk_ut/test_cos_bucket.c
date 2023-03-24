@@ -303,7 +303,9 @@ void test_list_object(CuTest *tc)
     size = 0;
     resp_headers = NULL;
     cos_list_init(&params->object_list);
-    cos_str_set(&params->marker, params->next_marker.data);
+    if (params->next_marker.data) {
+        cos_str_set(&params->marker, params->next_marker.data);
+    }
     s = cos_list_object(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     //CuAssertIntEquals(tc, 0, params->truncated);
@@ -410,7 +412,9 @@ void test_lifecycle(CuTest *tc)
     cos_str_set(&rule_content2->id, "2");
     cos_str_set(&rule_content2->prefix, "pre2");
     cos_str_set(&rule_content2->status, "Enabled");
-    cos_str_set(&rule_content2->expire.date, "2022-10-11T00:00:00+08:00");
+    cos_str_set(&rule_content2->transition.storage_class, "STANDARD_IA");
+    rule_content2->transition.days = 100;
+    //cos_str_set(&rule_content2->expire.date, "2022-10-11T00:00:00+08:00");
     cos_list_add_tail(&rule_content1->node, &lifecycle_rule_list);
     cos_list_add_tail(&rule_content2->node, &lifecycle_rule_list);
 
@@ -453,7 +457,7 @@ void test_lifecycle(CuTest *tc)
             CuAssertStrEquals(tc, "pre2", prefix);
             date = apr_psprintf(p, "%.*s", rule_content->expire.date.len, 
                     rule_content->expire.date.data);
-            CuAssertStrEquals(tc, "2022-10-11T00:00:00+08:00", date);
+            CuAssertStrEquals(tc, "2022-10-10T16:00:00.000Z", date);
             status = apr_psprintf(p, "%.*s", rule_content->status.len, 
                     rule_content->status.data);
             CuAssertStrEquals(tc, "Enabled", status);
@@ -582,14 +586,720 @@ void test_delete_objects_by_prefix(CuTest *tc)
     printf("test_delete_object_by_prefix ok\n");
 }
 
+void test_put_bucket_acl(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_status_t *s = NULL;
+    cos_string_t grant_read;
+    cos_string_t grant_write;
+    cos_string_t grant_full_control;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    cos_str_set(&grant_read, "id=\"2779643970\"");
+    cos_str_set(&grant_write, "id=\"2779643970\"");
+    cos_str_set(&grant_full_control, "id=\"2779643970\"");
+
+    s = cos_put_bucket_acl(options, &bucket, COS_ACL_PRIVATE, 
+                            &grant_read, &grant_write, &grant_full_control, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_put_bucket_acl ok\n");
+}
+
+void test_get_bucket_acl(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_status_t *s = NULL;
+    cos_acl_params_t *acl_param = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    acl_param = cos_create_acl_params(p);
+
+    s = cos_get_bucket_acl(options, &bucket, acl_param, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_get_bucket_acl ok\n");
+}
+
+void test_get_service(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_get_service_params_t *get_service_param = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+
+    get_service_param = cos_create_get_service_params(p);
+
+    s = cos_get_service(options, get_service_param, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_get_service ok\n");
+}
+
+void test_head_bucket(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_status_t *s = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    s = cos_head_bucket(options, &bucket, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_head_bucket ok\n");
+}
+
+void test_check_bucket_exist(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_bucket_exist_status_e bucket_exist;
+    cos_status_t *s = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    s = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_check_bucket_exist ok\n");
+}
+
+void test_bucket_versioning(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_status_t *s = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    cos_versioning_content_t *versioning = NULL;
+    versioning = cos_create_versioning_content(p);
+    cos_str_set(&versioning->status, "Enabled");
+
+    //put bucket versioning
+    s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //get bucket versioning
+    cos_str_set(&versioning->status, "");
+    s = cos_get_bucket_versioning(options, &bucket, versioning, &resp_headers);
+    CuAssertStrnEquals(tc, "Enabled", sizeof("Enabled") - 1, versioning->status.data);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_str_set(&versioning->status, "Suspended");
+    s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(p);
+
+    printf("test_bucket_versioning ok\n");
+}
+
+void test_bucket_replication(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_request_options_t *dst_options = NULL;
+    cos_string_t bucket;
+    cos_string_t dst_bucket;
+    cos_table_t *resp_headers = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&dst_bucket, "replicationtest-gz-1253960454");
+
+    dst_options = cos_request_options_create(p);
+    init_test_request_options(dst_options, is_cname);
+    
+    //enable bucket versioning
+    cos_versioning_content_t *versioning = NULL;
+    versioning = cos_create_versioning_content(p);
+    cos_str_set(&versioning->status, "Enabled");
+    s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    s = cos_create_bucket(dst_options, &dst_bucket, COS_ACL_PRIVATE, &resp_headers);
+    s = cos_put_bucket_versioning(dst_options, &dst_bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_replication_params_t *replication_param = NULL;
+    replication_param = cos_create_replication_params(p);
+    cos_str_set(&replication_param->role, "qcs::cam::uin/2832742109:uin/2832742109");
+    
+    cos_replication_rule_content_t *rule = NULL;
+    rule = cos_create_replication_rule_content(p);
+    cos_str_set(&rule->id, "Rule_01");
+    cos_str_set(&rule->status, "Enabled");
+    cos_str_set(&rule->prefix, "test1");
+    cos_str_set(&rule->dst_bucket, "qcs:id/0:cos:ap-beijing:appid/1253960454:replicationtest");
+    cos_str_set(&rule->storage_class, "Standard");
+    cos_list_add_tail(&rule->node, &replication_param->rule_list);
+    
+    //put bucket replication
+    s = cos_put_bucket_replication(options, &bucket, replication_param, &resp_headers);
+    //CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //get bucket replication
+    cos_replication_params_t *replication_param2 = NULL;
+    replication_param2 = cos_create_replication_params(p);
+    s = cos_get_bucket_replication(options, &bucket, replication_param2, &resp_headers);
+    //CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    printf("ReplicationConfiguration role: %s\n", replication_param2->role.data);
+    cos_replication_rule_content_t *content = NULL;
+    cos_list_for_each_entry(cos_replication_rule_content_t, content, &replication_param2->rule_list, node) {
+        printf("ReplicationConfiguration rule, id:%s, status:%s, prefix:%s, dst_bucket:%s, storage_class:%s\n",
+                content->id.data, content->status.data, content->prefix.data, content->dst_bucket.data, content->storage_class.data);
+    }
+
+    //delete bucket replication
+    s = cos_delete_bucket_replication(options, &bucket, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //disable bucket versioning
+    cos_str_set(&versioning->status, "Suspended");
+    s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    s = cos_put_bucket_versioning(dst_options, &dst_bucket, versioning, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+    
+    cos_pool_destroy(p);
+
+    printf("test_bucket_replication ok\n");
+}
+
+void test_bucket_website(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_website_params_t  *website_params = NULL;
+    cos_website_params_t  *website_result = NULL;
+    cos_website_rule_content_t *website_content = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建website参数
+    website_params = cos_create_website_params(options->pool);
+    cos_str_set(&website_params->index, "index.html");
+    cos_str_set(&website_params->redirect_protocol, "https");
+    cos_str_set(&website_params->error_document, "Error.html");
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_errcode, "404");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key, "404.html");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_prefix, "docs/");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key_prefix, "documents/");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    website_content = cos_create_website_rule_content(options->pool);
+    cos_str_set(&website_content->condition_prefix, "img/");
+    cos_str_set(&website_content->redirect_protocol, "https");
+    cos_str_set(&website_content->redirect_replace_key, "demo.jpg");
+    cos_list_add_tail(&website_content->node, &website_params->rule_list);
+
+    s = cos_put_bucket_website(options, &bucket, website_params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    website_result = cos_create_website_params(options->pool);
+    s = cos_get_bucket_website(options, &bucket, website_result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //查看结果
+    cos_website_rule_content_t *content = NULL;
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->index.len, website_result->index.data);
+    printf("index: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->redirect_protocol.len, website_result->redirect_protocol.data);
+    printf("redirect protocol: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", website_result->error_document.len, website_result->error_document.data);
+    printf("error document: %s", line);
+    cos_list_for_each_entry(cos_website_rule_content_t, content, &website_result->rule_list, node) {
+        line = apr_psprintf(options->pool, "%.*s\t%.*s\t%.*s\t%.*s\t%.*s\n", content->condition_errcode.len, content->condition_errcode.data, content->condition_prefix.len, content->condition_prefix.data, content->redirect_protocol.len, content->redirect_protocol.data, content->redirect_replace_key.len, content->redirect_replace_key.data, content->redirect_replace_key_prefix.len, content->redirect_replace_key_prefix.data);
+        printf("%s", line);
+    }
+
+    s = cos_delete_bucket_website(options, &bucket, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
+    CuAssertPtrNotNull(tc, resp_headers); 
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_website ok\n");
+}
+
+void test_bucket_domain(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_domain_params_t  *domain_params = NULL;
+    cos_domain_params_t  *domain_result = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建domain参数
+    domain_params = cos_create_domain_params(options->pool);
+    cos_str_set(&domain_params->status, "DISABLED");
+    cos_str_set(&domain_params->name, "www.abc.com");
+    cos_str_set(&domain_params->type, "REST");
+    cos_str_set(&domain_params->forced_replacement, "CNAME");
+
+    s = cos_put_bucket_domain(options, &bucket, domain_params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    domain_result = cos_create_domain_params(options->pool);
+    s = cos_get_bucket_domain(options, &bucket, domain_result, &resp_headers);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //查看结果
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->status.len, domain_result->status.data);
+    printf("status: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->name.len, domain_result->name.data);
+    printf("name: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->type.len, domain_result->type.data);
+    printf("type: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", domain_result->forced_replacement.len, domain_result->forced_replacement.data);
+    printf("forced_replacement: %s", line);
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_domain ok\n");
+}
+
+void test_bucket_logging(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_logging_params_t  *params = NULL;
+    cos_logging_params_t  *result = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    //创建logging参数
+    params = cos_create_logging_params(options->pool);
+    cos_str_set(&params->target_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&params->target_prefix, "logging/");
+
+    s = cos_put_bucket_logging(options, &bucket, params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    result = cos_create_logging_params(options->pool);
+    s = cos_get_bucket_logging(options, &bucket, result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    //查看结果
+    char *line = NULL;
+    line = apr_psprintf(options->pool, "%.*s\n", result->target_bucket.len, result->target_bucket.data);
+    printf("target bucket: %s", line);
+    line = apr_psprintf(options->pool, "%.*s\n", result->target_prefix.len, result->target_prefix.data);
+    printf("target prefix: %s", line);
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_logging ok\n");
+}
+
+void test_bucket_inventory(CuTest *tc) 
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    int inum = 1, i, len;
+    char buf[inum][32];
+    char dest_bucket[128];
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_inventory_params_t *get_params = NULL;
+    cos_inventory_optional_t *optional = NULL;
+    cos_list_inventory_params_t *list_params = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put bucket inventory 
+    len = snprintf(dest_bucket, 128, "qcs::cos:%s::%s", TEST_REGION, TEST_BUCKET_NAME);
+    dest_bucket[len] = 0;
+    for (i = 0; i < inum; i++) {
+        cos_inventory_params_t *params = cos_create_inventory_params(pool);
+        cos_inventory_optional_t *optional;
+        len = snprintf(buf[i], 32, "id%d", i);
+        buf[i][len] = 0;
+        cos_str_set(&params->id, buf[i]);
+        cos_str_set(&params->is_enabled, "true");
+        cos_str_set(&params->frequency, "Daily");
+        cos_str_set(&params->filter_prefix, "myPrefix");
+        cos_str_set(&params->included_object_versions, "All");
+        cos_str_set(&params->destination.format, "CSV");
+        cos_str_set(&params->destination.account_id, TEST_UIN);
+        cos_str_set(&params->destination.bucket, dest_bucket);
+        cos_str_set(&params->destination.prefix, "invent");
+        params->destination.encryption = 0;
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "Size");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "LastModifiedDate");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "ETag");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "StorageClass");
+        cos_list_add_tail(&optional->node, &params->fields);
+        optional = cos_create_inventory_optional(pool);
+        cos_str_set(&optional->field, "ReplicationStatus");
+        cos_list_add_tail(&optional->node, &params->fields);
+
+        s = cos_put_bucket_inventory(options, &bucket, params, &resp_headers);
+        CuAssertIntEquals(tc, 200, s->code);
+        CuAssertPtrNotNull(tc, resp_headers);
+    }
+
+    // get inventory 
+    get_params = cos_create_inventory_params(pool);
+    cos_str_set(&get_params->id, buf[inum/2]);
+    s = cos_get_bucket_inventory(options, &bucket, get_params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+            get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
+    printf("destination:\n");
+    printf("\tencryption: %d\n", get_params->destination.encryption);
+    printf("\tformat: %s\n", get_params->destination.format.data);
+    printf("\taccount_id: %s\n", get_params->destination.account_id.data);
+    printf("\tbucket: %s\n", get_params->destination.bucket.data);
+    printf("\tprefix: %s\n", get_params->destination.prefix.data);
+    cos_list_for_each_entry(cos_inventory_optional_t, optional, &get_params->fields, node) {
+        printf("field: %s\n", optional->field.data);
+    }
+
+    // list inventory
+    list_params = cos_create_list_inventory_params(pool); 
+    s = cos_list_bucket_inventory(options, &bucket, list_params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    get_params = NULL;
+    cos_list_for_each_entry(cos_inventory_params_t, get_params, &list_params->inventorys, node) {
+        printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+                get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
+        printf("destination:\n");
+        printf("\tencryption: %d\n", get_params->destination.encryption);
+        printf("\tformat: %s\n", get_params->destination.format.data);
+        printf("\taccount_id: %s\n", get_params->destination.account_id.data);
+        printf("\tbucket: %s\n", get_params->destination.bucket.data);
+        printf("\tprefix: %s\n", get_params->destination.prefix.data);
+        cos_list_for_each_entry(cos_inventory_optional_t, optional, &get_params->fields, node) {
+            printf("field: %s\n", optional->field.data);
+        }
+    }
+
+    // delete inventory
+    for (i = 0; i < inum; i++) {
+        cos_string_t id;
+        cos_str_set(&id, buf[i]);
+        s = cos_delete_bucket_inventory(options, &bucket, &id, &resp_headers);
+        CuAssertIntEquals(tc, 204, s->code);
+        CuAssertPtrNotNull(tc, resp_headers);
+    }
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_inventory ok\n");
+}
+
+void test_bucket_tagging(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    s = cos_put_bucket_tagging(options, &bucket, params, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // get tagging
+    result = cos_create_tagging_params(pool);
+    s = cos_get_bucket_tagging(options, &bucket, result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    tag = NULL;
+    cos_list_for_each_entry(cos_tagging_tag_t, tag, &result->node, node) {
+        printf("taging key: %s\n", tag->key.data);
+        printf("taging value: %s\n", tag->value.data);
+
+    } 
+
+    // delete tagging
+    s = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_tagging ok\n");
+}
+
+void test_bucket_referer(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_referer_params_t *params = NULL;
+    cos_referer_domain_t *domain = NULL;
+    cos_referer_params_t *result = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/32492
+    params = cos_create_referer_params(pool);
+    cos_str_set(&params->status, "Disabled");
+    cos_str_set(&params->referer_type, "White-List");
+    cos_str_set(&params->empty_refer_config, "Allow");
+    domain = cos_create_referer_domain(pool);
+    cos_str_set(&domain->domain, "www.qq.com");
+    cos_list_add_tail(&domain->node, &params->domain_list);
+    domain = cos_create_referer_domain(pool);
+    cos_str_set(&domain->domain, "*.tencent.com");
+    cos_list_add_tail(&domain->node, &params->domain_list);
+
+    // put referer
+    s = cos_put_bucket_referer(options, &bucket, params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // get referer
+    result = cos_create_referer_params(pool);
+    s = cos_get_bucket_referer(options, &bucket, result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_referer ok\n");
+}
+
+void test_bucket_intelligenttiering(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_intelligenttiering_params_t *params = NULL;
+    cos_intelligenttiering_params_t *result = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // put intelligenttiering
+    params = cos_create_intelligenttiering_params(pool);
+    cos_str_set(&params->status, "Enabled");
+    params->days = 30; 
+
+    s = cos_put_bucket_intelligenttiering(options, &bucket, params, &resp_headers);
+   // CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // get intelligenttiering
+    result = cos_create_intelligenttiering_params(pool);
+    s = cos_get_bucket_intelligenttiering(options, &bucket, result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    printf("status: %s\n", result->status.data);
+    printf("days: %d\n", result->days);
+    cos_pool_destroy(pool);
+
+    printf("test_bucket_intelligenttiering ok\n");
+}
+
 CuSuite *test_cos_bucket()
 {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_bucket_setup);
     SUITE_ADD_TEST(suite, test_create_bucket);
-    //SUITE_ADD_TEST(suite, test_put_bucket_acl);
-    //SUITE_ADD_TEST(suite, test_get_bucket_acl);
+    SUITE_ADD_TEST(suite, test_get_service);
+    SUITE_ADD_TEST(suite, test_bucket_replication);
+    SUITE_ADD_TEST(suite, test_bucket_versioning);
+    SUITE_ADD_TEST(suite, test_head_bucket);
+    SUITE_ADD_TEST(suite, test_check_bucket_exist);
+    SUITE_ADD_TEST(suite, test_bucket_referer);
+    SUITE_ADD_TEST(suite, test_bucket_website);
+    SUITE_ADD_TEST(suite, test_bucket_intelligenttiering);
+    SUITE_ADD_TEST(suite, test_bucket_domain);
+    SUITE_ADD_TEST(suite, test_bucket_logging);
+    SUITE_ADD_TEST(suite, test_bucket_inventory);
+    SUITE_ADD_TEST(suite, test_bucket_tagging);
+    SUITE_ADD_TEST(suite, test_put_bucket_acl);
+    SUITE_ADD_TEST(suite, test_get_bucket_acl);
     SUITE_ADD_TEST(suite, test_delete_objects_by_prefix);
     SUITE_ADD_TEST(suite, test_list_object);
     SUITE_ADD_TEST(suite, test_list_object_with_delimiter);

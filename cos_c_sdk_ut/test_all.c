@@ -117,6 +117,10 @@ int main(int argc, char *argv[])
                        TEST_BUCKET_NAME : getenv("COS_TEST_BUCKET");
     TEST_APPID = TEST_APPID != NULL ?
                        TEST_APPID : getenv("COS_TEST_APPID");
+
+    TEST_REGION = getenv("COS_TEST_REGION");
+    TEST_UIN = getenv("COS_TEST_UIN");
+    TEST_CI_ENDPOINT = getenv("COS_TEST_CI_ENDPOINT");
     
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);

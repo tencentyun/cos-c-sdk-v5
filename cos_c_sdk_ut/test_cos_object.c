@@ -17,12 +17,19 @@ void test_object_setup(CuTest *tc)
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_acl_e cos_acl = COS_ACL_PRIVATE;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    cos_string_t object;
 
     /* create test bucket */
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     s = create_test_bucket(options, TEST_BUCKET_NAME, cos_acl);
+
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+    s = cos_put_object_from_file(options, &bucket, &object, &object, NULL, &resp_headers);
 
     CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
@@ -730,11 +737,69 @@ void test_object_copy(CuTest *tc)
     s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertIntEquals(tc, 1, 0 != strcmp(params->etag.data, ""));
+    cos_pool_destroy(p);
+}
 
+void test_object_bigcopy(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *str = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy_222.txt");
+    cos_str_set(&src_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&src_object, "cos_test_put_object.ts");
+    cos_str_set(&src_endpoint, options->config->endpoint.data);
+
+    cos_list_init(&buffer);
+    str = cos_palloc(p, 0x300000);
+    content = cos_buf_pack(options->pool, str, 0x300000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &src_object, &buffer, NULL, &resp_headers);
+
+    s = copy(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, 1);
+    CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
 }
 
 void test_presigned_url(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t presigned_url;
+    int res;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.dat");
+
+    res = cos_gen_presigned_url_safe(options, &bucket, &object, 300, HTTP_GET, NULL, NULL, 1, &presigned_url);
+    CuAssertIntEquals(tc, 0, res);
+    
+    cos_pool_destroy(p);
+    
+}
+
+void test_presigned_safe_url(CuTest *tc)
 {
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -757,11 +822,420 @@ void test_presigned_url(CuTest *tc)
     
 }
 
+void test_check_object_exist(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    cos_object_exist_status_e object_exist;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.txt");
+
+    // 检查对象是否存在
+    s = cos_check_object_exist(options, &bucket, &object, headers, &object_exist, &resp_headers);
+    CuAssertPtrNotNull(tc, s);
+    if (object_exist == COS_OBJECT_NON_EXIST) {
+        printf("object: %.*s non exist.\n", object.len, object.data);
+    } else if (object_exist == COS_OBJECT_EXIST) {
+        printf("object: %.*s exist.\n", object.len, object.data);
+    } else {
+        printf("object: %.*s unknown status.\n", object.len, object.data);
+    }
+
+    cos_pool_destroy(p);
+
+    printf("test_check_object_exist ok\n");
+}
+
+void test_object_tagging(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t version_id = cos_string("");
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+    cos_list_t buffer;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.xxxxxx");
+
+    cos_list_init(&buffer);
+    cos_put_object_from_buffer(options, &bucket, &object, &buffer, NULL, resp_headers);
+
+    // put object tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    s = cos_put_object_tagging(options, &bucket, &object, &version_id, NULL, params, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // get object tagging
+    result = cos_create_tagging_params(pool);
+    s = cos_get_object_tagging(options, &bucket, &object, &version_id, NULL, result, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    tag = NULL;
+    cos_list_for_each_entry(cos_tagging_tag_t, tag, &result->node, node) {
+        printf("taging key: %s\n", tag->key.data);
+        printf("taging value: %s\n", tag->value.data);
+
+    } 
+
+    // delete tagging
+    s = cos_delete_object_tagging(options, &bucket, &object, &version_id, NULL, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(pool);
+
+    printf("test_object_tagging ok\n");
+}
+
+void test_object_restore(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    int is_cname = 0;
+    cos_table_t *resp_headers = NULL;
+    cos_request_options_t *options = NULL;
+    cos_status_t *s = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_restore.dat");
+
+    cos_object_restore_params_t *restore_params = cos_create_object_restore_params(p);
+    restore_params->days = 30;
+    cos_str_set(&restore_params->tier, "Standard");
+    s = cos_post_object_restore(options, &bucket, &object, restore_params, NULL, NULL, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(p);
+
+    printf("test_object_restore ok\n");
+}
+
+void test_ci_image_process(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    ci_operation_result_t *results = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.jpg");
+
+    // 云上数据处理
+    cos_str_set(&file, "test.jpg");
+    cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
+
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.jpg\",\"rule\":\"imageView2/format/png\"}]}");
+    s = ci_image_process(options, &bucket, &object, headers, &resp_headers, &results);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 上传时处理
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test3.jpg\",\"rule\":\"imageView2/format/png\"}]}");
+    cos_str_set(&file, "test.jpg");
+    cos_str_set(&object, "test2.jpg");
+    s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_media_info(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    ci_media_info_result_t *media_info;
+    cos_string_t object;
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/55672
+    s = ci_get_media_info(options, &bucket, &object, NULL, &resp_headers, &media_info);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_snapshot(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    cos_list_t download_buffer;
+    cos_string_t object;
+    ci_get_snapshot_request_t *snapshot_request;
+    cos_buf_t *content = NULL;
+    cos_string_t pic_file = cos_string("snapshot.jpg");
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/55671
+    snapshot_request = ci_snapshot_request_create(p);
+    snapshot_request->time = 7.5;
+    snapshot_request->width = 0;
+    snapshot_request->height = 0;
+    cos_str_set(&snapshot_request->format, "jpg");
+    cos_str_set(&snapshot_request->rotate, "auto");
+    cos_str_set(&snapshot_request->mode, "exactframe");
+    cos_list_init(&download_buffer);
+
+    s = ci_get_snapshot_to_buffer(options, &bucket, &object, snapshot_request, NULL, &download_buffer, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    int64_t len = 0;
+    int64_t size = 0;
+    int64_t pos = 0;
+    cos_list_for_each_entry(cos_buf_t, content, &download_buffer, node) {
+        len += cos_buf_size(content);
+    }
+    char *buf = cos_pcalloc(p, (apr_size_t)(len + 1));
+    buf[len] = '\0';
+    cos_list_for_each_entry(cos_buf_t, content, &download_buffer, node) {
+        size = cos_buf_size(content);
+        memcpy(buf + pos, content->pos, (size_t)size);
+        pos += size;
+    }
+    cos_warn_log("Download len:%ld data=%s", len, buf);
+
+    s = ci_get_snapshot_to_file(options, &bucket, &object, snapshot_request, NULL, &pic_file, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_media_process_media_bucket(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers;
+    ci_media_buckets_request_t *media_buckets_request;
+    ci_media_buckets_result_t *media_buckets_result;
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_CI_ENDPOINT);     // https://ci.<Region>.myqcloud.com
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/48988
+    media_buckets_request = ci_media_buckets_request_create(p);
+    cos_str_set(&media_buckets_request->regions, "");
+    cos_str_set(&media_buckets_request->bucket_names, "");
+    cos_str_set(&media_buckets_request->bucket_name, "");
+    cos_str_set(&media_buckets_request->page_number, "1");
+    cos_str_set(&media_buckets_request->page_size, "10");
+    s = ci_describe_media_buckets(options, media_buckets_request, NULL, &resp_headers, &media_buckets_result);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_video_auditing(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    ci_video_auditing_job_options_t *job_options;
+    ci_video_auditing_job_result_t *job_result;
+    ci_auditing_job_result_t *auditing_result;
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_CI_ENDPOINT);     // https://ci.<Region>.myqcloud.com
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/47316
+    job_options = ci_video_auditing_job_options_create(p);
+    cos_str_set(&job_options->input_object, "test.mp4");
+    cos_str_set(&job_options->job_conf.detect_type, "Porn,Terrorism,Politics,Ads");
+    cos_str_set(&job_options->job_conf.callback_version, "Detail");
+    job_options->job_conf.detect_content = 1;
+    cos_str_set(&job_options->job_conf.snapshot.mode, "Interval");
+    job_options->job_conf.snapshot.time_interval = 1.5;
+    job_options->job_conf.snapshot.count = 10;
+
+    // 提交一个视频审核任务
+    s = ci_create_video_auditing_job(options, &bucket, job_options, NULL, &resp_headers, &job_result);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 等待视频审核任务完成，此处可修改您的等待时间
+    sleep(30);
+
+    // 获取审核任务结果
+    s = ci_get_auditing_job(options, &bucket, &job_result->jobs_detail.job_id, NULL, &resp_headers, &auditing_result);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_image_qrcode(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t file;
+    cos_table_t *resp_headers;
+    cos_table_t *headers = NULL;
+    ci_operation_result_t *results = NULL;
+    ci_qrcode_info_t *content = NULL;
+    ci_qrcode_result_t *result2 = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.jpg");
+    
+    headers = cos_table_make(p, 1);
+    apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"QRcode/cover/1\"}]}");
+    // 上传时识别
+    cos_str_set(&file, "test.jpg");
+    cos_str_set(&object, "test.jpg");
+    s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    if (results == NULL) {
+        cos_pool_destroy(p);
+        return;
+    }
+
+    cos_list_for_each_entry(ci_qrcode_info_t, content, &results->object.qrcode_info, node) {
+        printf("CodeUrl: %s\n", content->code_url.data);
+        printf("Point: %s\n", content->point[0].data);
+        printf("Point: %s\n", content->point[1].data);
+        printf("Point: %s\n", content->point[2].data);
+        printf("Point: %s\n", content->point[3].data);
+    }
+
+    // 下载时识别
+    s = ci_get_qrcode(options, &bucket, &object, 1, NULL, NULL, &resp_headers, &result2);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    cos_list_for_each_entry(ci_qrcode_info_t, content, &result2->qrcode_info, node) {
+        printf("CodeUrl: %s\n", content->code_url.data);
+        printf("Point: %s\n", content->point[0].data);
+        printf("Point: %s\n", content->point[1].data);
+        printf("Point: %s\n", content->point[2].data);
+        printf("Point: %s\n", content->point[3].data);
+    }
+
+    //销毁内存池
+    cos_pool_destroy(p); 
+}
+
 CuSuite *test_cos_object()
 {
     CuSuite* suite = CuSuiteNew();   
 
     SUITE_ADD_TEST(suite, test_object_setup);
+    SUITE_ADD_TEST(suite, test_ci_image_qrcode);
+    SUITE_ADD_TEST(suite, test_ci_video_auditing);
+    SUITE_ADD_TEST(suite, test_ci_media_process_media_info);
+    SUITE_ADD_TEST(suite, test_ci_media_process_snapshot);
+    SUITE_ADD_TEST(suite, test_ci_media_process_media_bucket);
     SUITE_ADD_TEST(suite, test_put_object_from_buffer);
     SUITE_ADD_TEST(suite, test_put_object_from_file);
     SUITE_ADD_TEST(suite, test_put_object_from_buffer_with_specified);
@@ -775,11 +1249,17 @@ CuSuite *test_cos_object()
     SUITE_ADD_TEST(suite, test_head_object_with_not_exist);
     SUITE_ADD_TEST(suite, test_object_acl);
     SUITE_ADD_TEST(suite, test_object_copy);
+    SUITE_ADD_TEST(suite, test_object_bigcopy);
     SUITE_ADD_TEST(suite, test_delete_object);
     SUITE_ADD_TEST(suite, test_append_object_from_buffer);
     SUITE_ADD_TEST(suite, test_append_object_from_file);
     SUITE_ADD_TEST(suite, test_presigned_url);
+    SUITE_ADD_TEST(suite, test_presigned_safe_url);
+    SUITE_ADD_TEST(suite, test_check_object_exist);
+    SUITE_ADD_TEST(suite, test_object_tagging);
+    SUITE_ADD_TEST(suite, test_object_restore);
+    SUITE_ADD_TEST(suite, test_ci_image_process);
     SUITE_ADD_TEST(suite, test_object_cleanup); 
-    
+
     return suite;
 }
