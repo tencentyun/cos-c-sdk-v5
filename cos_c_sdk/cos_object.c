@@ -716,7 +716,7 @@ cos_status_t *copy
     cos_str_set(&head_options->config->endpoint, src_endpoint->data);
     cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
     cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
-    cos_str_set(&head_options->config->appid, "");
+    cos_str_set(&head_options->config->appid, options->config->appid.data);
     head_options->ctl = cos_http_controller_create(subpool, 0);
     s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
     if (!cos_status_is_ok(s)) {
@@ -753,8 +753,6 @@ cos_status_t *copy
     }
 
     ret = cos_status_dup(parent_pool, s);
-    cos_pool_destroy(subpool);
-    options->pool = parent_pool;
     return ret;
 }
 
