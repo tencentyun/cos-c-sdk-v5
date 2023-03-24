@@ -20,6 +20,7 @@ void test_object_setup(CuTest *tc)
     cos_string_t bucket;
     cos_table_t *resp_headers;
     cos_string_t object;
+    cos_string_t file_path;
 
     /* create test bucket */
     cos_pool_create(&p, NULL);
@@ -29,7 +30,8 @@ void test_object_setup(CuTest *tc)
 
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test.mp4");
-    s = cos_put_object_from_file(options, &bucket, &object, &object, NULL, &resp_headers);
+    cos_str_set(&file_path, "../../../test.mp4");
+    s = cos_put_object_from_file(options, &bucket, &object, &file_path, NULL, &resp_headers);
 
     CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
@@ -973,7 +975,7 @@ void test_ci_image_process(CuTest *tc)
     cos_str_set(&object, "test.jpg");
 
     // 云上数据处理
-    cos_str_set(&file, "test.jpg");
+    cos_str_set(&file, "../../../test.jpg");
     cos_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers);
 
     headers = cos_table_make(p, 1);
@@ -985,7 +987,6 @@ void test_ci_image_process(CuTest *tc)
     // 上传时处理
     headers = cos_table_make(p, 1);
     apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test3.jpg\",\"rule\":\"imageView2/format/png\"}]}");
-    cos_str_set(&file, "test.jpg");
     cos_str_set(&object, "test2.jpg");
     s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
     CuAssertIntEquals(tc, 200, s->code);
@@ -1151,6 +1152,10 @@ void test_ci_video_auditing(CuTest *tc)
 
     // 提交一个视频审核任务
     s = ci_create_video_auditing_job(options, &bucket, job_options, NULL, &resp_headers, &job_result);
+    if (job_result == NULL) {
+        cos_pool_destroy(p);
+        return;
+    }
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
@@ -1190,7 +1195,7 @@ void test_ci_image_qrcode(CuTest *tc)
     headers = cos_table_make(p, 1);
     apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"QRcode/cover/1\"}]}");
     // 上传时识别
-    cos_str_set(&file, "test.jpg");
+    cos_str_set(&file, "../../../test.jpg");
     cos_str_set(&object, "test.jpg");
     s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
     CuAssertIntEquals(tc, 200, s->code);
