@@ -686,7 +686,7 @@ void cos_list_multipart_uploads_content_parse(cos_pool_t *p, mxml_node_t *xml_no
         cos_str_set(&content->key, key);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "UploadID",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "UploadId",NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         upload_id = apr_pstrdup(p, node_content);
