@@ -30,10 +30,10 @@ lcov -extract arvinzhu.info ${EXTRACT} -o arvinzhu_filted.info
 # genhtml and zip
 genhtml -o UTReport -prefix=`pwd` arvinzhu_init_filted.info arvinzhu_filted.info
 tar -cvf UTReport.tar UTReport
-rm arvinzhu_init.info
-rm arvinzhu_init_filted.info
-rm arvinzhu.info
-rm arvinzhu_filted.info
+#rm arvinzhu_init.info
+#rm arvinzhu_init_filted.info
+#rm arvinzhu.info
+#rm arvinzhu_filted.info
 rm UTReport -rf
 
 
