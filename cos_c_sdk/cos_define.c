@@ -109,7 +109,8 @@ const char *SIGN_HEADER[] = {
     "response-content-type",
     "response-expires",
     "transfer-encoding",
-    "versionid"
+    "versionid",
+    "pic-operations"
 };
 const int SIGN_HEADER_NUM = (int)(sizeof(SIGN_HEADER) / sizeof(SIGN_HEADER[0]));
 const char X_COS_HEADER[] = "x-cos-";
