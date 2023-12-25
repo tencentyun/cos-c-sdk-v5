@@ -146,7 +146,7 @@ static int is_ak_or_sk_valid(cos_string_t *str)
 
 int is_should_retry(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || (s->code == 302 && (!strcmp(s->error_code, "UnknownError"))) || ((s->code/100 != 2) && s->req_id==NULL)){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
             return 1;
         }
     }
@@ -154,7 +154,7 @@ int is_should_retry(const cos_status_t *s, const char *str){
 }
 int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()){
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || (s->code == 302 && (!strcmp(s->error_code, "UnknownError"))) || ((s->code/100 != 2) && s->req_id==NULL)){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
             return 1;
         }
     }
@@ -1466,7 +1466,6 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
     s = cos_send_request(options->ctl, req, resp);
 
     if (retry && is_should_retry(s, req->host)){
-        fprintf(stderr, "[retry start]\n");
         if (apr_table_get(req->headers, "Host") != NULL)
         {
             apr_table_unset(req->headers, "Host");
@@ -1503,6 +1502,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         }
 
         ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        resp->status = 0;
         req->consumed_bytes = 0;
 
         s = cos_send_request(options->ctl, req, resp);
@@ -1516,7 +1516,6 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         }
         free(req->host);
         req->host = host;
-        fprintf(stderr, "[retry done]\n");
     }
     return s;
 }
