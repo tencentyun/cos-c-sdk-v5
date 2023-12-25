@@ -386,7 +386,7 @@ void test_resumable_checkpoint_xml(CuTest *tc)
         "<CPParts>"
         "<Number>1</Number><Size>1048576</Size>"
         "<Parts>"
-        "<Part><Index>0</Index><Offset>0</Offset><Size>510598</Size><Completed>1</Completed><ETag></ETag></Part>"
+        "<Part><Index>0</Index><Offset>0</Offset><Size>510598</Size><Completed>1</Completed><ETag></ETag><Crc64>0</Crc64></Part>"
         "</Parts>"
         "</CPParts>"
         "</Checkpoint>\n";
@@ -493,8 +493,9 @@ void test_resumable_upload_without_checkpoint(CuTest *tc)
     CuAssertIntEquals(tc, 200, s->code);
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
-    CuAssertTrue(tc, content_length == get_file_size(object_name));
-
+    CuAssertTrue(tc, content_length == get_file_size(&filename));
+    printf("test_resumable_upload_without_checkpoint len%d\n",content_length);
+    printf("test_resumable_upload_without_checkpoint size%d\n",get_file_size(&filename));
     cos_pool_destroy(p);
 
     printf("test_resumable_upload_without_checkpoint ok\n");
@@ -542,6 +543,8 @@ void test_resumable_upload_partsize(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_partsize len%d\n",content_length);
+    printf("test_resumable_upload_partsize size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -567,6 +570,8 @@ void test_resumable_upload_partsize(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_partsize len%d\n",content_length);
+    printf("test_resumable_upload_partsize size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -615,6 +620,8 @@ void test_resumable_upload_threads(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_threads len%d\n",content_length);
+    printf("test_resumable_upload_threads size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -640,6 +647,8 @@ void test_resumable_upload_threads(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_threads len%d\n",content_length);
+    printf("test_resumable_upload_threads size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -665,6 +674,8 @@ void test_resumable_upload_threads(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_threads len%d\n",content_length);
+    printf("test_resumable_upload_threads size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -713,6 +724,8 @@ void test_resumable_upload_with_checkpoint(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_with_checkpoint len%d\n",content_length);
+    printf("test_resumable_upload_with_checkpoint size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -766,6 +779,8 @@ void test_resumable_upload_with_checkpoint_format_invalid(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_with_checkpoint_format_invalid len%d\n",content_length);
+    printf("test_resumable_upload_with_checkpoint_format_invalid size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -880,6 +895,8 @@ void test_resumable_upload_with_file_size_unavailable(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_with_file_size_unavailable len%d\n",content_length);
+    printf("test_resumable_upload_with_file_size_unavailable size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -901,7 +918,7 @@ void test_resumable_upload_with_uploadid_unavailable(CuTest *tc)
     apr_finfo_t finfo;
     cos_request_options_t *options = NULL;
     cos_resumable_clt_params_t *clt_params;
-    char *cp_path = "d:\\work\\cos\\test.ucp";
+    char *cp_path = "../../../test.cp";
     char *xml_doc = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
         "<Checkpoint><MD5></MD5><Type>1</Type><LocalFile>"
         "<Path>cos_c_sdk_test/BingWallpaper-2017-01-19.jpg</Path>"
@@ -1027,7 +1044,8 @@ void test_resumable_upload_with_uploadid_available(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
-
+    printf("test_resumable_upload_with_uploadid_available len%d\n",content_length);
+    printf("test_resumable_upload_with_uploadid_available size%d\n",get_file_size(test_local_file));
     cos_pool_destroy(p);
     cos_pool_destroy(pool);
 
@@ -1111,6 +1129,8 @@ void test_resumable_upload_progress_without_checkpoint(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_progress_without_checkpoint len%d\n",content_length);
+    printf("test_resumable_upload_progress_without_checkpoint size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -1159,6 +1179,8 @@ void test_resumable_upload_progress_with_checkpoint(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(test_local_file));
+    printf("test_resumable_upload_progress_with_checkpoint len%d\n",content_length);
+    printf("test_resumable_upload_progress_with_checkpoint size%d\n",get_file_size(test_local_file));
 
     cos_pool_destroy(p);
 
@@ -1184,7 +1206,7 @@ void test_resumable_download(CuTest *tc)
 
     s = cos_resumable_download_file_without_cp(options, &bucket, &object, &filepath, NULL, NULL, 3, 
             5*1024*1024, NULL);
-    CuAssertIntEquals(tc, 0, s->code);
+    CuAssertIntEquals(tc, 200, s->code);
 
     cos_pool_destroy(p);
     
@@ -1219,7 +1241,7 @@ void test_resumable_download_file_with_cp(CuTest *tc)
 
     clt_params = cos_create_resumable_clt_params_content(p, 1*1024*1024, 3, COS_TRUE, NULL);
     s = cos_resumable_download_file(options, &bucket, &object, &object, NULL, NULL, clt_params, NULL);
-    CuAssertIntEquals(tc, 0, s->code);
+    CuAssertIntEquals(tc, 200, s->code);
 
     s = cos_delete_object(options, &bucket, &object, &resp_headers);
 
@@ -1257,7 +1279,7 @@ void test_resumable_copy_mt(CuTest *tc)
     s = cos_put_object_from_buffer(options, &bucket, &src_object, &buffer, NULL, &resp_headers);
 
     s = cos_upload_object_by_part_copy_mt(options, &bucket, &src_object, &src_endpoint, &bucket, &object, 1024*1024, 3, NULL);
-    CuAssertIntEquals(tc, 0, s->code);
+    CuAssertIntEquals(tc, 200, s->code);
 
     cos_pool_destroy(p);
 }

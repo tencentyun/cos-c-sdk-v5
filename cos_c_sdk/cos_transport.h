@@ -96,6 +96,7 @@ struct cos_http_request_s {
     cos_progress_callback progress_callback;
     uint64_t crc64;
     int64_t  consumed_bytes;
+    int clear_body;
 };
 
 struct cos_http_response_s {
