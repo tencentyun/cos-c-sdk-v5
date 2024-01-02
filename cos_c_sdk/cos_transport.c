@@ -396,8 +396,6 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
             cos_error_log("curl_easy_setopt failed, code:%d %s.", code, t->controller->reason); \
             return COSE_FAILED_INITIALIZE;                              \
     }
-    curl_easy_setopt(t->curl, CURLOPT_VERBOSE, 1L);
-    // curl_easy_setopt_safe(CURLOPT_DEBUGFUNCTION, debug_callback)
 
     curl_easy_setopt_safe(CURLOPT_PRIVATE, t);
 
