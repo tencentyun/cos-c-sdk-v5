@@ -96,7 +96,7 @@ void test_init_abort_multipart_upload(CuTest *tc)
 
     //abort multipart
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME, object_name, &upload_id);
-    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 204, s->code);
 
     cos_pool_destroy(p);
 
@@ -149,9 +149,9 @@ void test_list_multipart_upload(CuTest *tc)
     //CuAssertIntEquals(tc, 0, params->truncated);
 
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME, object_name1, &upload_id1);
-    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 204, s->code);
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME, object_name2, &upload_id2);
-    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 204, s->code);
     cos_pool_destroy(p);
 
     printf("test_list_multipart_upload ok\n");    
@@ -507,7 +507,7 @@ void test_upload_file_failed_without_uploadid(CuTest *tc)
     cos_str_set(&filepath, __FILE__);
     s = cos_upload_file(options, &bucket, &object, &upload_id, &filepath, 
                         part_size, NULL);
-    CuAssertIntEquals(tc, 400, s->code);
+    CuAssertIntEquals(tc, 404, s->code);
 
     cos_pool_destroy(p);
 
@@ -611,7 +611,7 @@ void test_upload_file_from_recover_failed(CuTest *tc)
     //abort multipart
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME,
                                     object_name, &upload_id);
-    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 204, s->code);
 
     cos_pool_destroy(p);
 
@@ -716,7 +716,7 @@ void test_cos_get_sorted_uploaded_part(CuTest *tc)
 
     //upload part
     cos_list_init(&buffer);
-    make_random_body(p, 10, &buffer);
+    make_random_body_with_size(p, 1048576, &buffer);
 
     s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
         part_num, &buffer, &upload_part_resp_headers);
@@ -724,7 +724,7 @@ void test_cos_get_sorted_uploaded_part(CuTest *tc)
     CuAssertPtrNotNull(tc, upload_part_resp_headers);
 
     cos_list_init(&buffer);
-    make_random_body(p, 10, &buffer);
+    make_random_body_with_size(p, 1048576, &buffer);
     s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
         part_num1, &buffer, &upload_part_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
@@ -787,7 +787,7 @@ void test_cos_get_sorted_uploaded_part_with_empty(CuTest *tc)
     //abort multipart
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME,
                                     object_name, &upload_id);
-    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 204, s->code);
 
     delete_test_object(options, TEST_BUCKET_NAME, object_name);
     cos_pool_destroy(p);

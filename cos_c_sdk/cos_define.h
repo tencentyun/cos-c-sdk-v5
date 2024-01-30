@@ -148,6 +148,7 @@ typedef struct {
     int proxy_port;
     cos_string_t proxy_user;
     cos_string_t proxy_passwd;
+    int retry_change_domin;
 } cos_config_t;
 
 typedef struct {

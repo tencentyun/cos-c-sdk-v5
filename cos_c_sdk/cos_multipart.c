@@ -37,7 +37,50 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 1);
+    cos_fill_read_response_header(resp, resp_headers);
+    if (!cos_status_is_ok(s)) {
+        return s;
+    }
+
+    res = cos_upload_id_parse_from_body(options->pool, &resp->body, upload_id);
+    if (res != COSE_OK) {
+        cos_xml_error_status_set(s, res);
+    }
+
+    return s;
+}
+
+cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *options, 
+                                        const cos_string_t *bucket, 
+                                        const cos_string_t *object, 
+                                        cos_string_t *upload_id, 
+                                        cos_table_t *headers,
+                                        cos_table_t **resp_headers)
+{
+    int res = COSE_OK;
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_table_t *query_params = NULL;
+    char *error_msg = NULL;
+
+    //init query_params
+    query_params = cos_table_create_if_null(options, query_params, 1);
+    apr_table_add(query_params, COS_UPLOADS, "");
+
+    //init headers
+    headers = cos_table_create_if_null(options, headers, 1);
+    set_content_type(NULL, object->data, headers);
+    cos_set_multipart_content_type(headers);
+
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST, 
+                            &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
+        cos_invalid_param_status_set(options, s, error_msg);
+        return s;
+    }
+
+    s = cos_process_request(options, req, resp, 0);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -77,7 +120,7 @@ cos_status_t *cos_abort_multipart_upload(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -114,7 +157,8 @@ cos_status_t *cos_list_upload_part(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 1);
+
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -162,7 +206,37 @@ cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 0);
+    if(is_should_retry(s, req->host)){
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+        int res = COSE_OK;
+        cos_table_t *query_params = NULL;
+        cos_table_t *headers = NULL;
+        char *error_msg = NULL;
+
+        //init query_params
+        query_params = cos_table_create_if_null(options, query_params, 7);
+        apr_table_add(query_params, COS_UPLOADS, "");
+        if (!cos_is_null_string(&params->encoding_type)) apr_table_add(query_params, COS_ENCODING_TYPE, params->encoding_type.data);
+        if (!cos_is_null_string(&params->prefix)) apr_table_add(query_params, COS_PREFIX, params->prefix.data);
+        if (!cos_is_null_string(&params->delimiter)) apr_table_add(query_params, COS_DELIMITER, params->delimiter.data);
+        if (!cos_is_null_string(&params->key_marker)) apr_table_add(query_params, COS_KEY_MARKER, params->key_marker.data);
+        if (!cos_is_null_string(&params->upload_id_marker)) apr_table_add(query_params, COS_UPLOAD_ID_MARKER, params->upload_id_marker.data);
+        cos_table_add_int(query_params, COS_MAX_UPLOADS, params->max_ret);
+
+        //init headers
+        headers = cos_table_create_if_null(options, headers, 0);
+
+        if (!cos_init_bucket_request(options, bucket, HTTP_GET, &req, 
+                                query_params, headers, &resp, &error_msg)) {
+            cos_invalid_param_status_set(options, s, error_msg);
+            return s;
+        }
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        s = cos_process_request(options, req, resp, 0);
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+    }
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -226,7 +300,35 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
     build_complete_multipart_upload_body(options->pool, part_list, &body);
     cos_write_request_body_from_buffer(&body, req);
 
-    s = cos_process_request(options, req, resp); 
+    s = cos_process_request(options, req, resp, 0); 
+    if(is_should_retry(s, req->host)){
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+        apr_table_t *query_params = NULL;
+        cos_list_t body;
+        char *error_msg = NULL;
+
+        //init query_params
+        query_params = cos_table_create_if_null(options, params, 1);
+        apr_table_add(query_params, COS_UPLOAD_ID, upload_id->data);
+
+        //init headers
+        headers = cos_table_create_if_null(options, headers, 1);
+        set_content_type(NULL, object->data, headers);
+        cos_set_multipart_content_type(headers);
+        //apr_table_add(headers, COS_REPLACE_OBJECT_META, COS_YES);
+        
+        if (!cos_init_object_request(options, bucket, object, HTTP_POST, 
+                                &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
+            cos_invalid_param_status_set(options, s, error_msg);
+            return s;
+        }
+        build_complete_multipart_upload_body(options->pool, part_list, &body);
+        cos_write_request_body_from_buffer(&body, req);
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        s = cos_process_request(options, req, resp, 0); 
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+    }
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
 
@@ -281,7 +383,7 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
 
     cos_write_request_body_from_buffer(buffer, req);
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
 
@@ -347,7 +449,97 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 0);
+    if(is_should_retry(s, req->host)){
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+        cos_table_t *query_params = NULL;
+        int res = COSE_OK;
+        char *error_msg = NULL;
+
+        s = cos_status_create(options->pool);
+
+        //init query_params
+        query_params = cos_table_create_if_null(options, params, 2);
+        apr_table_add(query_params, COS_UPLOAD_ID, upload_id->data);
+        cos_table_add_int(query_params, COS_PARTNUMBER, part_num);
+
+        //init headers
+        headers = cos_table_create_if_null(options, headers, 0);
+
+        cos_add_content_md5_from_file_range(options, upload_file, headers);
+
+        if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+                                query_params, headers, progress_callback, 0, &resp, &error_msg)) {
+            cos_invalid_param_status_set(options, s, error_msg);
+            return s;
+        }
+
+        res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+        if (res != COSE_OK) {
+            cos_file_error_status_set(s, res);
+            return s;
+        }
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        s = cos_process_request(options, req, resp, 0);
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+    }
+    
+    cos_fill_read_response_header(resp, resp_headers);
+    cos_fill_read_response_body(resp, resp_body);
+
+    if (is_enable_crc(options) && has_crc_in_response(resp)) {
+        cos_check_crc_consistent(req->crc64, resp->headers, s);
+    }
+
+    return s;
+}
+
+cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t *options,
+                                           const cos_string_t *bucket, 
+                                           const cos_string_t *object,
+                                           const cos_string_t *upload_id, 
+                                           int part_num, 
+                                           cos_upload_file_t *upload_file,
+                                           cos_progress_callback progress_callback,
+                                           cos_table_t *headers, 
+                                           cos_table_t *params,
+                                           cos_table_t **resp_headers,
+                                           cos_list_t *resp_body)
+{
+    cos_status_t *s = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL; 
+    cos_table_t *query_params = NULL;
+    int res = COSE_OK;
+    char *error_msg = NULL;
+
+    s = cos_status_create(options->pool);
+
+    //init query_params
+    query_params = cos_table_create_if_null(options, params, 2);
+    apr_table_add(query_params, COS_UPLOAD_ID, upload_id->data);
+    cos_table_add_int(query_params, COS_PARTNUMBER, part_num);
+
+    //init headers
+    headers = cos_table_create_if_null(options, headers, 0);
+
+    cos_add_content_md5_from_file_range(options, upload_file, headers);
+
+    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+                            query_params, headers, progress_callback, 0, &resp, &error_msg)) {
+        cos_invalid_param_status_set(options, s, error_msg);
+        return s;
+    }
+
+    res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+    if (res != COSE_OK) {
+        cos_file_error_status_set(s, res);
+        return s;
+    }
+
+    s = cos_process_request(options, req, resp, 0);
+    
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
 
@@ -394,7 +586,7 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -738,7 +930,35 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 0);
+    if(is_should_retry(s, req->host)){
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+        int res = COSE_OK;
+        char range_buf[64];
+        char *error_msg = NULL;
+        
+        headers = cos_table_create_if_null(options, headers, 1);
+        params = cos_table_create_if_null(options, params, 0);
+        apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
+        apr_table_add(headers, COS_RANGE, range_buf);
+
+        if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+                                &req, params, headers, progress_callback, 0, &resp, &error_msg)) {
+            cos_invalid_param_status_set(options, s, error_msg);
+            return s;
+        }
+
+        s = cos_status_create(options->pool);
+        res = cos_init_read_response_body_to_file_part(options->pool, download_file, resp);
+        if (res != COSE_OK) {
+            cos_file_error_status_set(s, res);
+            return s;
+        }
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        s = cos_process_request(options, req, resp, 0);
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+    }
     cos_fill_read_response_header(resp, resp_headers);
 
     if (is_enable_crc(options) && has_crc_in_response(resp) && 

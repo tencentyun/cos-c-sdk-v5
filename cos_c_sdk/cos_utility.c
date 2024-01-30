@@ -143,6 +143,156 @@ static int is_ak_or_sk_valid(cos_string_t *str)
     return COS_TRUE;
 }
 
+
+int is_should_retry(const cos_status_t *s, const char *str){
+    if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
+            return 1;
+        }
+    }
+    return 0;
+}
+int is_should_retry_endpoint(const cos_status_t *s, const char *str){
+    if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
+            return 1;
+        }
+    }
+    return 0;
+}
+int is_default_endpoint(const char *str){
+    if (str == NULL) {
+        return 0;
+    }
+
+    int len = strlen(str);
+    int i = 0;
+
+    // 匹配 \cos\.
+    if (i >= len || strncmp(str + i, "cos.", 4) != 0) {
+        return 0;
+    }
+    i += 4;
+
+    // 匹配 ([\w-]+)-([\w-]+)
+    int flag = 0;
+    while (i < len && (isalnum(str[i]) || str[i] == '-'))
+    {
+        if(str[i] == '-') flag = 1;
+        i++;
+    }
+
+    if (i >= len || str[i] != '.' || !flag) {
+        return 0;
+    }
+
+    if (i >= len || strncmp(str + i, ".myqcloud.com", 13) != 0) {
+        return 0;
+    }
+    i += 13;
+
+    return i == len;
+}
+int is_default_domain(const char *str){
+    if (str == NULL) {
+        return 0;
+    }
+
+    int len = strlen(str);
+    int i = 0;
+
+    // 匹配 (^([\w-]+)-([\w-]+)
+    while (i < len && (isalnum(str[i]) || str[i] == '-')) {
+        i++;
+    }
+
+    if (i == 0 || i >= len || str[i] != '.') {
+        return 0;
+    }
+
+    // 匹配 \.cos\.
+    if (i >= len || strncmp(str + i, ".cos.", 5) != 0) {
+        return 0;
+    }
+    i += 5;
+
+    // 匹配 ([\w-]+)-([\w-]+)
+    int flag = 0;
+    while (i < len && (isalnum(str[i]) || str[i] == '-'))
+    {
+        if(str[i] == '-') flag = 1;
+        i++;
+    }
+
+    if (i >= len || str[i] != '.' || !flag) {
+        return 0;
+    }
+
+    if (i >= len || strncmp(str + i, ".myqcloud.com", 13) != 0) {
+        return 0;
+    }
+    i += 13;
+
+    return i == len;
+}
+
+
+// void change_host_suffix(char *endpoint){
+//     const char *to_replace = "myqcloud.com";
+//     char *pos = strstr(endpoint, to_replace);
+//     if (pos) {
+//         sprintf(pos, "tencentcos.cn");
+//     }
+// }
+
+void change_host_suffix(char **endpoint) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+
+    size_t old_len = strlen(old_suffix);
+    size_t new_len = strlen(new_suffix);
+
+    if (strncmp(*endpoint + strlen(*endpoint) - old_len, old_suffix, old_len) == 0) {
+        size_t new_size = strlen(*endpoint) - old_len + new_len + 1;
+        char *new_endpoint = (char *)malloc(new_size);
+        if (new_endpoint == NULL) {
+            return;
+        }
+
+        strncpy(new_endpoint, *endpoint, strlen(*endpoint) - old_len);
+        strncpy(new_endpoint + strlen(*endpoint) - old_len, new_suffix, new_len);
+        new_endpoint[new_size - 1] = '\0';
+        *endpoint = new_endpoint;
+    }
+}
+void change_endpoint_suffix(cos_string_t *endpoint) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+
+    size_t old_len = strlen(old_suffix);
+    size_t new_len = strlen(new_suffix);
+
+    if (strncmp(endpoint->data + strlen(endpoint->data) - old_len, old_suffix, old_len) == 0) {
+        size_t new_size = strlen(endpoint->data) - old_len + new_len + 1;
+        char *new_endpoint = (char *)malloc(new_size);
+        if (new_endpoint == NULL) {
+            return;
+        }
+
+        strncpy(new_endpoint, endpoint->data, strlen(endpoint->data) - old_len);
+        strncpy(new_endpoint + strlen(endpoint->data) - old_len, new_suffix, new_len);
+        new_endpoint[new_size - 1] = '\0';
+        endpoint->data = new_endpoint;
+        endpoint->len = strlen(new_endpoint);
+    }
+}
+
+void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host){
+    free(endpoint->data);
+    endpoint->data = host;
+    endpoint->len = strlen(endpoint->data);
+}
+
 static int is_config_params_vaild(const cos_request_options_t *options,
                                   const cos_string_t *bucket,
                                   char **error_msg)
@@ -1291,21 +1441,83 @@ cos_status_t *cos_send_request(cos_http_controller_t *ctl,
     return s;
 }
 
+void reset_list_pos(cos_list_t *list) {
+    cos_buf_t *b;
+    cos_list_for_each_entry(cos_buf_t, b, list, node) {
+        b->pos = b->start;
+    }
+}
+
 cos_status_t *cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req, 
-                                  cos_http_response_t *resp)
+                                  cos_http_response_t *resp,
+                                  const int retry)
 {
     int res = COSE_OK;
     cos_status_t *s;
 
+    req->clear_body = 0;
     s = cos_status_create(options->pool);
     res = cos_sign_request(req, options->config);
-    if (res != COSE_OK) {
+    if (res != COSE_OK) { 
         cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
         return s;
     }
+    s = cos_send_request(options->ctl, req, resp);
 
-    return cos_send_request(options->ctl, req, resp);
+    if (retry && is_should_retry(s, req->host)){
+        if (apr_table_get(req->headers, "Host") != NULL)
+        {
+            apr_table_unset(req->headers, "Host");
+        }
+        if (apr_table_get(req->headers, "Authorization") != NULL) {
+            apr_table_unset(req->headers, "Authorization");
+        }
+        char *host = req->host;
+        change_host_suffix(&req->host);
+        reset_list_pos(&req->body);
+        req->crc64 = 0;
+        res = cos_sign_request(req, options->config);
+        if (res != COSE_OK) {
+            cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
+            return s;
+        }
+        if (req->file_path != NULL) {
+            cos_string_t file;
+            cos_str_set(&file, req->file_path);
+            res = cos_write_request_body_from_file(options->pool, &file, req);
+            if (res != COSE_OK) {
+                cos_file_error_status_set(s, res);
+                return s;
+            }
+        }
+        if (req->file_path != NULL) {
+            cos_string_t file;
+            cos_str_set(&file, req->file_path);
+            res = cos_write_request_body_from_file(options->pool, &file, req);
+            if (res != COSE_OK) {
+                cos_file_error_status_set(s, res);
+                return s;
+            }
+        }
+
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        resp->status = 0;
+        req->consumed_bytes = 0;
+
+        s = cos_send_request(options->ctl, req, resp);
+        //clear body
+        if (req->clear_body){
+            cos_buf_t *b;
+            cos_buf_t *n;
+            cos_list_for_each_entry_safe(cos_buf_t, b, n, &req->body, node) {
+                cos_list_del(&b->node);
+            }
+        }
+        free(req->host);
+        req->host = host;
+    }
+    return s;
 }
 
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,

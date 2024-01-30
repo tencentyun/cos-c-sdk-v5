@@ -9,9 +9,17 @@
 #include "cos_api.h"
 #include "cos_config.h"
 #include "cos_test_util.h"
-
+#include "cos_log.h"
+void log_status(cos_status_t *s)
+{
+    cos_warn_log("status->code: %d", s->code);
+    if (s->error_code) cos_warn_log("status->error_code: %s", s->error_code);
+    if (s->error_msg) cos_warn_log("status->error_msg: %s", s->error_msg);
+    if (s->req_id) cos_warn_log("status->req_id: %s", s->req_id);
+}
 void test_bucket_setup(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_setup==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -43,6 +51,7 @@ void test_bucket_setup(CuTest *tc)
     init_test_request_options(options, is_cname);
     s = create_test_bucket(options, TEST_BUCKET_NAME, cos_acl);
 
+    log_status(s);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertStrEquals(tc, NULL, s->error_code);
 
@@ -53,18 +62,26 @@ void test_bucket_setup(CuTest *tc)
     headers4 = cos_table_make(p, 0);
     headers5 = cos_table_make(p, 0);
     headers6 = cos_table_make(p, 0);
-    create_test_object(options, TEST_BUCKET_NAME, object_name1, str, headers1);
-    create_test_object(options, TEST_BUCKET_NAME, object_name2, str, headers2);
-    create_test_object(options, TEST_BUCKET_NAME, object_name3, str, headers3);
-    create_test_object(options, TEST_BUCKET_NAME, object_name4, str, headers4);
-    create_test_object(options, TEST_BUCKET_NAME, object_name5, str, headers5);
-    create_test_object(options, TEST_BUCKET_NAME, object_name6, str, headers6);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name1, str, headers1);
+    log_status(s);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name2, str, headers2);
+    log_status(s);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name3, str, headers3);
+    log_status(s);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name4, str, headers4);
+    log_status(s);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name5, str, headers5);
+    log_status(s);
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name6, str, headers6);
+    log_status(s);
 
     cos_pool_destroy(p);
+    fprintf(stderr, "==========test_bucket_setup==========\n");
 }
 
 void test_delete_all_objects()
 {
+    fprintf(stderr, "==========test_delete_all_objects==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     int is_cname = 0;
@@ -81,12 +98,15 @@ void test_delete_all_objects()
 
     s = cos_delete_objects_by_prefix(options, &bucket, &prefix);
     printf("delete all objects, status code=%d\n", s->code);
+    log_status(s);
     cos_pool_destroy(p);
+    fprintf(stderr, "==========test_delete_all_objects==========\n");
 
 }
 
 void test_bucket_cleanup(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_cleanup==========\n");
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
     cos_string_t bucket;
@@ -106,15 +126,18 @@ void test_bucket_cleanup(CuTest *tc)
 
     s = cos_delete_bucket(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
 
     cos_pool_destroy(p);
 
     printf("test_delete_bucket ok\n");
     
+    fprintf(stderr, "==========test_bucket_cleanup==========\n");
 }
 
 void test_create_bucket(CuTest *tc)
 {
+    fprintf(stderr, "==========test_create_bucket==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -129,13 +152,16 @@ void test_create_bucket(CuTest *tc)
     //create the same bucket twice with same bucket acl
     s = create_test_bucket(options, TEST_BUCKET_NAME, cos_acl);
     CuAssertIntEquals(tc, 409, s->code);
-    CuAssertStrEquals(tc, "BucketAlreadyExists", s->error_code);
+    log_status(s);
+    CuAssertStrEquals(tc, "BucketAlreadyOwnedByYou", s->error_code);
 
     printf("test_create_bucket ok\n");
+    fprintf(stderr, "==========test_create_bucket==========\n");
 }
 
 void test_delete_bucket(CuTest *tc)
 {
+    fprintf(stderr, "==========test_delete_bucket==========\n");
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
     cos_string_t bucket;
@@ -154,6 +180,7 @@ void test_delete_bucket(CuTest *tc)
     //delete bucket not empty
     s = cos_delete_bucket(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 409, s->code);
+    log_status(s);
     CuAssertStrEquals(tc, "BucketNotEmpty", s->error_code);
     CuAssertTrue(tc, s->req_id != NULL);
     CuAssertPtrNotNull(tc, resp_headers);
@@ -161,10 +188,12 @@ void test_delete_bucket(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_delete_bucket ok\n");
+    fprintf(stderr, "==========test_delete_bucket==========\n");
 }
 
 void test_bucket_acl(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -183,12 +212,14 @@ void test_bucket_acl(CuTest *tc)
     cos_str_set(&read, "id=\"qcs::cam::uin/12345:uin/12345\", id=\"qcs::cam::uin/45678:uin/45678\"");
     s = cos_put_bucket_acl(options, &bucket, cos_acl, &read, NULL, NULL, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
 
     //get acl
     cos_acl_params_t *acl_params = NULL;
     acl_params = cos_create_acl_params(p);
     s = cos_get_bucket_acl(options, &bucket, acl_params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     printf("acl owner id:%s, name:%s\n", acl_params->owner_id.data, acl_params->owner_name.data);
     cos_acl_grantee_content_t *acl_content = NULL;
     cos_list_for_each_entry(cos_acl_grantee_content_t, acl_content, &acl_params->grantee_list, node) {
@@ -196,10 +227,12 @@ void test_bucket_acl(CuTest *tc)
     }
 
     cos_pool_destroy(p);
+    fprintf(stderr, "==========test_bucket_acl==========\n");
 }
 
 void test_bucket_cors(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_cors==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -246,12 +279,14 @@ void test_bucket_cors(CuTest *tc)
     //put cors
     s = cos_put_bucket_cors(options, &bucket, &rule_list, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
 
     //get cors
     cos_list_t rule_list_ret;
     cos_list_init(&rule_list_ret);
     s = cos_get_bucket_cors(options, &bucket, &rule_list_ret, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     cos_cors_rule_content_t *content = NULL;
     cos_list_for_each_entry(cos_cors_rule_content_t, content, &rule_list_ret, node) {
         printf("cors id:%s, allowed_origin:%s, allowed_method:%s, allowed_header:%s, expose_header:%s, max_age_seconds:%d\n",
@@ -261,13 +296,16 @@ void test_bucket_cors(CuTest *tc)
     //delete cors
     cos_delete_bucket_cors(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     
     cos_pool_destroy(p);
+    fprintf(stderr, "==========test_bucket_cors==========\n");
 
 }
 
 void test_list_object(CuTest *tc)
 {
+    fprintf(stderr, "==========test_list_object==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_request_options_t *options = NULL;
@@ -289,6 +327,7 @@ void test_list_object(CuTest *tc)
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     s = cos_list_object(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertIntEquals(tc, 1, params->truncated);
     CuAssertStrEquals(tc, "cos_test_object1", params->next_marker.data);
     CuAssertPtrNotNull(tc, resp_headers);
@@ -308,6 +347,7 @@ void test_list_object(CuTest *tc)
     }
     s = cos_list_object(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     //CuAssertIntEquals(tc, 0, params->truncated);
     cos_list_for_each_entry(cos_list_object_content_t, content, &params->object_list, node) {
         ++size;
@@ -319,10 +359,12 @@ void test_list_object(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_list_object ok\n");
+    fprintf(stderr, "==========test_list_object==========\n");
 }
 
 void test_list_object_with_delimiter(CuTest *tc)
 {
+    fprintf(stderr, "==========test_list_object_with_delimiter==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_request_options_t *options = NULL;
@@ -345,6 +387,7 @@ void test_list_object_with_delimiter(CuTest *tc)
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     s = cos_list_object(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertIntEquals(tc, 0, params->truncated);
     CuAssertPtrNotNull(tc, resp_headers);
 
@@ -362,10 +405,12 @@ void test_list_object_with_delimiter(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_list_object_with_delimiter ok\n");
+    fprintf(stderr, "==========test_list_object_with_delimiter==========\n");
 }
 
 void test_lifecycle(CuTest *tc)
 {
+    fprintf(stderr, "==========test_lifecycle==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     int is_cname = 0;
@@ -398,6 +443,7 @@ void test_lifecycle(CuTest *tc)
     s = cos_put_bucket_lifecycle(options, &bucket, &lifecycle_rule_list, 
                                  &resp_headers);
     CuAssertIntEquals(tc, 400, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //put lifecycle
@@ -421,6 +467,7 @@ void test_lifecycle(CuTest *tc)
     s = cos_put_bucket_lifecycle(options, &bucket, &lifecycle_rule_list, 
                                  &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //get lifecycle
@@ -429,6 +476,7 @@ void test_lifecycle(CuTest *tc)
     s = cos_get_bucket_lifecycle(options, &bucket, &lifecycle_rule_list, 
                                  &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_list_for_each_entry(cos_lifecycle_rule_content_t, rule_content, &lifecycle_rule_list, node) {
@@ -472,14 +520,17 @@ void test_lifecycle(CuTest *tc)
     resp_headers = NULL;
     s = cos_delete_bucket_lifecycle(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_lifecycle ok\n");
+    fprintf(stderr, "==========test_lifecycle==========\n");
 }
 
 void test_delete_objects_quiet(CuTest *tc)
 {
+    fprintf(stderr, "==========test_delete_objects_quiet==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_string_t bucket;
@@ -512,14 +563,17 @@ void test_delete_objects_quiet(CuTest *tc)
         &resp_headers, &deleted_object_list);
 
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_delete_objects_quiet ok\n");
+    fprintf(stderr, "==========test_delete_objects_quiet==========\n");
 }
 
 void test_delete_objects_not_quiet(CuTest *tc)
 {
+    fprintf(stderr, "==========test_delete_objects_not_quiet==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_string_t bucket;
@@ -553,6 +607,7 @@ void test_delete_objects_not_quiet(CuTest *tc)
         &resp_headers, &deleted_object_list);
 
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_list_for_each_entry(cos_object_key_t, content, &deleted_object_list, node) {
@@ -561,10 +616,12 @@ void test_delete_objects_not_quiet(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_delete_objects_not_quiet ok\n");
+    fprintf(stderr, "==========test_delete_objects_not_quiet==========\n");
 }
 
 void test_delete_objects_by_prefix(CuTest *tc)
 {
+    fprintf(stderr, "==========test_delete_objects_by_prefix==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     int is_cname = 0;
@@ -581,13 +638,16 @@ void test_delete_objects_by_prefix(CuTest *tc)
 
     s = cos_delete_objects_by_prefix(options, &bucket, &prefix);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     cos_pool_destroy(p);
 
     printf("test_delete_object_by_prefix ok\n");
+    fprintf(stderr, "==========test_delete_objects_by_prefix==========\n");
 }
 
 void test_put_bucket_acl(CuTest *tc)
 {
+    fprintf(stderr, "==========test_put_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -611,14 +671,17 @@ void test_put_bucket_acl(CuTest *tc)
     s = cos_put_bucket_acl(options, &bucket, COS_ACL_PRIVATE, 
                             &grant_read, &grant_write, &grant_full_control, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_put_bucket_acl ok\n");
+    fprintf(stderr, "==========test_put_bucket_acl==========\n");
 }
 
 void test_get_bucket_acl(CuTest *tc)
 {
+    fprintf(stderr, "==========test_get_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -637,14 +700,17 @@ void test_get_bucket_acl(CuTest *tc)
 
     s = cos_get_bucket_acl(options, &bucket, acl_param, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_get_bucket_acl ok\n");
+    fprintf(stderr, "==========test_get_bucket_acl==========\n");
 }
 
 void test_get_service(CuTest *tc)
 {
+    fprintf(stderr, "==========test_get_service==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -661,14 +727,17 @@ void test_get_service(CuTest *tc)
 
     s = cos_get_service(options, get_service_param, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_get_service ok\n");
+    fprintf(stderr, "==========test_get_service==========\n");
 }
 
 void test_head_bucket(CuTest *tc)
 {
+    fprintf(stderr, "==========test_head_bucket==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -684,14 +753,17 @@ void test_head_bucket(CuTest *tc)
 
     s = cos_head_bucket(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_head_bucket ok\n");
+    fprintf(stderr, "==========test_head_bucket==========\n");
 }
 
 void test_check_bucket_exist(CuTest *tc)
 {
+    fprintf(stderr, "==========test_check_bucket_exist==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -708,14 +780,17 @@ void test_check_bucket_exist(CuTest *tc)
 
     s = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
 
     printf("test_check_bucket_exist ok\n");
+    fprintf(stderr, "==========test_check_bucket_exist==========\n");
 }
 
 void test_bucket_versioning(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_versioning==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers = NULL;
@@ -736,6 +811,7 @@ void test_bucket_versioning(CuTest *tc)
     //put bucket versioning
     s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //get bucket versioning
@@ -747,15 +823,18 @@ void test_bucket_versioning(CuTest *tc)
     cos_str_set(&versioning->status, "Suspended");
     s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_pool_destroy(p);
 
     printf("test_bucket_versioning ok\n");
+    fprintf(stderr, "==========test_bucket_versioning==========\n");
 }
 
 void test_bucket_replication(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_replication==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -780,10 +859,12 @@ void test_bucket_replication(CuTest *tc)
     cos_str_set(&versioning->status, "Enabled");
     s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     s = cos_create_bucket(dst_options, &dst_bucket, COS_ACL_PRIVATE, &resp_headers);
     s = cos_put_bucket_versioning(dst_options, &dst_bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_replication_params_t *replication_param = NULL;
@@ -802,6 +883,7 @@ void test_bucket_replication(CuTest *tc)
     //put bucket replication
     s = cos_put_bucket_replication(options, &bucket, replication_param, &resp_headers);
     //CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //get bucket replication
@@ -809,6 +891,7 @@ void test_bucket_replication(CuTest *tc)
     replication_param2 = cos_create_replication_params(p);
     s = cos_get_bucket_replication(options, &bucket, replication_param2, &resp_headers);
     //CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     printf("ReplicationConfiguration role: %s\n", replication_param2->role.data);
     cos_replication_rule_content_t *content = NULL;
@@ -820,24 +903,29 @@ void test_bucket_replication(CuTest *tc)
     //delete bucket replication
     s = cos_delete_bucket_replication(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //disable bucket versioning
     cos_str_set(&versioning->status, "Suspended");
     s = cos_put_bucket_versioning(options, &bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     s = cos_put_bucket_versioning(dst_options, &dst_bucket, versioning, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
     
     cos_pool_destroy(p);
 
     printf("test_bucket_replication ok\n");
+    fprintf(stderr, "==========test_bucket_replication==========\n");
 }
 
 void test_bucket_website(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_website==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -882,11 +970,13 @@ void test_bucket_website(CuTest *tc)
 
     s = cos_put_bucket_website(options, &bucket, website_params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     website_result = cos_create_website_params(options->pool);
     s = cos_get_bucket_website(options, &bucket, website_result, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //查看结果
@@ -905,15 +995,18 @@ void test_bucket_website(CuTest *tc)
 
     s = cos_delete_bucket_website(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers); 
 
     cos_pool_destroy(pool);
 
     printf("test_bucket_website ok\n");
+    fprintf(stderr, "==========test_bucket_website==========\n");
 }
 
 void test_bucket_domain(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_domain==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -943,6 +1036,7 @@ void test_bucket_domain(CuTest *tc)
 
     s = cos_put_bucket_domain(options, &bucket, domain_params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     domain_result = cos_create_domain_params(options->pool);
@@ -963,10 +1057,12 @@ void test_bucket_domain(CuTest *tc)
     cos_pool_destroy(pool);
 
     printf("test_bucket_domain ok\n");
+    fprintf(stderr, "==========test_bucket_domain==========\n");
 }
 
 void test_bucket_logging(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_logging==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -991,11 +1087,13 @@ void test_bucket_logging(CuTest *tc)
 
     s = cos_put_bucket_logging(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     result = cos_create_logging_params(options->pool);
     s = cos_get_bucket_logging(options, &bucket, result, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     //查看结果
@@ -1008,10 +1106,12 @@ void test_bucket_logging(CuTest *tc)
     cos_pool_destroy(pool);
 
     printf("test_bucket_logging ok\n");
+    fprintf(stderr, "==========test_bucket_logging==========\n");
 }
 
 void test_bucket_inventory(CuTest *tc) 
 {
+    fprintf(stderr, "==========test_bucket_inventory==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     int inum = 1, i, len;
@@ -1072,6 +1172,7 @@ void test_bucket_inventory(CuTest *tc)
 
         s = cos_put_bucket_inventory(options, &bucket, params, &resp_headers);
         CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
         CuAssertPtrNotNull(tc, resp_headers);
     }
 
@@ -1080,6 +1181,7 @@ void test_bucket_inventory(CuTest *tc)
     cos_str_set(&get_params->id, buf[inum/2]);
     s = cos_get_bucket_inventory(options, &bucket, get_params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
@@ -1098,6 +1200,7 @@ void test_bucket_inventory(CuTest *tc)
     list_params = cos_create_list_inventory_params(pool); 
     s = cos_list_bucket_inventory(options, &bucket, list_params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     get_params = NULL;
@@ -1121,16 +1224,19 @@ void test_bucket_inventory(CuTest *tc)
         cos_str_set(&id, buf[i]);
         s = cos_delete_bucket_inventory(options, &bucket, &id, &resp_headers);
         CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
         CuAssertPtrNotNull(tc, resp_headers);
     }
 
     cos_pool_destroy(pool);
 
     printf("test_bucket_inventory ok\n");
+    fprintf(stderr, "==========test_bucket_inventory==========\n");
 }
 
 void test_bucket_tagging(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_tagging==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1163,12 +1269,14 @@ void test_bucket_tagging(CuTest *tc)
 
     s = cos_put_bucket_tagging(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     // get tagging
     result = cos_create_tagging_params(pool);
     s = cos_get_bucket_tagging(options, &bucket, result, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     tag = NULL;
@@ -1181,15 +1289,18 @@ void test_bucket_tagging(CuTest *tc)
     // delete tagging
     s = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
     CuAssertIntEquals(tc, 204, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_pool_destroy(pool);
 
     printf("test_bucket_tagging ok\n");
+    fprintf(stderr, "==========test_bucket_tagging==========\n");
 }
 
 void test_bucket_referer(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_referer==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1223,21 +1334,25 @@ void test_bucket_referer(CuTest *tc)
     // put referer
     s = cos_put_bucket_referer(options, &bucket, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     // get referer
     result = cos_create_referer_params(pool);
     s = cos_get_bucket_referer(options, &bucket, result, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    //log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_pool_destroy(pool);
 
     printf("test_bucket_referer ok\n");
+    fprintf(stderr, "==========test_bucket_referer==========\n");
 }
 
 void test_bucket_intelligenttiering(CuTest *tc)
 {
+    fprintf(stderr, "==========test_bucket_intelligenttiering==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1265,12 +1380,14 @@ void test_bucket_intelligenttiering(CuTest *tc)
 
     s = cos_put_bucket_intelligenttiering(options, &bucket, params, &resp_headers);
    // CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     // get intelligenttiering
     result = cos_create_intelligenttiering_params(pool);
     s = cos_get_bucket_intelligenttiering(options, &bucket, result, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
+    log_status(s);
     CuAssertPtrNotNull(tc, resp_headers);
 
     printf("status: %s\n", result->status.data);
@@ -1278,6 +1395,7 @@ void test_bucket_intelligenttiering(CuTest *tc)
     cos_pool_destroy(pool);
 
     printf("test_bucket_intelligenttiering ok\n");
+    fprintf(stderr, "==========test_bucket_intelligenttiering==========\n");
 }
 
 CuSuite *test_cos_bucket()

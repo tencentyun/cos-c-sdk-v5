@@ -159,7 +159,7 @@ int cos_read_http_body_memory(cos_http_request_t *req, char *buffer, int len)
     cos_list_for_each_entry_safe(cos_buf_t, b, n, &req->body, node) {
         wsize = cos_buf_size(b);
         if (wsize == 0) {
-            cos_list_del(&b->node);
+            // cos_list_del(&b->node);
             continue;
         }
         wsize = cos_min(len - bytes, wsize);
@@ -170,9 +170,10 @@ int cos_read_http_body_memory(cos_http_request_t *req, char *buffer, int len)
         b->pos += wsize;
         bytes += wsize;
         if (b->pos == b->last) {
-            cos_list_del(&b->node);
+            // cos_list_del(&b->node);
         }
     }
+    req->clear_body = 1;
 
     return bytes;
 }
