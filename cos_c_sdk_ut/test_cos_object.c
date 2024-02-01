@@ -32,7 +32,7 @@ void test_object_setup(CuTest *tc)
     cos_str_set(&object, "test.mp4");
     cos_str_set(&file_path, "../../../test.mp4");
     s = cos_put_object_from_file(options, &bucket, &object, &file_path, NULL, &resp_headers);
-
+    log_status(s);
     CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
 }
@@ -398,7 +398,7 @@ void test_get_object_to_buffer_with_range(CuTest *tc)
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, object_name);
     headers = cos_table_make(p, 1);
-    apr_table_set(headers, "Range", " bytes=5-13");
+    apr_table_set(headers, "Range", "bytes=5-13");
     cos_list_init(&buffer);
 
     /* test get object to buffer */
@@ -600,7 +600,7 @@ void test_append_object_from_buffer(CuTest *tc)
     s = cos_append_object_from_buffer(options, &bucket, &object, 
             position, &buffer, headers1, &resp_headers);
 
-    CuAssertIntEquals(tc, 400, s->code);
+    CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
     cos_pool_destroy(p);

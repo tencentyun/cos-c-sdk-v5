@@ -47,7 +47,22 @@ void make_random_body(cos_pool_t *p, int count, cos_list_t *bc)
         cos_list_add_tail(&b->node, bc);
     }
 }
+void make_random_body_with_size(cos_pool_t *p, int size, cos_list_t *bc)
+{
+    int i = 0;
+    cos_buf_t *b;
 
+    while (size >0) {
+        if (size >= 1024){
+            b = make_random_buf(p, 1024);
+            size -= 1024;
+        }else {
+            b = make_random_buf(p, size);
+            size = 0;
+        }
+        cos_list_add_tail(&b->node, bc);
+    }
+}
 int make_random_file(cos_pool_t *p, const char *filename, int len)
 {
     apr_file_t *file;

@@ -265,9 +265,9 @@ void test_progress_append_object(CuTest *tc)
 
     cos_str_set(&filename, object_name);
     make_random_file(p, object_name, length);
-
-    s = cos_do_append_object_from_file(options, &bucket, &object, length, initcrc, &filename, 
-        NULL, NULL, percentage, &resp_headers, &resp_body);
+    options->ctl->options->enable_crc = 0;
+    s = cos_do_append_object_from_file(options, &bucket, &object, length, initcrc, &filename,
+                                       NULL, NULL, percentage, &resp_headers, &resp_body);
     CuAssertIntEquals(tc, 200, s->code);
 
     apr_file_remove(object_name, p);

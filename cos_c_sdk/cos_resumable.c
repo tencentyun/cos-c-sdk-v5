@@ -436,7 +436,7 @@ void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data)
     headers = cos_table_create_if_null(options, headers, 0);
     paras = cos_table_create_if_null(options, paras, 0);
 
-    s = cos_do_upload_part_from_file(options, params->bucket, params->object, params->upload_id,
+    s = cos_do_upload_part_from_file_no_retry(options, params->bucket, params->object, params->upload_id,
         part_num, upload_file, NULL, headers, paras, &resp_headers, NULL);
     if (!cos_status_is_ok(s)) {
         apr_atomic_inc32(params->failed);
@@ -506,7 +506,7 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
     // init upload
     cos_pool_create(&subpool, parent_pool);
     options->pool = subpool;
-    s = cos_init_multipart_upload(options, bucket, object, &upload_id, headers, resp_headers);
+    s = cos_init_multipart_upload_no_retry(options, bucket, object, &upload_id, headers, resp_headers);
     if (!cos_status_is_ok(s)) {
         s = cos_status_dup(parent_pool, s);
         cos_pool_destroy(subpool);
@@ -670,7 +670,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
         // init upload 
         cos_pool_create(&subpool, parent_pool);
         options->pool = subpool;
-        s = cos_init_multipart_upload(options, bucket, object, &upload_id, headers, resp_headers);
+        s = cos_init_multipart_upload_no_retry(options, bucket, object, &upload_id, headers, resp_headers);
         if (!cos_status_is_ok(s)) {
             s = cos_status_dup(parent_pool, s);
             cos_pool_destroy(subpool);
@@ -845,7 +845,6 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
     }
     part_size = clt_params->part_size;
     cos_get_part_size(finfo.size, &part_size);
-
     if (NULL != clt_params && clt_params->enable_checkpoint) {
         cos_get_checkpoint_path(clt_params, filepath, sub_pool, &checkpoint_path);
         s = cos_resumable_upload_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, 
@@ -855,6 +854,44 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
             part_size, &finfo, progress_callback, resp_headers, resp_body);
     }
 
+    if(is_should_retry_endpoint(s, options->config->endpoint.data)){
+        int32_t thread_num = 0;
+        int64_t part_size = 0;
+        cos_string_t checkpoint_path;
+        cos_pool_t *sub_pool;
+        apr_finfo_t finfo;
+        cos_status_t *s;
+        int res;
+
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+
+        thread_num = cos_get_thread_num(clt_params);
+        cos_pool_create(&sub_pool, options->pool);
+        res = cos_get_file_info(filepath, sub_pool, &finfo);
+        if (res != COSE_OK) {
+            cos_error_log("Open read file fail, filename:%s\n", filepath->data);
+            s = cos_status_create(options->pool);
+            cos_file_error_status_set(s, res);
+            cos_pool_destroy(sub_pool);
+            return s;
+        }
+        part_size = clt_params->part_size;
+        cos_get_part_size(finfo.size, &part_size);
+
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        if (NULL != clt_params && clt_params->enable_checkpoint) {
+            cos_get_checkpoint_path(clt_params, filepath, sub_pool, &checkpoint_path);
+            s = cos_resumable_upload_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, 
+                part_size, &checkpoint_path, &finfo, progress_callback, resp_headers, resp_body);
+        } else {
+            s = cos_resumable_upload_file_without_cp(options, bucket, object, filepath, headers, params, thread_num, 
+                part_size, &finfo, progress_callback, resp_headers, resp_body);
+        }
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+        cos_pool_destroy(sub_pool);
+        return s;
+    }
     cos_pool_destroy(sub_pool);
     return s;
 }
@@ -984,8 +1021,74 @@ cos_status_t *cos_upload_object_by_part_copy_mt
     options->pool = subpool;
     cos_table_t *init_multipart_headers = NULL;
     cos_table_t *init_multipart_resp_headers = NULL;
-    s = cos_init_multipart_upload(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
+    s = cos_init_multipart_upload_no_retry(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
+    char *host_dst = NULL;
+    char *host_src = NULL;
+    if(is_should_retry_endpoint(s, src_endpoint->data) || is_should_retry_endpoint(s, options->config->endpoint.data)){
+        if (is_default_endpoint(options->config->endpoint.data))
+        {
+            host_dst = options->config->endpoint.data;
+            change_endpoint_suffix(&options->config->endpoint);
+        }
+        if (is_default_endpoint(src_endpoint->data)){
+            host_src = src_endpoint->data;
+            change_endpoint_suffix(src_endpoint);
+        }
+        copy_source_str = apr_psprintf(options->pool, "%.*s.%.*s/%.*s", 
+                                   src_bucket->len, src_bucket->data,
+                                   src_endpoint->len, src_endpoint->data,
+                                   src_object->len, src_object->data);
+        cos_str_set(&copy_source, copy_source_str);
+
+        cos_list_init(&completed_part_list);
+        parent_pool = options->pool;
+        cos_pool_create(&subpool, options->pool);
+        options->pool = subpool;
+
+        //get object size
+        cos_table_t *head_resp_headers = NULL;
+        cos_request_options_t *head_options = cos_request_options_create(subpool);
+        head_options->config = cos_config_create(subpool);
+        cos_str_set(&head_options->config->endpoint, src_endpoint->data);
+        cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
+        cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
+        cos_str_set(&head_options->config->appid, options->config->appid.data);
+        head_options->ctl = cos_http_controller_create(subpool, 0);
+        s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
+        if (!cos_status_is_ok(s)) {
+            ret = cos_status_dup(parent_pool, s);
+            cos_pool_destroy(subpool);
+            options->pool = parent_pool;
+            return ret;
+        }
+        total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
+        options->pool = parent_pool;
+        cos_pool_destroy(subpool);
+
+        // prepare
+        ret = cos_status_create(parent_pool);
+        part_num = cos_get_part_num(total_size, part_size);
+        parts = (cos_checkpoint_part_t *)cos_palloc(parent_pool, sizeof(cos_checkpoint_part_t) * part_num);
+        cos_build_parts(total_size, part_size, parts);
+        results = (cos_part_task_result_t *)cos_palloc(parent_pool, sizeof(cos_part_task_result_t) * part_num);
+        thr_params = (cos_upload_copy_thread_params_t *)cos_palloc(parent_pool, sizeof(cos_upload_copy_thread_params_t) * part_num);
+        cos_build_copy_thread_params(thr_params, part_num, parent_pool, options, dest_bucket, dest_object, &copy_source, &upload_id, parts, results);
+
+        // init upload
+        cos_pool_create(&subpool, parent_pool);
+        options->pool = subpool;
+        cos_table_t *init_multipart_headers = NULL;
+        cos_table_t *init_multipart_resp_headers = NULL;
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        s = cos_init_multipart_upload_no_retry(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
+    }
     if (!cos_status_is_ok(s)) {
+        if (host_dst != NULL){
+            clear_change_endpoint_suffix(&options->config->endpoint, host_dst);
+        }
+        if (host_src != NULL){
+            clear_change_endpoint_suffix(src_endpoint, host_src);
+        }
         s = cos_status_dup(parent_pool, s);
         cos_pool_destroy(subpool);
         options->pool = parent_pool;
@@ -1074,6 +1177,12 @@ cos_status_t *cos_upload_object_by_part_copy_mt
     s = cos_do_complete_multipart_upload(options, dest_bucket, dest_object, &upload_id, 
         &completed_part_list, cb_headers, NULL, NULL, NULL);
     s = cos_status_dup(parent_pool, s);
+    if (host_dst != NULL){
+        clear_change_endpoint_suffix(&options->config->endpoint, host_dst);
+    }
+    if (host_src != NULL){
+        clear_change_endpoint_suffix(src_endpoint, host_src);
+    }
     cos_pool_destroy(subpool);
     options->pool = parent_pool;
 
@@ -1126,7 +1235,7 @@ void * APR_THREAD_FUNC download_part(apr_thread_t *thd, void *data)
         apr_queue_push(params->failed_parts, params->result);
         return s;
     }
-    s = cos_process_request(options, req, resp);
+    s = cos_process_request(options, req, resp, 0);
     cos_fill_read_response_header(resp, &resp_headers);
 
     cos_debug_log("download part = %d, start byte = %"APR_INT64_T_FMT", end byte = %"APR_INT64_T_FMT, part_num, download_file->file_pos, download_file->file_last-1);
@@ -1548,6 +1657,28 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
         s = cos_resumable_download_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, &checkpoint_path, progress_callback);
     } else {
         s = cos_resumable_download_file_without_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, progress_callback);
+    }
+
+    if(is_should_retry_endpoint(s, options->config->endpoint.data)){
+        int32_t thread_num = 0;
+        int64_t part_size = 0;
+        cos_status_t *s = NULL; 
+        cos_string_t checkpoint_path;
+
+        char *host = options->config->endpoint.data;
+        change_endpoint_suffix(&options->config->endpoint);
+        thread_num = cos_get_thread_num(clt_params);
+        part_size = clt_params->part_size;
+        part_size = cos_get_safe_size_for_download(part_size);
+        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
+        if (clt_params->enable_checkpoint) {
+            cos_get_checkpoint_path(clt_params, filepath, options->pool, &checkpoint_path);
+            s = cos_resumable_download_file_with_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, &checkpoint_path, progress_callback);
+        } else {
+            s = cos_resumable_download_file_without_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, progress_callback);
+        }
+        clear_change_endpoint_suffix(&options->config->endpoint, host);
+        return s;
     }
     return s;
 }

@@ -9,7 +9,8 @@
 #include <stdint.h>
 
 COS_CPP_START
-
+int get_retry_change_domin();
+void set_retry_change_domin(int user_retry_change_domin);
 /*
  * @brief  get cos service
  * @param[in]   options       the cos request options
@@ -20,8 +21,8 @@ COS_CPP_START
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_service(const cos_request_options_t *options,
-                                cos_get_service_params_t *params,
-                                cos_table_t **resp_headers);
+                              cos_get_service_params_t *params,
+                              cos_table_t **resp_headers);
 
 /*
  * @brief  get cos service
@@ -35,10 +36,9 @@ cos_status_t *cos_get_service(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_get_service(const cos_request_options_t *options,
-                                cos_get_service_params_t *params,
-                                cos_table_t *header,
-                                cos_table_t **resp_headers);
-
+                                 cos_get_service_params_t *params,
+                                 cos_table_t *header,
+                                 cos_table_t **resp_headers);
 
 /*
  * @brief  head cos bucket
@@ -48,8 +48,8 @@ cos_status_t *cos_do_get_service(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_head_bucket(const cos_request_options_t *options,
-                                const cos_string_t *bucket,
-                                cos_table_t **resp_headers);
+                              const cos_string_t *bucket,
+                              cos_table_t **resp_headers);
 
 /*
  * @brief  head cos bucket
@@ -60,9 +60,9 @@ cos_status_t *cos_head_bucket(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_head_bucket(const cos_request_options_t *options,
-                                const cos_string_t *bucket,
-                                cos_table_t *header,
-                                cos_table_t **resp_headers);
+                                 const cos_string_t *bucket,
+                                 cos_table_t *header,
+                                 cos_table_t **resp_headers);
 
 /*
  * @brief  check cos bucket is exist or nonexist
@@ -76,7 +76,6 @@ cos_status_t *cos_check_bucket_exist(const cos_request_options_t *options,
                                      const cos_string_t *bucket,
                                      cos_bucket_exist_status_e *bucket_exist,
                                      cos_table_t **resp_headers);
-
 
 /*
  * @brief  create cos bucket
@@ -100,11 +99,11 @@ cos_status_t *cos_create_bucket(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_do_create_bucket(const cos_request_options_t *options, 
-                                const cos_string_t *bucket, 
-                                cos_acl_e cos_acl, 
-                                cos_table_t *headers,
-                                cos_table_t **resp_headers);
+cos_status_t *cos_do_create_bucket(const cos_request_options_t *options,
+                                   const cos_string_t *bucket,
+                                   cos_acl_e cos_acl,
+                                   cos_table_t *headers,
+                                   cos_table_t **resp_headers);
 
 /*
  * @brief  delete cos bucket
@@ -113,8 +112,8 @@ cos_status_t *cos_do_create_bucket(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_delete_bucket(const cos_request_options_t *options, 
-                                const cos_string_t *bucket, 
+cos_status_t *cos_delete_bucket(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
                                 cos_table_t **resp_headers);
 
 /*
@@ -125,12 +124,10 @@ cos_status_t *cos_delete_bucket(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_do_delete_bucket(const cos_request_options_t *options, 
-                                const cos_string_t *bucket,
-                                cos_table_t *headers,
-                                cos_table_t **resp_headers);
-
-
+cos_status_t *cos_do_delete_bucket(const cos_request_options_t *options,
+                                   const cos_string_t *bucket,
+                                   cos_table_t *headers,
+                                   cos_table_t **resp_headers);
 
 /*
  * @brief  put cos bucket acl
@@ -143,8 +140,8 @@ cos_status_t *cos_do_delete_bucket(const cos_request_options_t *options,
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_put_bucket_acl(const cos_request_options_t *options, 
-                                 const cos_string_t *bucket, 
+cos_status_t *cos_put_bucket_acl(const cos_request_options_t *options,
+                                 const cos_string_t *bucket,
                                  cos_acl_e cos_acl,
                                  const cos_string_t *grant_read,
                                  const cos_string_t *grant_write,
@@ -159,9 +156,9 @@ cos_status_t *cos_put_bucket_acl(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_get_bucket_acl(const cos_request_options_t *options, 
-                                 const cos_string_t *bucket, 
-                                 cos_acl_params_t *acl_param, 
+cos_status_t *cos_get_bucket_acl(const cos_request_options_t *options,
+                                 const cos_string_t *bucket,
+                                 cos_acl_params_t *acl_param,
                                  cos_table_t **resp_headers);
 
 /*
@@ -173,9 +170,9 @@ cos_status_t *cos_get_bucket_acl(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_bucket_cors(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       cos_list_t *cors_rule_list, 
-                                       cos_table_t **resp_headers);
+                                  const cos_string_t *bucket,
+                                  cos_list_t *cors_rule_list,
+                                  cos_table_t **resp_headers);
 
 /*
  * @brief  get cos bucket cors
@@ -186,9 +183,9 @@ cos_status_t *cos_put_bucket_cors(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_cors(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       cos_list_t *cors_rule_list, 
-                                       cos_table_t **resp_headers);
+                                  const cos_string_t *bucket,
+                                  cos_list_t *cors_rule_list,
+                                  cos_table_t **resp_headers);
 
 /*
  * @brief  delete cos bucket cors
@@ -198,9 +195,8 @@ cos_status_t *cos_get_bucket_cors(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_bucket_cors(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
-                                          cos_table_t **resp_headers);
-
+                                     const cos_string_t *bucket,
+                                     cos_table_t **resp_headers);
 
 /*
  * @brief  put cos bucket versioning
@@ -210,13 +206,11 @@ cos_status_t *cos_delete_bucket_cors(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_put_bucket_versioning
-(
+cos_status_t *cos_put_bucket_versioning(
     const cos_request_options_t *options,
-    const cos_string_t *bucket, 
-    cos_versioning_content_t *versioning, 
-    cos_table_t **resp_headers
-);
+    const cos_string_t *bucket,
+    cos_versioning_content_t *versioning,
+    cos_table_t **resp_headers);
 
 /*
  * @brief  get cos bucket versioning
@@ -226,13 +220,11 @@ cos_status_t *cos_put_bucket_versioning
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_get_bucket_versioning
-(
+cos_status_t *cos_get_bucket_versioning(
     const cos_request_options_t *options,
-    const cos_string_t *bucket, 
-    cos_versioning_content_t *versioning, 
-    cos_table_t **resp_headers
-);
+    const cos_string_t *bucket,
+    cos_versioning_content_t *versioning,
+    cos_table_t **resp_headers);
 
 /*
  * @brief  put cos bucket replication
@@ -242,13 +234,11 @@ cos_status_t *cos_get_bucket_versioning
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_put_bucket_replication
-(
+cos_status_t *cos_put_bucket_replication(
     const cos_request_options_t *options,
-    const cos_string_t *bucket, 
-    cos_replication_params_t *replication_param, 
-    cos_table_t **resp_headers
-);
+    const cos_string_t *bucket,
+    cos_replication_params_t *replication_param,
+    cos_table_t **resp_headers);
 
 /*
  * @brief  get cos bucket replication
@@ -258,13 +248,11 @@ cos_status_t *cos_put_bucket_replication
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_get_bucket_replication
-(
-    const cos_request_options_t *options, 
-    const cos_string_t *bucket, 
+cos_status_t *cos_get_bucket_replication(
+    const cos_request_options_t *options,
+    const cos_string_t *bucket,
     cos_replication_params_t *replication_param,
-    cos_table_t **resp_headers
-);
+    cos_table_t **resp_headers);
 
 /*
  * @brief  delete cos bucket replication
@@ -273,12 +261,10 @@ cos_status_t *cos_get_bucket_replication
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_delete_bucket_replication
-(
+cos_status_t *cos_delete_bucket_replication(
     const cos_request_options_t *options,
-    const cos_string_t *bucket, 
-    cos_table_t **resp_headers
-);
+    const cos_string_t *bucket,
+    cos_table_t **resp_headers);
 
 /*
  * @brief  put cos bucket lifecycle
@@ -289,8 +275,8 @@ cos_status_t *cos_delete_bucket_replication
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       cos_list_t *lifecycle_rule_list, 
+                                       const cos_string_t *bucket,
+                                       cos_list_t *lifecycle_rule_list,
                                        cos_table_t **resp_headers);
 
 /*
@@ -302,8 +288,8 @@ cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_lifecycle(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       cos_list_t *lifecycle_rule_list, 
+                                       const cos_string_t *bucket,
+                                       cos_list_t *lifecycle_rule_list,
                                        cos_table_t **resp_headers);
 
 /*
@@ -314,37 +300,37 @@ cos_status_t *cos_get_bucket_lifecycle(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_bucket_lifecycle(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
+                                          const cos_string_t *bucket,
                                           cos_table_t **resp_headers);
 
 /*
- * @brief  put cos bucket website 
+ * @brief  put cos bucket website
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   website_params  the cos bucket website configuration 
+ * @param[in]   website_params  the cos bucket website configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_bucket_website(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_website_params_t *website_params,
-                                    cos_table_t **resp_header);
+                                     const cos_string_t *bucket,
+                                     cos_website_params_t *website_params,
+                                     cos_table_t **resp_header);
 
 /*
- * @brief  get cos bucket website 
+ * @brief  get cos bucket website
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  website_params  the cos bucket website configuration 
+ * @param[out]  website_params  the cos bucket website configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_website(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_website_params_t *website_params,
-                                    cos_table_t **resp_header);
+                                     const cos_string_t *bucket,
+                                     cos_website_params_t *website_params,
+                                     cos_table_t **resp_header);
 
 /*
- * @brief  del cos bucket website 
+ * @brief  del cos bucket website
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[out]  resp_headers    cos server response headers
@@ -355,10 +341,10 @@ cos_status_t *cos_delete_bucket_website(const cos_request_options_t *options,
                                         cos_table_t **resp_header);
 
 /*
- * @brief  put cos bucket domain 
+ * @brief  put cos bucket domain
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   domain_params  the cos bucket domain configuration 
+ * @param[in]   domain_params  the cos bucket domain configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -368,10 +354,10 @@ cos_status_t *cos_put_bucket_domain(const cos_request_options_t *options,
                                     cos_table_t **resp_header);
 
 /*
- * @brief  get cos bucket domain 
+ * @brief  get cos bucket domain
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  domain_params  the cos bucket domain configuration 
+ * @param[out]  domain_params  the cos bucket domain configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -384,63 +370,63 @@ cos_status_t *cos_get_bucket_domain(const cos_request_options_t *options,
  * @brief  put cos bucket logging
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   logging_params  the cos bucket logging configuration 
+ * @param[in]   logging_params  the cos bucket logging configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_bucket_logging(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_logging_params_t *logging_params,
-                                    cos_table_t **resp_headers);
+                                     const cos_string_t *bucket,
+                                     cos_logging_params_t *logging_params,
+                                     cos_table_t **resp_headers);
 /*
- * @brief  get cos bucket logging 
+ * @brief  get cos bucket logging
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  logging_params  the cos bucket logging configuration 
+ * @param[out]  logging_params  the cos bucket logging configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_logging(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_logging_params_t *logging_params,
-                                    cos_table_t **resp_headers);
+                                     const cos_string_t *bucket,
+                                     cos_logging_params_t *logging_params,
+                                     cos_table_t **resp_headers);
 /*
  * @brief  put cos bucket inventory
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   inventory_params  the cos bucket inventory configuration 
+ * @param[in]   inventory_params  the cos bucket inventory configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 
 cos_status_t *cos_put_bucket_inventory(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_inventory_params_t *inventory_params,
-                                    cos_table_t **resp_headers);
+                                       const cos_string_t *bucket,
+                                       cos_inventory_params_t *inventory_params,
+                                       cos_table_t **resp_headers);
 /*
  * @brief  get cos bucket inventory
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  inventory_params  the cos bucket inventory configuration 
+ * @param[out]  inventory_params  the cos bucket inventory configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_inventory(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_inventory_params_t *inventory_params,
-                                    cos_table_t **resp_headers);
+                                       const cos_string_t *bucket,
+                                       cos_inventory_params_t *inventory_params,
+                                       cos_table_t **resp_headers);
 /*
- * @brief  list cos bucket inventory 
+ * @brief  list cos bucket inventory
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  inventory_params  the cos bucket inventory configuration 
+ * @param[out]  inventory_params  the cos bucket inventory configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_list_bucket_inventory(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_list_inventory_params_t *inventory_params,
-                                    cos_table_t **resp_headers);
+                                        const cos_string_t *bucket,
+                                        cos_list_inventory_params_t *inventory_params,
+                                        cos_table_t **resp_headers);
 /*
  * @brief  delete cos bucket inventory
  * @param[in]   options       the cos request options
@@ -450,39 +436,39 @@ cos_status_t *cos_list_bucket_inventory(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_bucket_inventory(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    const cos_string_t *id,
-                                    cos_table_t **resp_headers);
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *id,
+                                          cos_table_t **resp_headers);
 /*
  * @brief  put cos bucket tagging
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   tagging_params  the cos bucket tagging configuration 
+ * @param[in]   tagging_params  the cos bucket tagging configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_tagging_params_t *tagging_params,
-                                    cos_table_t **resp_headers);
+                                     const cos_string_t *bucket,
+                                     cos_tagging_params_t *tagging_params,
+                                     cos_table_t **resp_headers);
 /*
  * @brief  get cos bucket tagging
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  tagging_params  the cos bucket tagging configuration 
+ * @param[out]  tagging_params  the cos bucket tagging configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_tagging_params_t *tagging_params,
-                                    cos_table_t **resp_headers);
+                                     const cos_string_t *bucket,
+                                     cos_tagging_params_t *tagging_params,
+                                     cos_table_t **resp_headers);
 
 /*
  * @brief  put cos bucket referer
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[in]   tagging_params  the cos bucket referer configuration 
+ * @param[in]   tagging_params  the cos bucket referer configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -495,7 +481,7 @@ cos_status_t *cos_put_bucket_referer(const cos_request_options_t *options,
  * @brief  get cos bucket referer
  * @param[in]   options       the cos request options
  * @param[in]   bucket        the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
- * @param[out]  tagging_params  the cos bucket referer configuration 
+ * @param[out]  tagging_params  the cos bucket referer configuration
  * @param[out]  resp_headers    cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
@@ -512,9 +498,8 @@ cos_status_t *cos_get_bucket_referer(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_bucket_tagging(const cos_request_options_t *options,
-                                    const cos_string_t *bucket,
-                                    cos_table_t **resp_headers);
-
+                                        const cos_string_t *bucket,
+                                        cos_table_t **resp_headers);
 
 cos_status_t *cos_put_bucket_intelligenttiering(const cos_request_options_t *options,
                                                 const cos_string_t *bucket,
@@ -526,22 +511,20 @@ cos_status_t *cos_get_bucket_intelligenttiering(const cos_request_options_t *opt
                                                 cos_intelligenttiering_params_t *params,
                                                 cos_table_t **resp_headers);
 
-
-cos_status_t *cos_put_object_acl(const cos_request_options_t *options, 
+cos_status_t *cos_put_object_acl(const cos_request_options_t *options,
                                  const cos_string_t *bucket,
-                                 const cos_string_t *object, 
+                                 const cos_string_t *object,
                                  cos_acl_e cos_acl,
                                  const cos_string_t *grant_read,
                                  const cos_string_t *grant_write,
                                  const cos_string_t *grant_full_ctrl,
                                  cos_table_t **resp_headers);
 
-cos_status_t *cos_get_object_acl(const cos_request_options_t *options, 
+cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
                                  const cos_string_t *bucket,
                                  const cos_string_t *object,
-                                 cos_acl_params_t *acl_param, 
+                                 cos_acl_params_t *acl_param,
                                  cos_table_t **resp_headers);
-
 
 /*
  * @brief  list cos objects
@@ -554,9 +537,9 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_list_object(const cos_request_options_t *options, 
-                              const cos_string_t *bucket, 
-                              cos_list_object_params_t *params, 
+cos_status_t *cos_list_object(const cos_request_options_t *options,
+                              const cos_string_t *bucket,
+                              cos_list_object_params_t *params,
                               cos_table_t **resp_headers);
 
 /*
@@ -572,10 +555,10 @@ cos_status_t *cos_list_object(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_list_object(const cos_request_options_t *options,
-                              const cos_string_t *bucket,
-                              cos_table_t *headers,
-                              cos_list_object_params_t *params, 
-                              cos_table_t **resp_headers);
+                                 const cos_string_t *bucket,
+                                 cos_table_t *headers,
+                                 cos_list_object_params_t *params,
+                                 cos_table_t **resp_headers);
 
 /*
  * @brief  put cos object from buffer
@@ -587,10 +570,10 @@ cos_status_t *cos_do_list_object(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_put_object_from_buffer(const cos_request_options_t *options, 
-                                         const cos_string_t *bucket, 
-                                         const cos_string_t *object, 
-                                         cos_list_t *buffer, 
+cos_status_t *cos_put_object_from_buffer(const cos_request_options_t *options,
+                                         const cos_string_t *bucket,
+                                         const cos_string_t *object,
+                                         cos_list_t *buffer,
                                          cos_table_t *headers,
                                          cos_table_t **resp_headers);
 
@@ -605,10 +588,10 @@ cos_status_t *cos_put_object_from_buffer(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_object_from_file(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       const cos_string_t *object, 
+                                       const cos_string_t *bucket,
+                                       const cos_string_t *object,
                                        const cos_string_t *filename,
-                                       cos_table_t *headers, 
+                                       cos_table_t *headers,
                                        cos_table_t **resp_headers);
 
 /*
@@ -625,10 +608,10 @@ cos_status_t *cos_put_object_from_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object, 
+                                            const cos_string_t *bucket,
+                                            const cos_string_t *object,
                                             cos_list_t *buffer,
-                                            cos_table_t *headers, 
+                                            cos_table_t *headers,
                                             cos_table_t *params,
                                             cos_progress_callback progress_callback,
                                             cos_table_t **resp_headers,
@@ -648,10 +631,10 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
-                                          const cos_string_t *object, 
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *object,
                                           const cos_string_t *filename,
-                                          cos_table_t *headers, 
+                                          cos_table_t *headers,
                                           cos_table_t *params,
                                           cos_progress_callback progress_callback,
                                           cos_table_t **resp_headers,
@@ -668,12 +651,12 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options, 
-                                       const cos_string_t *bucket, 
+cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options,
+                                       const cos_string_t *bucket,
                                        const cos_string_t *object,
-                                       cos_table_t *headers, 
+                                       cos_table_t *headers,
                                        cos_table_t *params,
-                                       cos_list_t *buffer, 
+                                       cos_list_t *buffer,
                                        cos_table_t **resp_headers);
 
 /*
@@ -688,13 +671,13 @@ cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options, 
-                                          const cos_string_t *bucket, 
+cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
+                                          const cos_string_t *bucket,
                                           const cos_string_t *object,
-                                          cos_table_t *headers, 
+                                          cos_table_t *headers,
                                           cos_table_t *params,
                                           cos_list_t *buffer,
-                                          cos_progress_callback progress_callback, 
+                                          cos_progress_callback progress_callback,
                                           cos_table_t **resp_headers);
 
 /*
@@ -709,11 +692,11 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_object_to_file(const cos_request_options_t *options,
-                                     const cos_string_t *bucket, 
+                                     const cos_string_t *bucket,
                                      const cos_string_t *object,
-                                     cos_table_t *headers, 
+                                     cos_table_t *headers,
                                      cos_table_t *params,
-                                     cos_string_t *filename, 
+                                     cos_string_t *filename,
                                      cos_table_t **resp_headers);
 
 /*
@@ -729,11 +712,11 @@ cos_status_t *cos_get_object_to_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
-                                        cos_table_t *headers, 
+                                        cos_table_t *headers,
                                         cos_table_t *params,
-                                        cos_string_t *filename, 
+                                        cos_string_t *filename,
                                         cos_progress_callback progress_callback,
                                         cos_table_t **resp_headers);
 
@@ -746,10 +729,10 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
  * @param[out]  resp_headers     cos server response headers containing object meta
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_head_object(const cos_request_options_t *options, 
-                              const cos_string_t *bucket, 
+cos_status_t *cos_head_object(const cos_request_options_t *options,
+                              const cos_string_t *bucket,
                               const cos_string_t *object,
-                              cos_table_t *headers, 
+                              cos_table_t *headers,
                               cos_table_t **resp_headers);
 
 /*
@@ -762,10 +745,10 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
  * @param[out]  resp_headers  cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_check_object_exist(const cos_request_options_t *options, 
-                                     const cos_string_t *bucket, 
+cos_status_t *cos_check_object_exist(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
                                      const cos_string_t *object,
-                                     cos_table_t *headers, 
+                                     cos_table_t *headers,
                                      cos_object_exist_status_e *object_exist,
                                      cos_table_t **resp_headers);
 
@@ -777,9 +760,9 @@ cos_status_t *cos_check_object_exist(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_delete_object(const cos_request_options_t *options, 
-                                const cos_string_t *bucket, 
-                                const cos_string_t *object, 
+cos_status_t *cos_delete_object(const cos_request_options_t *options,
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
                                 cos_table_t **resp_headers);
 
 /*
@@ -792,10 +775,10 @@ cos_status_t *cos_delete_object(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
-                                const cos_string_t *object,
-                                cos_table_t *headers, 
-                                cos_table_t **resp_headers);
+                                   const cos_string_t *bucket,
+                                   const cos_string_t *object,
+                                   cos_table_t *headers,
+                                   cos_table_t **resp_headers);
 
 /*
  * @brief  delete cos objects
@@ -808,10 +791,10 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_objects(const cos_request_options_t *options,
-                                 const cos_string_t *bucket, 
-                                 cos_list_t *object_list, 
+                                 const cos_string_t *bucket,
+                                 cos_list_t *object_list,
                                  int is_quiet,
-                                 cos_table_t **resp_headers, 
+                                 cos_table_t **resp_headers,
                                  cos_list_t *deleted_object_list);
 
 /*
@@ -826,12 +809,12 @@ cos_status_t *cos_delete_objects(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
-                                 const cos_string_t *bucket, 
-                                 cos_list_t *object_list, 
-                                 int is_quiet,
-                                 cos_table_t *headers,
-                                 cos_table_t **resp_headers, 
-                                 cos_list_t *deleted_object_list);
+                                    const cos_string_t *bucket,
+                                    cos_list_t *object_list,
+                                    int is_quiet,
+                                    cos_table_t *headers,
+                                    cos_table_t **resp_headers,
+                                    cos_list_t *deleted_object_list);
 
 /*
  * @brief  delete cos objects by prefix
@@ -841,9 +824,8 @@ cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const cos_string_t *prefix);
-
 
 /*
  * @brief  append cos object from buffer
@@ -857,11 +839,11 @@ cos_status_t *cos_delete_objects_by_prefix(cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object, 
+                                            const cos_string_t *bucket,
+                                            const cos_string_t *object,
                                             int64_t position,
-                                            cos_list_t *buffer, 
-                                            cos_table_t *headers, 
+                                            cos_list_t *buffer,
+                                            cos_table_t *headers,
                                             cos_table_t **resp_headers);
 
 /*
@@ -880,12 +862,12 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *options,
-                                               const cos_string_t *bucket, 
-                                               const cos_string_t *object, 
+                                               const cos_string_t *bucket,
+                                               const cos_string_t *object,
                                                int64_t position,
                                                uint64_t init_crc,
-                                               cos_list_t *buffer, 
-                                               cos_table_t *headers, 
+                                               cos_list_t *buffer,
+                                               cos_table_t *headers,
                                                cos_table_t *params,
                                                cos_progress_callback progress_callback,
                                                cos_table_t **resp_headers,
@@ -897,17 +879,17 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
  * @param[in]   bucket              the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
- * @param[in]   append_file         the file containing appending content 
+ * @param[in]   append_file         the file containing appending content
  * @param[in]   headers             the headers for request
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
-                                          const cos_string_t *object, 
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *object,
                                           int64_t position,
-                                          const cos_string_t *append_file, 
-                                          cos_table_t *headers, 
+                                          const cos_string_t *append_file,
+                                          cos_table_t *headers,
                                           cos_table_t **resp_headers);
 
 /*
@@ -917,7 +899,7 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
  * @param[in]   object              the cos object name
  * @param[in]   position            the start position append
  * @param[in]   init_crc            the initial crc value
- * @param[in]   append_file         the file containing appending content 
+ * @param[in]   append_file         the file containing appending content
  * @param[in]   headers             the headers for request
  * @param[in]   params              the params for request
  * @param[in]   progress_callback   the progress callback function
@@ -926,12 +908,12 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *options,
-                                             const cos_string_t *bucket, 
-                                             const cos_string_t *object, 
+                                             const cos_string_t *bucket,
+                                             const cos_string_t *object,
                                              int64_t position,
                                              uint64_t init_crc,
-                                             const cos_string_t *append_file, 
-                                             cos_table_t *headers, 
+                                             const cos_string_t *append_file,
+                                             cos_table_t *headers,
                                              cos_table_t *params,
                                              cos_progress_callback progress_callback,
                                              cos_table_t **resp_headers,
@@ -953,7 +935,7 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
                               const cos_string_t *src_bucket,
                               const cos_string_t *src_object,
                               const cos_string_t *src_endpoint,
-                              const cos_string_t *dest_bucket, 
+                              const cos_string_t *dest_bucket,
                               const cos_string_t *dest_object,
                               cos_table_t *headers,
                               cos_copy_object_params_t *copy_object_param,
@@ -970,16 +952,14 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
  * @param[in]   thread_num          thread count used to copy object
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *copy
-(
+cos_status_t *copy(
     cos_request_options_t *options,
     const cos_string_t *src_bucket,
     const cos_string_t *src_object,
     const cos_string_t *src_endpoint,
-    const cos_string_t *dest_bucket, 
+    const cos_string_t *dest_bucket,
     const cos_string_t *dest_object,
-    int32_t thread_num
-);
+    int32_t thread_num);
 
 /*
  * @brief  post object restore from archive
@@ -993,12 +973,12 @@ cos_status_t *copy
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object,
-                                            cos_object_restore_params_t *restore_params,
-                                            cos_table_t *headers,
-                                            cos_table_t *params,
-                                            cos_table_t **resp_headers);
+                                      const cos_string_t *bucket,
+                                      const cos_string_t *object,
+                                      cos_object_restore_params_t *restore_params,
+                                      cos_table_t *headers,
+                                      cos_table_t *params,
+                                      cos_table_t **resp_headers);
 
 #if 0
 /*
@@ -1110,6 +1090,12 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
                                         cos_string_t *upload_id,
                                         cos_table_t *headers,
                                         cos_table_t **resp_headers);
+cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *options, 
+                                        const cos_string_t *bucket, 
+                                        const cos_string_t *object, 
+                                        cos_string_t *upload_id,
+                                        cos_table_t *headers,
+                                        cos_table_t **resp_headers);
 
 /*
  * @brief  cos upload part from buffer
@@ -1202,7 +1188,17 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
                                            cos_table_t *params,
                                            cos_table_t **resp_headers,
                                            cos_list_t *resp_body);
-
+cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t *options,
+                                           const cos_string_t *bucket, 
+                                           const cos_string_t *object,
+                                           const cos_string_t *upload_id, 
+                                           int part_num, 
+                                           cos_upload_file_t *upload_file,
+                                           cos_progress_callback progress_callback,
+                                           cos_table_t *headers, 
+                                           cos_table_t *params,
+                                           cos_table_t **resp_headers,
+                                           cos_list_t *resp_body);
 /*
  * @brief  cos abort multipart upload
  * @param[in]   options             the cos request options
