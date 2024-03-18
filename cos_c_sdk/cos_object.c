@@ -253,6 +253,10 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
+    if(s != NULL && s->code == 404)
+    {
+        s->error_code = "NosuchKey";
+    }
 
     return s;
 }
