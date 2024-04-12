@@ -12,7 +12,7 @@ static const char *g_s_mon[] = {
 };
 
 static const char g_s_gmt_format[] = "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT";
-static int retry_change_domin_config = 1;
+static int retry_change_domin_config = COS_FALSE;
 
 static cos_table_t *g_sign_header_table = NULL;
 static cos_pool_t *g_table_pool = NULL;
