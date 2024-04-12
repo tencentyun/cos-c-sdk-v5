@@ -986,6 +986,10 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
                           http_method_e method,
                           cos_string_t *presigned_url)
 {
+    if (object == NULL || object->len == 0){
+        cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
+        return COSE_UNKNOWN_ERROR;
+    }
     cos_string_t signstr;
     int res;
     cos_http_request_t *req = NULL;
@@ -1059,6 +1063,10 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
                           int sign_host,
                           cos_string_t *presigned_url)
 {
+    if (object == NULL || object->len == 0){
+        cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
+        return COSE_UNKNOWN_ERROR;
+    }
     cos_string_t signstr;
     int res;
     cos_http_request_t *req = NULL;
