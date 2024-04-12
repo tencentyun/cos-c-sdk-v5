@@ -253,6 +253,10 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
+    if(s != NULL && s->code == 404)
+    {
+        s->error_code = "NosuchKey";
+    }
 
     return s;
 }
@@ -982,6 +986,10 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
                           http_method_e method,
                           cos_string_t *presigned_url)
 {
+    if (object == NULL || object->len == 0){
+        cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
+        return COSE_UNKNOWN_ERROR;
+    }
     cos_string_t signstr;
     int res;
     cos_http_request_t *req = NULL;
@@ -1055,6 +1063,10 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
                           int sign_host,
                           cos_string_t *presigned_url)
 {
+    if (object == NULL || object->len == 0){
+        cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
+        return COSE_UNKNOWN_ERROR;
+    }
     cos_string_t signstr;
     int res;
     cos_http_request_t *req = NULL;
