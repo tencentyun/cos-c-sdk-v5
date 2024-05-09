@@ -1339,6 +1339,8 @@ CuSuite *test_cos_object()
     SUITE_ADD_TEST(suite, test_object_restore);
     SUITE_ADD_TEST(suite, test_ci_image_process);
     SUITE_ADD_TEST(suite, test_object_cleanup); 
+    SUITE_ADD_TEST(suite, test_get_object_to_file_with_illega_getobject_key); 
+    SUITE_ADD_TEST(suite, test_get_object_to_buffer_with_illega_getobject_key); 
 
     return suite;
 }
