@@ -374,6 +374,7 @@ void test_get_object_to_buffer(CuTest *tc)
 
 void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
 {
+    fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "/././///abc/.//def//../../";
@@ -488,6 +489,7 @@ void test_get_object_to_file(CuTest *tc)
     cos_str_set(&file, filename);
 
     /* test get object to file */
+    set_object_key_simplify_check(COS_FALSE);
     s = cos_get_object_to_file(options, &bucket, &object, headers, 
                                params, &file, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
@@ -504,6 +506,7 @@ void test_get_object_to_file(CuTest *tc)
 
 void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
 {
+    fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "/././///abc/.//def//../../";
