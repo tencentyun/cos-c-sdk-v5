@@ -406,7 +406,7 @@ void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
     CuAssertStrEquals(tc, "ClientError", s->error_code);
     cos_pool_destroy(p);
 
-    printf("test_get_object_to_buffer ok\n");
+    printf("test_get_object_to_buffer_with_illega_getobject_key ok\n");
 }
 
 void test_get_object_to_buffer_with_range(CuTest *tc)
@@ -533,7 +533,7 @@ void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
     CuAssertStrEquals(tc, "ClientError", s->error_code);
     cos_pool_destroy(p);
 
-    printf("test_get_object_to_file ok\n");
+    printf("test_get_object_to_file_with_illega_getobject_key ok\n");
 }
 
 void test_head_object(CuTest *tc)
