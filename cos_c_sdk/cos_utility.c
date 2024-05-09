@@ -160,6 +160,81 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     }
     return 0;
 }
+
+char ** split(const char * s, char delim, int * returnSize) {
+    int n = strlen(s);
+    char ** ans = (char **)malloc(sizeof(char *) * n);
+    int pos = 0;
+    int curr = 0;
+    int len = 0;
+    
+    while (pos < n) {
+        while (pos < n && s[pos] == delim) {
+            ++pos;
+        }
+        curr = pos;
+        while (pos < n && s[pos] != delim) {
+            ++pos;
+        }
+        if (curr < n) {
+            ans[len] = (char *)malloc(sizeof(char) * (pos - curr + 1)); 
+            strncpy(ans[len], s + curr, pos - curr);
+            ans[len][pos - curr] = '\0';
+            ++len;
+        }
+    }
+    *returnSize = len;
+    return ans;
+}
+
+int object_key_simplify_check(const char * path){
+    if (!get_object_key_simplify_check()){
+        return 1;
+    }
+    int namesSize = 0;
+    int n = strlen(path);
+    char ** names = split(path, '/', &namesSize);
+    char ** stack = (char **)malloc(sizeof(char *) * namesSize);
+    int stackSize = 0;
+    int i = 0;
+    for (i = 0; i < namesSize; ++i) {
+        if (!strcmp(names[i], "..")) {
+            if (stackSize > 0) {
+                --stackSize;
+            } 
+        } else if (strcmp(names[i], ".")){
+            stack[stackSize] = names[i];
+            ++stackSize;
+        }
+    }
+
+    char * ans = (char *)malloc(sizeof(char) * (n + 1));
+    int curr = 0;
+    if (stackSize == 0) {
+        ans[curr] = '/';
+        ++curr;
+    } else {
+        for (i = 0; i < stackSize; ++i) {
+            ans[curr] = '/';
+            ++curr;
+            strcpy(ans + curr, stack[i]);
+            curr += strlen(stack[i]);
+        }
+    }
+    ans[curr] = '\0';
+    for (i = 0; i < namesSize; ++i) {
+        free(names[i]);
+    }
+    free(names);
+    free(stack);
+    if (strlen(ans) == 1 && ans[0] == '/'){
+        free(ans);
+        return 0;
+    }
+    free(ans);
+    return 1;
+}
+
 int is_default_endpoint(const char *str){
     if (str == NULL) {
         return 0;

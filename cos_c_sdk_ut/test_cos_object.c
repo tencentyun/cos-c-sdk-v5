@@ -372,6 +372,43 @@ void test_get_object_to_buffer(CuTest *tc)
     printf("test_get_object_to_buffer ok\n");
 }
 
+void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "/././///abc/.//def//../../";
+    cos_string_t object;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_status_t *s = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *expect_content = "test cos c sdk";
+    char *buf = NULL;
+    int64_t len = 0;
+    int64_t size = 0;
+    int64_t pos = 0;
+    char *content_type = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_list_init(&buffer);
+
+    /* test get object to buffer */
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+                                 params, &buffer, &resp_headers);
+    CuAssertStrEquals(tc, "ClientError", s->error_code);
+    cos_pool_destroy(p);
+
+    printf("test_get_object_to_buffer ok\n");
+}
+
 void test_get_object_to_buffer_with_range(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -460,6 +497,40 @@ void test_get_object_to_file(CuTest *tc)
     CuAssertPtrNotNull(tc, resp_headers);
 
     remove(filename);
+    cos_pool_destroy(p);
+
+    printf("test_get_object_to_file ok\n");
+}
+
+void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "/././///abc/.//def//../../";
+    cos_string_t object;
+    char *filename = "cos_test_get_object_to_file";
+    char *source_filename = __FILE__;
+    cos_string_t file;
+    cos_request_options_t *options = NULL; 
+    int is_cname = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_status_t *s = NULL;
+    char *content_type = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_str_set(&file, filename);
+
+    /* test get object to file */
+    set_object_key_simplify_check(COS_TRUE);
+    s = cos_get_object_to_file(options, &bucket, &object, headers, 
+                               params, &file, &resp_headers);
+    CuAssertStrEquals(tc, "ClientError", s->error_code);
     cos_pool_destroy(p);
 
     printf("test_get_object_to_file ok\n");
