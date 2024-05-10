@@ -28,7 +28,7 @@ static const struct testlist {
     {"test_cos_progress", test_cos_progress},
     {"test_cos_resumable", test_cos_resumable},
     {"test_cos_sys", test_cos_sys},
-    {"test_cos_sys", test_cos_crc},
+    {"test_cos_crc", test_cos_crc},
     {"LastTest", NULL}
 };
 
