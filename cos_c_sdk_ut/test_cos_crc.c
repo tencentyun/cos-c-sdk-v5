@@ -9,7 +9,7 @@
 #include "cos_api.h"
 #include "cos_config.h"
 #include "cos_test_util.h"
-#include "cos_crc64.h"
+#include "cos_crc64.c"
 
 void test_crc_setup(CuTest *tc)
 {
@@ -285,6 +285,40 @@ void test_crc_negative(CuTest *tc)
     printf("test_crc_negative ok\n");
 }
 
+
+void test_crc_rev8(CuTest *tc)
+{
+    {
+        uint64_t input = 0x123456789ABCDEF0;
+        uint64_t expected_output = 0xF0DEBC9A78563412;
+        uint64_t output = rev8(input);
+        CuAssertIntEquals(tc,output, expected_output);
+    }
+    printf("test_crc_rev8 ok\n");
+}
+
+void test_crc_crc64_big_init(CuTest *tc)
+{
+    {
+        crc64_big_init();
+    }
+    printf("crc64_big_init ok\n");
+}
+
+void test_crc_crc64_big(CuTest *tc)
+{
+    {
+        uint64_t crc1 = 0;
+        const char *buf1 = "123456789";
+        size_t len1 = strlen(buf1);
+        uint64_t expected_output1 = 0x995DC9BBDF1939FA;
+        uint64_t output1 = crc64_big(crc1, (void *)buf1, len1);
+        CuAssertIntEquals(tc,output1, expected_output1);
+    }
+    printf("crc64_big ok\n");
+}
+
+
 CuSuite *test_cos_crc()
 {
     CuSuite* suite = CuSuiteNew();
@@ -296,6 +330,9 @@ CuSuite *test_cos_crc()
     SUITE_ADD_TEST(suite, test_crc_combine);
     SUITE_ADD_TEST(suite, test_crc_negative);
     SUITE_ADD_TEST(suite, test_crc_cleanup);
+    SUITE_ADD_TEST(suite, test_crc_crc64_big);
+    SUITE_ADD_TEST(suite, test_crc_crc64_big_init);
+    SUITE_ADD_TEST(suite, test_crc_rev8);
 
     return suite;
 }
