@@ -208,6 +208,7 @@ void test_list_objects()
     } else {
         printf("list object failed\n");
     }
+    log_status(s);
 
     //销毁内存池
     cos_pool_destroy(p); 
@@ -300,6 +301,7 @@ void test_put_object_with_limit()
     } else {
         printf("put object failed\n");
     }
+    log_status(s);
 
     //销毁内存池
     cos_pool_destroy(p); 
@@ -338,6 +340,7 @@ void test_get_object_with_limit()
     } else {
         printf("get object failed\n");
     }
+    log_status(s);
 
     //销毁内存池
     cos_pool_destroy(p); 
@@ -389,6 +392,7 @@ void test_create_dir()
     } else {
         printf("put object failed\n");
     }
+    log_status(s);
     cos_pool_destroy(p);
 }
 
@@ -546,6 +550,7 @@ void test_head_object()
     cos_str_set(&object, TEST_OBJECT_NAME1);
     s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
     print_headers(resp_headers);
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("head object succeeded\n");
     } else {
@@ -767,7 +772,7 @@ void multipart_upload_file_from_file()
     //init mulitipart
     s = cos_init_multipart_upload(options, &bucket, &object, 
                                   &upload_id, headers, &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Init multipart upload succeeded, upload_id:%.*s\n", 
                upload_id.len, upload_id.data);
@@ -835,7 +840,7 @@ void multipart_upload_file_from_file()
     //complete multipart
     s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
             &complete_part_list, complete_headers, &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
                upload_id.len, upload_id.data);
@@ -872,7 +877,7 @@ void multipart_upload_file_from_buffer()
     //init mulitipart
     s = cos_init_multipart_upload(options, &bucket, &object, 
                                   &upload_id, headers, &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Init multipart upload succeeded, upload_id:%.*s\n", 
                upload_id.len, upload_id.data);
@@ -892,7 +897,7 @@ void multipart_upload_file_from_buffer()
     content = cos_buf_pack(p, str, strlen(str));
     cos_list_add_tail(&content->node, &buffer);
     s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id, 1, &buffer, &resp_headers);
-
+    log_status(s);
     // 直接获取etag
     char *etag = apr_pstrdup(p, (char*)apr_table_get(resp_headers, "ETag"));
     cos_list_init(&complete_part_list);
@@ -936,7 +941,7 @@ void multipart_upload_file_from_buffer()
     //complete multipart
     s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
             &complete_part_list, complete_headers, &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
                upload_id.len, upload_id.data);
@@ -968,7 +973,7 @@ void abort_multipart_upload()
 
     s = cos_init_multipart_upload(options, &bucket, &object, 
                                   &upload_id, headers, &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Init multipart upload succeeded, upload_id:%.*s\n", 
                upload_id.len, upload_id.data);
@@ -980,7 +985,7 @@ void abort_multipart_upload()
     
     s = cos_abort_multipart_upload(options, &bucket, &object, &upload_id, 
                                    &resp_headers);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Abort multipart upload succeeded, upload_id::%.*s\n", 
                upload_id.len, upload_id.data);
@@ -1021,6 +1026,7 @@ void list_multipart()
     cos_str_set(&object, TEST_MULTIPART_OBJECT);
     s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
                              list_upload_param, &resp_headers);
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("List upload part succeeded, upload_id::%.*s\n", 
                upload_id.len, upload_id.data);
@@ -1049,7 +1055,7 @@ void test_resumable()
     cos_string_t object;
     cos_string_t filepath;
     cos_resumable_clt_params_t *clt_params;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1059,6 +1065,31 @@ void test_resumable()
 
     clt_params = cos_create_resumable_clt_params_content(p, 5*1024*1024, 3, COS_FALSE, NULL);
     s = cos_resumable_download_file(options, &bucket, &object, &filepath, NULL, NULL, clt_params, NULL);
+    log_status(s);
+
+    cos_pool_destroy(p);
+}
+
+
+void test_cos_download_part_to_file()
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_table_t *resp_headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, TEST_MULTIPART_OBJECT4);
+    cos_str_set(&filepath, TEST_DOWNLOAD_NAME4);
+
+    s = cos_download_part_to_file(options, &bucket, &object, &filepath, &resp_headers);
     log_status(s);
 
     cos_pool_destroy(p);
@@ -1089,7 +1120,7 @@ void test_resumable_upload_with_multi_threads()
     clt_params = cos_create_resumable_clt_params_content(p, 1024 * 1024, 8, COS_FALSE, NULL);
     s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
         clt_params, NULL, &resp_headers, NULL);
-
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("upload succeeded\n");
     } else {
@@ -1247,6 +1278,7 @@ void test_copy()
     cos_copy_object_params_t *params = NULL;
     params = cos_create_copy_object_params(p);
     s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
+    log_status(s);
     if (cos_status_is_ok(s)) {
         printf("put object copy succeeded\n");
     } else {
