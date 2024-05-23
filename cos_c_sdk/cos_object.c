@@ -143,6 +143,11 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
                                           cos_table_t **resp_headers)
 {
     cos_status_t *s = NULL;
+    if (!object_key_simplify_check(object->data)){
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
+        return s;
+    }
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     char *error_msg = NULL;
@@ -192,6 +197,11 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
                                         cos_table_t **resp_headers)
 {
     cos_status_t *s = NULL;
+    if (!object_key_simplify_check(object->data)){
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
+        return s;
+    }
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     int res = COSE_OK;

@@ -13,6 +13,7 @@ static const char *g_s_mon[] = {
 
 static const char g_s_gmt_format[] = "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT";
 static int retry_change_domin_config = COS_FALSE;
+static int object_key_simplify_check = COS_TRUE;
 
 static cos_table_t *g_sign_header_table = NULL;
 static cos_pool_t *g_table_pool = NULL;
@@ -22,6 +23,13 @@ int get_retry_change_domin() {
 }
 void set_retry_change_domin(int user_retry_change_domin) {
     retry_change_domin_config = user_retry_change_domin;
+}
+
+int get_object_key_simplify_check() {
+    return object_key_simplify_check;
+}
+void set_object_key_simplify_check(int user_object_key_simplify_check) {
+    object_key_simplify_check = user_object_key_simplify_check;
 }
 int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root)
 {
