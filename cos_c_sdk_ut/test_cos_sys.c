@@ -30,6 +30,115 @@ void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
     printf("test_get_xml_doc_with_empty_cos_list ok\n");
 }
 
+void test_build_lifecycle_xml(CuTest *tc){
+    cos_pool_t *pool = NULL;
+    cos_pool_create(&pool, NULL);
+
+    cos_lifecycle_rule_content_t rule1;
+    cos_str_set(&rule1.id, "rule1");
+    cos_str_set(&rule1.prefix, "prefix1");
+    cos_str_set(&rule1.status, "Enabled");
+    rule1.expire.days = 1;
+    rule1.transition.days = INT_MAX;
+    rule1.abort.days = INT_MAX;
+
+    cos_lifecycle_rule_content_t rule2;
+    cos_str_set(&rule2.id, "rule2");
+    cos_str_set(&rule2.prefix, "prefix2");
+    cos_str_set(&rule2.status, "Disabled");
+    rule2.expire.days = INT_MAX;
+    cos_str_set(&rule2.expire.date, "2023-01-01T00:00:00.000Z");
+    rule2.transition.days = 7;
+    cos_str_set(&rule2.transition.date, "2023-01-01T00:00:00.000Z");
+    cos_str_set(&rule2.transition.storage_class, "Standard_IA");
+    rule2.abort.days = 1111111;
+
+    cos_list_t lifecycle_rule_list;
+    cos_list_init(&lifecycle_rule_list);
+    cos_list_add_tail(&rule1.node, &lifecycle_rule_list);
+    cos_list_add_tail(&rule2.node, &lifecycle_rule_list);
+
+    char *lifecycle_xml = build_lifecycle_xml(pool, &lifecycle_rule_list);
+    cos_pool_destroy(pool);
+    printf("test_build_lifecycle_xml ok\n");
+}
+
+
+void test_cos_serveral_parse_from_xml_node(CuTest *tc) {
+    apr_initialize();
+
+    // 创建内存池
+    cos_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+
+    // 准备测试数据
+    const char *test_xml = "<root><test>hello</test></root>\n";
+    mxml_node_t *root = mxmlLoadString(NULL, test_xml, MXML_OPAQUE_CALLBACK);
+    mxml_node_t *pnode = mxmlFindElement(root, root, "root", NULL, NULL, MXML_DESCEND);
+    cos_string_t param;
+
+    // 调用要测试的函数
+    mxml_node_t *node = cos_serveral_parse_from_xml_node(pool, pnode, root, "test", &param);
+    // 清理
+    mxmlDelete(root);
+    cos_pool_destroy(pool);
+    apr_terminate();
+    printf("test_cos_serveral_parse_from_xml_node ok\n");
+}
+
+void print_node_values(mxml_node_t *node) {
+    mxml_node_t *current_node = node;
+
+    while (current_node != NULL) {
+        if (current_node->type == MXML_ELEMENT) {
+            printf("Node: %s\n", current_node->value.element.name);
+        } else if (current_node->type == MXML_OPAQUE) {
+            printf("Value: %s\n", current_node->value.opaque);
+        }
+
+        if (current_node->child != NULL) {
+            print_node_values(current_node->child);
+        }
+
+        current_node = current_node->next;
+    }
+}
+
+void test_cos_get_domain_parse_from_body(CuTest *tc) {
+    cos_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+
+    // 创建 cos_list_t 对象并加载测试数据
+    cos_list_t body;
+    cos_list_init(&body);
+    const char *buffer = "<root><DomainRule><Status>active</Status><Name>test</Name><Type>test</Type><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+
+    cos_buf_t *b;
+    int len = strlen(buffer);
+    b = cos_create_buf(pool, len);
+    memcpy(b->pos, buffer, len);
+    b->last += len;
+    cos_list_add_tail(&b->node, &body);
+    
+    // 创建 cos_domain_params_t 对象
+    cos_domain_params_t *domain = cos_create_domain_params(pool);
+
+    // 调用要测试的函数
+    int res = cos_get_domain_parse_from_body(pool, &body, domain);
+
+    mxml_node_t *root = mxmlLoadString(NULL, buffer, MXML_OPAQUE_CALLBACK);
+    print_node_values(root);
+    mxmlDelete(root);
+
+    // 检查结果
+    CuAssertIntEquals(tc, COSE_OK, res);
+    CuAssertStrEquals(tc, "active", domain->status.data);
+    CuAssertStrEquals(tc, "test", domain->name.data);
+    CuAssertStrEquals(tc, "test", domain->type.data);
+    CuAssertStrEquals(tc, "test", domain->forced_replacement.data);
+    cos_pool_destroy(pool);
+    printf("test_cos_get_domain_parse_from_body ok\n");
+}
 /*
  * cos_list.h
  */
@@ -50,6 +159,57 @@ void test_cos_list_movelist_with_empty_list(CuTest *tc) {
 /*
  * cos_util.c
  */
+void test_change_host_suffix(CuTest *tc) {
+    char *endpoint = "example.cos.myqcloud.com";
+    change_host_suffix(&endpoint);
+    CuAssertStrEquals(tc, "example.cos.tencentcos.cn", endpoint);
+    printf("test_change_host_suffix ok\n");
+}
+void test_change_endpoint_suffix(CuTest *tc) {
+    cos_string_t endpoint;  
+    endpoint.data = strdup("example.cos.myqcloud.com");
+    endpoint.len = strlen(endpoint.data);
+    change_endpoint_suffix(&endpoint);
+    CuAssertStrEquals(tc, "example.cos.tencentcos.cn", endpoint.data);
+    clear_change_endpoint_suffix(&endpoint, "test");
+    CuAssertStrEquals(tc, "test", endpoint.data);
+    printf("test_change_endpoint_suffix ok\n");
+}
+void test_cos_set_request_route(CuTest *tc) {
+    cos_pool_t *pool;
+    cos_request_options_t *options;
+    cos_pool_create(&pool, NULL);
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, "<用户的Endpoint>");
+    cos_str_set(&options->config->access_key_id, "<用户的SecretId>");
+    cos_str_set(&options->config->access_key_secret, "<用户的SecretKey>");
+    cos_str_set(&options->config->appid, "<用户的AppId>");
+    options->config->is_cname = 0;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_set_content_md5_enable(options->ctl, COS_FALSE);
+    cos_set_request_route(options->ctl, "1.2.3.4", 80);
+    cos_pool_destroy(pool);
+    printf("test_cos_set_request_route ok\n");
+}
+void test_cos_gen_object_url(CuTest *tc) {
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+        
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, "TEST_BUCKET_NAME");
+    cos_str_set(&object, "TEST_OBJECT_NAME1");
+
+    printf("url:%s\n", cos_gen_object_url(options, &bucket, &object));
+
+    cos_pool_destroy(p);
+    printf("test_cos_gen_object_url ok\n");
+}
 void test_starts_with_failed(CuTest *tc) {
     int ret;
     cos_string_t str;
@@ -457,7 +617,14 @@ CuSuite *test_cos_sys()
     CuSuite* suite = CuSuiteNew();   
 
     SUITE_ADD_TEST(suite, test_get_xml_doc_with_empty_cos_list);
+    SUITE_ADD_TEST(suite, test_build_lifecycle_xml);
+    SUITE_ADD_TEST(suite, test_cos_serveral_parse_from_xml_node);
+    SUITE_ADD_TEST(suite, test_cos_get_domain_parse_from_body);
     SUITE_ADD_TEST(suite, test_cos_list_movelist_with_empty_list);
+    SUITE_ADD_TEST(suite, test_change_endpoint_suffix);
+    SUITE_ADD_TEST(suite, test_change_host_suffix);
+    SUITE_ADD_TEST(suite, test_cos_set_request_route);
+    SUITE_ADD_TEST(suite, test_cos_gen_object_url);
     SUITE_ADD_TEST(suite, test_starts_with_failed);
     SUITE_ADD_TEST(suite, test_is_valid_ip);
     SUITE_ADD_TEST(suite, test_cos_request_options_create_with_null_pool);
