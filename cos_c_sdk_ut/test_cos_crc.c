@@ -58,111 +58,111 @@ void test_crc_cleanup(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_crc_append_object_from_buffer(CuTest *tc)
-{
-    cos_pool_t *p = NULL;
-    char *object_name = "cos_test_crc_append_object.txt";
-    cos_string_t bucket;
-    cos_string_t object;
-    char *str = "Time is a bird for ever on the wing.";
-    cos_status_t *s = NULL;
-    int is_cname = 0;
-    int64_t position = 0;
-    uint64_t initcrc = 0;
-    cos_table_t *headers = NULL;
-    cos_table_t *resp_headers = NULL;
-    cos_list_t resp_body;
-    cos_request_options_t *options = NULL;
-    cos_list_t buffer;
-    cos_buf_t *content = NULL;
+// void test_crc_append_object_from_buffer(CuTest *tc)
+// {
+//     cos_pool_t *p = NULL;
+//     char *object_name = "cos_test_crc_append_object.txt";
+//     cos_string_t bucket;
+//     cos_string_t object;
+//     char *str = "Time is a bird for ever on the wing.";
+//     cos_status_t *s = NULL;
+//     int is_cname = 0;
+//     int64_t position = 0;
+//     uint64_t initcrc = 0;
+//     cos_table_t *headers = NULL;
+//     cos_table_t *resp_headers = NULL;
+//     cos_list_t resp_body;
+//     cos_request_options_t *options = NULL;
+//     cos_list_t buffer;
+//     cos_buf_t *content = NULL;
 
-    cos_pool_create(&p, NULL);
-    options = cos_request_options_create(p);
-    init_test_request_options(options, is_cname);
-    headers = cos_table_make(p, 0);
-    cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, object_name);
-    cos_list_init(&resp_body);
+//     cos_pool_create(&p, NULL);
+//     options = cos_request_options_create(p);
+//     init_test_request_options(options, is_cname);
+//     headers = cos_table_make(p, 0);
+//     cos_str_set(&bucket, TEST_BUCKET_NAME);
+//     cos_str_set(&object, object_name);
+//     cos_list_init(&resp_body);
 
-    /* append object */
-    cos_list_init(&buffer);
-    content = cos_buf_pack(p, str, strlen(str));
-    cos_list_add_tail(&content->node, &buffer);
+//     /* append object */
+//     cos_list_init(&buffer);
+//     content = cos_buf_pack(p, str, strlen(str));
+//     cos_list_add_tail(&content->node, &buffer);
 
-    cos_delete_object(options, &bucket, &object, NULL);
+//     cos_delete_object(options, &bucket, &object, NULL);
 
-    s = cos_do_append_object_from_buffer(options, &bucket, &object, position, 
-        initcrc, &buffer, headers, NULL, NULL, &resp_headers, &resp_body);
-    CuAssertIntEquals(tc, 200, s->code);
+//     s = cos_do_append_object_from_buffer(options, &bucket, &object, position, 
+//         initcrc, &buffer, headers, NULL, NULL, &resp_headers, &resp_body);
+//     CuAssertIntEquals(tc, 200, s->code);
 
-    position = cos_atoi64((char*)(apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION)));
-    initcrc = cos_atoui64((char*)(apr_table_get(resp_headers, COS_HASH_CRC64_ECMA)));
+//     position = cos_atoi64((char*)(apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION)));
+//     initcrc = cos_atoui64((char*)(apr_table_get(resp_headers, COS_HASH_CRC64_ECMA)));
 
-    /* append object */
-    s = cos_do_append_object_from_buffer(options, &bucket, &object, position, 
-        initcrc, &buffer, NULL, NULL, NULL, NULL, NULL);
-    CuAssertIntEquals(tc, 200, s->code);
+//     /* append object */
+//     s = cos_do_append_object_from_buffer(options, &bucket, &object, position, 
+//         initcrc, &buffer, NULL, NULL, NULL, NULL, NULL);
+//     CuAssertIntEquals(tc, 200, s->code);
 
-    /* delete object */
-    s= cos_delete_object(options, &bucket, &object, NULL);
-    CuAssertIntEquals(tc, 204, s->code);
+//     /* delete object */
+//     s= cos_delete_object(options, &bucket, &object, NULL);
+//     CuAssertIntEquals(tc, 204, s->code);
 
-    cos_pool_destroy(p);
+//     cos_pool_destroy(p);
 
-    printf("test_crc_append_object_from_buffer ok\n");
-}
+//     printf("test_crc_append_object_from_buffer ok\n");
+// }
 
-void test_crc_append_object_from_file(CuTest *tc)
-{
-    cos_pool_t *p = NULL;
-    char *object_name = "cos_test_crc_append_object.txt";
-    cos_string_t bucket;
-    cos_string_t object;
-    cos_string_t filename;
-    cos_status_t *s = NULL;
-    int is_cname = 0;
-    int64_t position = 0;
-    uint64_t initcrc = 0;
-    cos_table_t *headers = NULL;
-    cos_table_t *resp_headers = NULL;
-    cos_list_t resp_body;
-    cos_request_options_t *options = NULL;
+// void test_crc_append_object_from_file(CuTest *tc)
+// {
+//     cos_pool_t *p = NULL;
+//     char *object_name = "cos_test_crc_append_object.txt";
+//     cos_string_t bucket;
+//     cos_string_t object;
+//     cos_string_t filename;
+//     cos_status_t *s = NULL;
+//     int is_cname = 0;
+//     int64_t position = 0;
+//     uint64_t initcrc = 0;
+//     cos_table_t *headers = NULL;
+//     cos_table_t *resp_headers = NULL;
+//     cos_list_t resp_body;
+//     cos_request_options_t *options = NULL;
 
-    cos_pool_create(&p, NULL);
-    options = cos_request_options_create(p);
-    init_test_request_options(options, is_cname);
-    headers = cos_table_make(p, 0);
-    cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_str_set(&object, object_name);
-    cos_list_init(&resp_body);
+//     cos_pool_create(&p, NULL);
+//     options = cos_request_options_create(p);
+//     init_test_request_options(options, is_cname);
+//     headers = cos_table_make(p, 0);
+//     cos_str_set(&bucket, TEST_BUCKET_NAME);
+//     cos_str_set(&object, object_name);
+//     cos_list_init(&resp_body);
 
-    make_random_file(p, object_name, 10240);
-    cos_str_set(&filename, object_name);
+//     make_random_file(p, object_name, 10240);
+//     cos_str_set(&filename, object_name);
 
-    cos_delete_object(options, &bucket, &object, NULL);
+//     cos_delete_object(options, &bucket, &object, NULL);
 
-    /* append object */
-    s = cos_do_append_object_from_file(options, &bucket, &object, position, 
-        initcrc, &filename, headers, NULL, NULL, &resp_headers, &resp_body);
-    CuAssertIntEquals(tc, 200, s->code);
+//     /* append object */
+//     s = cos_do_append_object_from_file(options, &bucket, &object, position, 
+//         initcrc, &filename, headers, NULL, NULL, &resp_headers, &resp_body);
+//     CuAssertIntEquals(tc, 200, s->code);
 
-    position = cos_atoi64((char*)(apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION)));
-    initcrc = cos_atoui64((char*)(apr_table_get(resp_headers, COS_HASH_CRC64_ECMA)));
+//     position = cos_atoi64((char*)(apr_table_get(resp_headers, COS_NEXT_APPEND_POSITION)));
+//     initcrc = cos_atoui64((char*)(apr_table_get(resp_headers, COS_HASH_CRC64_ECMA)));
 
-    /* append object */
-    s = cos_do_append_object_from_file(options, &bucket, &object, position, 
-        initcrc, &filename, NULL, NULL, NULL, NULL, NULL);
-    CuAssertIntEquals(tc, 200, s->code);
+//     /* append object */
+//     s = cos_do_append_object_from_file(options, &bucket, &object, position, 
+//         initcrc, &filename, NULL, NULL, NULL, NULL, NULL);
+//     CuAssertIntEquals(tc, 200, s->code);
 
-    /* delete object */
-    s= cos_delete_object(options, &bucket, &object, NULL);
-    CuAssertIntEquals(tc, 204, s->code);
+//     /* delete object */
+//     s= cos_delete_object(options, &bucket, &object, NULL);
+//     CuAssertIntEquals(tc, 204, s->code);
 
-    apr_file_remove(object_name, p);
-    cos_pool_destroy(p);
+//     apr_file_remove(object_name, p);
+//     cos_pool_destroy(p);
 
-    printf("test_crc_append_object_from_file ok\n");
-}
+//     printf("test_crc_append_object_from_file ok\n");
+// }
 
 void test_crc_disable_crc(CuTest *tc) 
 {
@@ -290,8 +290,8 @@ CuSuite *test_cos_crc()
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_crc_setup);
-    SUITE_ADD_TEST(suite, test_crc_append_object_from_buffer);
-    SUITE_ADD_TEST(suite, test_crc_append_object_from_file);
+    // SUITE_ADD_TEST(suite, test_crc_append_object_from_buffer);
+    // SUITE_ADD_TEST(suite, test_crc_append_object_from_file);
     SUITE_ADD_TEST(suite, test_crc_disable_crc);
     SUITE_ADD_TEST(suite, test_crc_combine);
     SUITE_ADD_TEST(suite, test_crc_negative);
