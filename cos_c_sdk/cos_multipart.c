@@ -922,6 +922,7 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
         int res = COSE_OK;
         char range_buf[64];
         char *error_msg = NULL;
+        cos_table_t *headers = NULL;
         
         headers = cos_table_create_if_null(options, headers, 1);
         params = cos_table_create_if_null(options, params, 0);

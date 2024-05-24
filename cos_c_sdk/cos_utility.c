@@ -143,7 +143,11 @@ static int is_ak_or_sk_valid(cos_string_t *str)
     return COS_TRUE;
 }
 
-
+#ifdef MOCK_IS_SHOULD_RETRY
+int is_should_retry(const cos_status_t *s, const char *str){
+    return 1;
+}
+#else
 int is_should_retry(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
         if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
@@ -152,6 +156,8 @@ int is_should_retry(const cos_status_t *s, const char *str){
     }
     return 0;
 }
+#endif
+
 int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()){
         if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
