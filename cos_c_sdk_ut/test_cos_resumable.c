@@ -501,6 +501,59 @@ void test_resumable_upload_without_checkpoint(CuTest *tc)
     printf("test_resumable_upload_without_checkpoint ok\n");
 }
 
+void test_cos_upload_object_by_part_copy(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t copy_source;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    int length = snprintf(NULL, 0, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    char *result = (char *)malloc(length + 1);
+    snprintf(result, length + 1, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    cos_str_set(&copy_source, result);
+
+    s = cos_upload_object_by_part_copy(options, &copy_source, &bucket, &object, 2);
+    CuAssertIntEquals(tc, 200, s->code);
+    printf("test_cos_upload_object_by_part_copy ok\n");
+    free(result);
+    cos_pool_destroy(p);
+}
+
+void test_cos_download_part_to_file(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_table_t *resp_headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_3M.dat");
+    cos_str_set(&filepath, "download3Mtest.dat");
+
+    s = cos_download_part_to_file(options, &bucket, &object, &filepath, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    printf("test_cos_download_part_to_file ok\n");
+
+    cos_pool_destroy(p);
+}
+
+
 void test_resumable_upload_partsize(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -1303,6 +1356,8 @@ CuSuite *test_cos_resumable()
     SUITE_ADD_TEST(suite, test_resumable_upload_without_checkpoint);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint);
     SUITE_ADD_TEST(suite, test_resumable_upload_partsize);
+    SUITE_ADD_TEST(suite, test_cos_download_part_to_file);
+    SUITE_ADD_TEST(suite, test_cos_upload_object_by_part_copy);
     SUITE_ADD_TEST(suite, test_resumable_upload_threads);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint_format_invalid);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint_path_invalid);

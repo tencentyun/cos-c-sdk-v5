@@ -18,6 +18,9 @@ extern int cos_curl_code_to_status(CURLcode code);
  */
 void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
 {
+    set_retry_change_domin(0);
+    cos_log_set_print(cos_log_print_default);
+    cos_log_set_format(cos_log_format_default);
     int ret;
     mxml_node_t *xml_node;
     cos_list_t bc;
@@ -154,6 +157,18 @@ void test_cos_list_movelist_with_empty_list(CuTest *tc) {
     CuAssertTrue(tc, new_list.next == &new_list);
 
     printf("test_cos_list_movelist_with_empty_list ok\n");
+
+    cos_list_t list2;
+    cos_list_init(&list2);
+    cos_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+
+    cos_object_key_t *object_key = cos_create_cos_object_key(pool);
+    char *key = apr_psprintf(pool, "%.*s", 2,
+                               "22");
+    cos_str_set(&object_key->key, key);
+    cos_list_add_tail(&object_key->node, &list2);
+    cos_list_del(&object_key->node);
 }
 
 /*
