@@ -145,7 +145,7 @@ static int is_ak_or_sk_valid(cos_string_t *str)
 
 #ifdef MOCK_IS_SHOULD_RETRY
 int is_should_retry(const cos_status_t *s, const char *str){
-    return 1;
+    return get_test_retry_change_domin_config();
 }
 #else
 int is_should_retry(const cos_status_t *s, const char *str){
