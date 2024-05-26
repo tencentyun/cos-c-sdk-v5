@@ -14,15 +14,15 @@ make
 # init
 #cd ..
 
-lcov -d CMakeFiles -z
-lcov -d CMakeFiles -b . -no-external -initial -c -o arvinzhu_init.info
+lcov -d build -z
+lcov -d build -b . -no-external -initial -c -o arvinzhu_init.info
 
 # run
 cd build/Coverage/bin
 ./cos_c_sdk_ut
 # second
 cd ../../..
-lcov -d CMakeFiles -b . -no-external -c -o arvinzhu.info
+lcov -d build -b . -no-external -c -o arvinzhu.info
 
 # filt
 lcov -extract arvinzhu_init.info ${EXTRACT} -o arvinzhu_init_filted.info
