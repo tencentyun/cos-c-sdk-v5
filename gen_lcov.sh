@@ -6,20 +6,20 @@ EXTRACT="${workspace}/cos_c_sdk/* ${workspace}/cos_c_sdk_ut/*"
 # clear
 rm UTReport -rf
 rm UTResport.tar
-#cd build
+mkdir -p build
+cd build
 #cmake -DENABLE_COVERAGE=ON ..
-cmake . -DCMAKE_BUILD_TYPE=Coverage -DBUILD_UNITTEST=ON -DMOCK_IS_SHOULD_RETRY=ON
+cmake .. -DCMAKE_BUILD_TYPE=Coverage -DBUILD_UNITTEST=ON -DMOCK_IS_SHOULD_RETRY=ON
 make
 
 # init
-#cd ..
+cd ..
 
 lcov -d build -z
 lcov -d build -b . -no-external -initial -c -o arvinzhu_init.info
 
 # run
-cd build/Coverage/bin
-./cos_c_sdk_ut
+./build/Coverage/bin/cos_c_sdk_ut
 # second
 cd ../../..
 lcov -d build -b . -no-external -c -o arvinzhu.info
