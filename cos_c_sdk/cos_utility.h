@@ -31,7 +31,7 @@ int is_should_retry(const cos_status_t *s, const char *str);
 int is_default_domain(const char *str);
 int is_should_retry_endpoint(const cos_status_t *s, const char *str);
 int is_default_endpoint(const char *str);
-void change_host_suffix(char **endpoint);
+int change_host_suffix(char **endpoint);
 void change_endpoint_suffix(cos_string_t *endpoint);
 void clear_change_endpoint_suffix(cos_string_t *endpoint, char *host);
 /**
