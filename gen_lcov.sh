@@ -1,7 +1,7 @@
 #!/bin/sh
 workspace=`pwd`
 # EXTRACT="${workspace}/cos_c_sdk/cos_auth.c ${workspace}/cos_c_sdk/cos_bucket.c ${workspace}/cos_c_sdk/cos_buf.c ${workspace}/cos_c_sdk/cos_fstack.c ${workspace}/cos_c_sdk/cos_http_io.c ${workspace}/cos_c_sdk/cos_http_io.h ${workspace}/cos_c_sdk/cos_list.h ${workspace}/cos_c_sdk/cos_log.c ${workspace}/cos_c_sdk/cos_multipart.c ${workspace}/cos_c_sdk/cos_object.c ${workspace}/cos_c_sdk/cos_resumable.c ${workspace}/cos_c_sdk/cos_status.c ${workspace}/cos_c_sdk/cos_status.h ${workspace}/cos_c_sdk/cos_string.c ${workspace}/cos_c_sdk/cos_string.h ${workspace}/cos_c_sdk/cos_sys_util.c ${workspace}/cos_c_sdk/cos_transport.c ${workspace}/cos_c_sdk/cos_utility.c ${workspace}/cos_c_sdk/cos_xml.c ${workspace}/cos_c_sdk/cos_crc64.c"
-EXTRACT="${workspace}/cos_c_sdk/* "
+EXTRACT="${workspace}/cos_c_sdk/* ${workspace}/cos_c_sdk_ut/*"
 
 # clear
 rm UTReport -rf
