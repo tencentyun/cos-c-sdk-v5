@@ -233,6 +233,11 @@ static void crc64_combine_test(CuTest *tc, void *vector, size_t len, uint64_t cr
 
 void test_crc_combine(CuTest *tc)
 {
+    {
+        char *strb1 = "123456789";
+        size_t lenb1 = 9;
+        cos_crc64_big(0, strb1, lenb1);
+    }
     char *str1 = "123456789";
     size_t len1 = 9;
     uint64_t crc1 = UINT64_C(0x995dc9bbdf1939fa);

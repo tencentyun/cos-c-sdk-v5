@@ -41,14 +41,10 @@ cos_status_t *cos_do_get_service(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_service_parse_from_body(options->pool, &resp->body, params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -225,16 +221,12 @@ cos_status_t *cos_do_list_object(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_list_objects_parse_from_body(options->pool, &resp->body, 
             &params->object_list, &params->common_prefix_list, 
             &params->next_marker, &params->truncated);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -303,19 +295,13 @@ cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
-    if (is_quiet) {
-        return s;
-    }
+    if (is_quiet) return s;
 
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_delete_objects_parse_from_body(options->pool, &resp->body, 
                                              deleted_object_list);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -484,14 +470,10 @@ cos_status_t *cos_get_bucket_acl(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_acl_parse_from_body(options->pool, &resp->body, acl_param);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -574,15 +556,11 @@ cos_status_t *cos_get_bucket_lifecycle(const cos_request_options_t *options,
     
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_lifecycle_rules_parse_from_body(options->pool, 
             &resp->body, lifecycle_rule_list);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -697,15 +675,11 @@ cos_status_t *cos_get_bucket_cors(const cos_request_options_t *options,
     
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_cors_rules_parse_from_body(options->pool, 
             &resp->body, cors_rule_list);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -826,14 +800,10 @@ cos_status_t *cos_get_bucket_versioning
     
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_versioning_parse_from_body(options->pool, &resp->body, versioning);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -922,14 +892,10 @@ cos_status_t *cos_get_bucket_replication
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_replication_parse_from_body(options->pool, &resp->body, replication_param);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -1044,14 +1010,10 @@ cos_status_t *cos_get_bucket_website(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_website_parse_from_body(options->pool, &resp->body, website_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 } 
@@ -1160,14 +1122,10 @@ cos_status_t *cos_get_bucket_domain(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_domain_parse_from_body(options->pool, &resp->body, domain_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -1249,14 +1207,10 @@ cos_status_t *cos_get_bucket_logging(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_logging_parse_from_body(options->pool, &resp->body, logging_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1345,14 +1299,10 @@ cos_status_t *cos_get_bucket_inventory(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_inventory_parse_from_body(options->pool, &resp->body, inventory_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1385,14 +1335,10 @@ cos_status_t *cos_list_bucket_inventory(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_list_inventory_parse_from_body(options->pool, &resp->body, inventory_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -1503,14 +1449,10 @@ cos_status_t *cos_get_bucket_tagging(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_tagging_parse_from_body(options->pool, &resp->body, tagging_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1618,14 +1560,10 @@ cos_status_t *cos_get_bucket_referer(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_referer_parse_from_body(options->pool, &resp->body, referer_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1706,13 +1644,9 @@ cos_status_t *cos_get_bucket_intelligenttiering(const cos_request_options_t *opt
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_intelligenttiering_parse_from_body(options->pool, &resp->body, params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }

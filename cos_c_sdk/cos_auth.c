@@ -86,17 +86,15 @@ int cos_get_string_to_sign(cos_pool_t *p,
 
     // query-parameters
     res = cos_table_to_string(p, sort_params, &params_str, sign_content_query_params);
-    if (res != COSE_OK) {
-        return res;
-    }
+    if (res != COSE_OK) return res;
+
     cos_buf_append_string(p, fmt_str, params_str.data, params_str.len);
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
     
     // headers
     res = cos_table_to_string(p, sort_headers, &header_str, sign_content_header);  
-    if (res != COSE_OK) {
-        return res;
-    }
+    if (res != COSE_OK) return res;
+    
     cos_buf_append_string(p, fmt_str, header_str.data, header_str.len);                                                         
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);  
 
@@ -154,16 +152,13 @@ int cos_get_signed_headers(cos_pool_t *p,
 {
     int res;
     cos_string_t signstr;
-    if (cos_is_null_string(access_key_id)) {
-        return COSE_OK;
-    }
+    if (cos_is_null_string(access_key_id)) return COSE_OK;
+    
 
     res = cos_get_string_to_sign(p, req->method, access_key_id, access_key_secret, canon_res, 
                                  req->headers, req->query_params, COS_AUTH_EXPIRE_DEFAULT, &signstr);
     
-    if (res != COSE_OK) {
-        return res;
-    }
+    if (res != COSE_OK) return res;
     
     cos_debug_log("signstr:%.*s.", signstr.len, signstr.data);
 

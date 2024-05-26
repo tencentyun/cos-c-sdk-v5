@@ -39,14 +39,10 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_upload_id_parse_from_body(options->pool, &resp->body, upload_id);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -82,14 +78,10 @@ cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *op
 
     s = cos_process_request(options, req, resp, 0);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_upload_id_parse_from_body(options->pool, &resp->body, upload_id);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -160,16 +152,12 @@ cos_status_t *cos_list_upload_part(const cos_request_options_t *options,
     s = cos_process_request(options, req, resp, 1);
 
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_list_parts_parse_from_body(options->pool, &resp->body,
             &params->part_list, &params->next_part_number_marker,
             &params->truncated);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -238,16 +226,12 @@ cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options,
         clear_change_endpoint_suffix(&options->config->endpoint, host);
     }
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_list_multipart_uploads_parse_from_body(options->pool, &resp->body, 
             &params->upload_list, &params->next_key_marker, 
             &params->next_upload_id_marker, &params->truncated);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -588,15 +572,11 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     if (NULL != params->rsp_content) {
         res = cos_copy_object_parse_from_body(options->pool, &resp->body, params->rsp_content);
-        if (res != COSE_OK) {
-            cos_xml_error_status_set(s, res);
-        }
+        if (res != COSE_OK) cos_xml_error_status_set(s, res);
     }
 
     return s;
@@ -942,6 +922,7 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
         int res = COSE_OK;
         char range_buf[64];
         char *error_msg = NULL;
+        cos_table_t *headers = NULL;
         
         headers = cos_table_create_if_null(options, headers, 1);
         params = cos_table_create_if_null(options, params, 0);

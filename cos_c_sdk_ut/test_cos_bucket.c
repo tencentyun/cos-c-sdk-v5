@@ -788,6 +788,33 @@ void test_check_bucket_exist(CuTest *tc)
     fprintf(stderr, "==========test_check_bucket_exist==========\n");
 }
 
+void test_check_bucket_exist_not_find(CuTest *tc)
+{
+    fprintf(stderr, "==========test_check_bucket_exist_not_find==========\n");
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_bucket_exist_status_e bucket_exist;
+    cos_status_t *s = NULL;
+    
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, "adahjrvfiaidsuv");
+
+    s = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
+    CuAssertIntEquals(tc, 404, s->code);
+    log_status(s);
+    CuAssertPtrNotNull(tc, resp_headers);
+    cos_pool_destroy(p);
+
+    printf("test_check_bucket_exist_not_find ok\n");
+    fprintf(stderr, "==========test_check_bucket_exist_not_find==========\n");
+}
+
 void test_bucket_versioning(CuTest *tc)
 {
     fprintf(stderr, "==========test_bucket_versioning==========\n");
@@ -1409,6 +1436,7 @@ CuSuite *test_cos_bucket()
     SUITE_ADD_TEST(suite, test_bucket_versioning);
     SUITE_ADD_TEST(suite, test_head_bucket);
     SUITE_ADD_TEST(suite, test_check_bucket_exist);
+    SUITE_ADD_TEST(suite, test_check_bucket_exist_not_find);
     SUITE_ADD_TEST(suite, test_bucket_referer);
     SUITE_ADD_TEST(suite, test_bucket_website);
     SUITE_ADD_TEST(suite, test_bucket_intelligenttiering);

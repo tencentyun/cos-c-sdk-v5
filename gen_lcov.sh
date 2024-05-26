@@ -7,7 +7,7 @@ rm UTReport -rf
 rm UTResport.tar
 #cd build
 #cmake -DENABLE_COVERAGE=ON ..
-cmake . -DCMAKE_BUILD_TYPE=Coverage -DBUILD_UNITTEST=ON
+cmake . -DCMAKE_BUILD_TYPE=Coverage -DBUILD_UNITTEST=ON -DMOCK_IS_SHOULD_RETRY=ON
 make
 
 # init

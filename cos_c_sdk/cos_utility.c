@@ -143,7 +143,14 @@ static int is_ak_or_sk_valid(cos_string_t *str)
     return COS_TRUE;
 }
 
-
+#ifdef MOCK_IS_SHOULD_RETRY
+int is_should_retry(const cos_status_t *s, const char *str){
+    return get_test_retry_change_domin_config();
+}
+int is_should_retry_endpoint(const cos_status_t *s, const char *str){
+    return get_test_retry_change_domin_config();
+}
+#else
 int is_should_retry(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
         if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
@@ -160,6 +167,7 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     }
     return 0;
 }
+#endif
 
 char ** split(const char * s, char delim, int * returnSize) {
     int n = strlen(s);
@@ -320,7 +328,7 @@ int is_default_domain(const char *str){
 //     }
 // }
 
-void change_host_suffix(char **endpoint) {
+int change_host_suffix(char **endpoint) {
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
@@ -331,14 +339,16 @@ void change_host_suffix(char **endpoint) {
         size_t new_size = strlen(*endpoint) - old_len + new_len + 1;
         char *new_endpoint = (char *)malloc(new_size);
         if (new_endpoint == NULL) {
-            return;
+            return 0;
         }
 
         strncpy(new_endpoint, *endpoint, strlen(*endpoint) - old_len);
         strncpy(new_endpoint + strlen(*endpoint) - old_len, new_suffix, new_len);
         new_endpoint[new_size - 1] = '\0';
         *endpoint = new_endpoint;
+        return 1;
     }
+    return 0;
 }
 void change_endpoint_suffix(cos_string_t *endpoint) {
     const char *old_suffix = "myqcloud.com";
@@ -363,7 +373,9 @@ void change_endpoint_suffix(cos_string_t *endpoint) {
 }
 
 void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host){
-    free(endpoint->data);
+    if (strlen(endpoint->data) > 13 && strcmp(endpoint->data + strlen(endpoint->data)  - 13, "tencentcos.cn") == 0) {
+        free(endpoint->data);
+    }
     endpoint->data = host;
     endpoint->len = strlen(endpoint->data);
 }
@@ -1549,7 +1561,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
             apr_table_unset(req->headers, "Authorization");
         }
         char *host = req->host;
-        change_host_suffix(&req->host);
+        int malloc_host_flag = change_host_suffix(&req->host);
         reset_list_pos(&req->body);
         req->crc64 = 0;
         res = cos_sign_request(req, options->config);
@@ -1589,7 +1601,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
                 cos_list_del(&b->node);
             }
         }
-        free(req->host);
+        if(malloc_host_flag) free(req->host);
         req->host = host;
     }
     return s;
