@@ -19,9 +19,9 @@ lcov -d build -z
 lcov -d build -b . -no-external -initial -c -o arvinzhu_init.info
 
 # run
-./build/Coverage/bin/cos_c_sdk_ut
+./build/build/Coverage/bin/cos_c_sdk_ut
 # second
-cd ../../..
+
 lcov -d build -b . -no-external -c -o arvinzhu.info
 
 # filt
