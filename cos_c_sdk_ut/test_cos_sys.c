@@ -14,6 +14,54 @@ extern int starts_with(const cos_string_t *str, const char *prefix);
 extern int cos_curl_code_to_status(CURLcode code);
 
 /*
+ * cos_status.h
+ */
+void test_cos_status_parse_from_body(CuTest *tc){
+    cos_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+
+    // 调用要测试的函数
+    {
+        cos_status_t s ;
+        int res = cos_status_parse_from_body(pool, NULL, 200, &s);
+        printf("test_cos_status_parse_from_body 200 ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status><Name>test</Name><Type>test</Type><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
+        printf("test_cos_status_parse_from_body 400 1ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
+        printf("test_cos_status_parse_from_body 400 2ok\n");
+    }
+    printf("test_cos_status_parse_from_body ok\n");
+}
+
+/*
  * cos_xml.c
  */
 void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
@@ -631,6 +679,7 @@ CuSuite *test_cos_sys()
 {
     CuSuite* suite = CuSuiteNew();   
 
+    SUITE_ADD_TEST(suite, test_cos_status_parse_from_body);
     SUITE_ADD_TEST(suite, test_get_xml_doc_with_empty_cos_list);
     SUITE_ADD_TEST(suite, test_build_lifecycle_xml);
     SUITE_ADD_TEST(suite, test_cos_serveral_parse_from_xml_node);

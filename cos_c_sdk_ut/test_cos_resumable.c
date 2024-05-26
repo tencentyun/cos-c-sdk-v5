@@ -1505,6 +1505,7 @@ void test_resumable_copy_mt(CuTest *tc)
 void test_resumable_copy_mt_change_domin(CuTest *tc)
 {
     set_test_retry_change_domin_config(1);
+    get_retry_change_domin();
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
