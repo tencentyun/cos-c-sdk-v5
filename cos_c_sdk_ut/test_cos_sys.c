@@ -14,6 +14,54 @@ extern int starts_with(const cos_string_t *str, const char *prefix);
 extern int cos_curl_code_to_status(CURLcode code);
 
 /*
+ * cos_status.h
+ */
+void test_cos_status_parse_from_body(CuTest *tc){
+    cos_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+
+    // 调用要测试的函数
+    {
+        cos_status_t s ;
+        int res = cos_status_parse_from_body(pool, NULL, 200, &s);
+        printf("test_cos_status_parse_from_body 200 ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status><Name>test</Name><Type>test</Type><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
+        printf("test_cos_status_parse_from_body 400 1ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
+        printf("test_cos_status_parse_from_body 400 2ok\n");
+    }
+    printf("test_cos_status_parse_from_body ok\n");
+}
+
+/*
  * cos_xml.c
  */
 void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
@@ -462,6 +510,102 @@ void test_cos_ends_with(CuTest *tc) {
 /*
  * cos_util.h
  */
+void test_is_default_domain(CuTest *tc) {
+    int code = is_default_domain("xxxxxx-123.cos.ap-guangzhou.myqcloud.com");
+    CuAssertIntEquals(tc, 1, code);
+    printf("test_is_default_domain ok\n");
+}
+void test_is_config_params_vaild(CuTest *tc) {
+    {
+        cos_pool_t *p = NULL;
+        int is_cname = 0;
+        cos_request_options_t *options = NULL;
+        char *error_msg = "xxxxxx";
+        options = cos_request_options_create(p);
+        init_test_request_options(options, is_cname);
+        options->config->endpoint.data = "";
+        options->config->endpoint.len = 0;
+        cos_string_t bucket;
+        cos_str_set(&bucket, "qp");
+        
+        int code = cos_get_object_uri(options, &bucket, NULL, NULL, &error_msg);
+        CuAssertIntEquals(tc, 0, code);
+        printf("test_is_config_params_vaild endpoint invaild ok\n");
+    }
+    {
+        cos_pool_t *p = NULL;
+        int is_cname = 0;
+        cos_request_options_t *options = NULL;
+        char *error_msg = "xxxxxx";
+        options = cos_request_options_create(p);
+        init_test_request_options(options, is_cname);
+
+        int code = cos_get_object_uri(options, NULL, NULL, NULL, &error_msg);
+        CuAssertIntEquals(tc, 0, code);
+        printf("test_is_config_params_vaild bucket invaild ok\n");
+    }
+
+    {
+        cos_pool_t *p = NULL;
+        int is_cname = 0;
+        cos_request_options_t *options = NULL;
+        char *error_msg = "xxxxxx";
+        options = cos_request_options_create(p);
+        init_test_request_options(options, is_cname);
+
+        cos_string_t bucket;
+        cos_str_set(&bucket, "qp");
+        options->config->access_key_id.data = "\n";
+        options->config->access_key_id.len = 1;
+        int code = cos_get_object_uri(options, &bucket, NULL, NULL, &error_msg);
+        CuAssertIntEquals(tc, 0, code);
+        printf("test_is_config_params_vaild ak invaild ok\n");
+    }
+
+    {
+        cos_pool_t *p = NULL;
+        int is_cname = 0;
+        cos_request_options_t *options = NULL;
+        char *error_msg = "xxxxxx";
+        options = cos_request_options_create(p);
+        init_test_request_options(options, is_cname);
+
+        cos_string_t bucket;
+        cos_str_set(&bucket, "qp");
+        options->config->access_key_secret.data = "\n";
+        options->config->access_key_secret.len = 1;
+        int code = cos_get_object_uri(options, &bucket, NULL, NULL, &error_msg);
+        printf("test_is_config_params_vaild sk invaild 1ok\n");
+        CuAssertIntEquals(tc, 0, code);
+        code = cos_get_service_uri(options, 1, NULL, &error_msg);
+        CuAssertIntEquals(tc, 0, code);
+        printf("test_is_config_params_vaild sk invaild 2ok\n");
+    }
+    {
+        cos_pool_t *p = NULL;
+        cos_request_options_t *options = NULL;
+        cos_table_t *resp_headers = NULL;
+        int is_cname = 0;
+        cos_status_t *s = NULL;
+        
+        options = cos_request_options_create(p);
+        init_test_request_options(options, is_cname);
+        cos_http_request_t *req = cos_http_request_create(options->pool);;
+        char *error_msg = "xxxxxx";
+        int code = cos_get_service_uri(options, 2, req, &error_msg);
+        CuAssertIntEquals(tc, 1, code);
+        printf("test_cos_get_service_uri sk invaild 2ok\n");
+    }
+
+    {
+        cos_string_t test;
+        cos_str_set(&test, "xxxxx");
+        int code = starts_with(&test, "a");
+        CuAssertIntEquals(tc, 0, code);
+        printf("test_is_config_params_vaild starts_with invaild ok\n");
+    }
+
+}
 
 void test_cos_url_encode_failed(CuTest *tc) {
     int ret;
@@ -631,6 +775,9 @@ CuSuite *test_cos_sys()
 {
     CuSuite* suite = CuSuiteNew();   
 
+    SUITE_ADD_TEST(suite, test_is_default_domain);
+    SUITE_ADD_TEST(suite, test_is_config_params_vaild);
+    SUITE_ADD_TEST(suite, test_cos_status_parse_from_body);
     SUITE_ADD_TEST(suite, test_get_xml_doc_with_empty_cos_list);
     SUITE_ADD_TEST(suite, test_build_lifecycle_xml);
     SUITE_ADD_TEST(suite, test_cos_serveral_parse_from_xml_node);

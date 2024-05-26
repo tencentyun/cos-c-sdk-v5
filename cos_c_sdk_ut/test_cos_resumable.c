@@ -516,9 +516,9 @@ void test_cos_upload_object_by_part_copy(CuTest *tc)
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test_copy.txt");
-    int length = snprintf(NULL, 0, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    int length = snprintf(NULL, 0, "%s-%s.%s/test_3M.dat", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
     char *result = (char *)malloc(length + 1);
-    snprintf(result, length + 1, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    snprintf(result, length + 1, "%s-%s.%s/test_3M.dat", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
     cos_str_set(&copy_source, result);
 
     s = cos_upload_object_by_part_copy(options, &copy_source, &bucket, &object, 2);
@@ -1505,6 +1505,7 @@ void test_resumable_copy_mt(CuTest *tc)
 void test_resumable_copy_mt_change_domin(CuTest *tc)
 {
     set_test_retry_change_domin_config(1);
+    get_retry_change_domin();
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;

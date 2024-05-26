@@ -109,6 +109,48 @@ void test_put_object_from_buffer(CuTest *tc)
     printf("test_put_object_from_buffer ok\n");
 }
 
+void test_put_object_from_buffer2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    char *object_name = "cos_test_put_object.ts";
+    char *str = "test cos c sdk";
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *headers = NULL;
+    cos_table_t *head_headers = NULL;
+    cos_table_t *head_resp_headers = NULL;
+    char *content_type = NULL;
+    cos_request_options_t *options = NULL;
+
+    /* test put object */
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 1);
+    apr_table_set(headers, "x-cos-meta-author", "cos");
+    s = create_test_object(options, TEST_BUCKET_NAME, object_name, str, headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, headers);
+
+    cos_pool_destroy(p);
+
+    /* head object */
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    init_test_request_options(options, is_cname);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_head_object(options, &bucket, &object, 
+                        head_headers, &head_resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    printf("test_put_object_from_buffer2 ok\n");
+}
+
 void test_put_object_from_buffer_with_default_content_type(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -372,6 +414,45 @@ void test_get_object_to_buffer(CuTest *tc)
     printf("test_get_object_to_buffer ok\n");
 }
 
+void test_get_object_to_buffer2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "cos_test_put_object.ts";
+    cos_string_t object;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_status_t *s = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *expect_content = "test cos c sdk";
+    char *buf = NULL;
+    int64_t len = 0;
+    int64_t size = 0;
+    int64_t pos = 0;
+    char *content_type = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_list_init(&buffer);
+
+    /* test get object to buffer */
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+                                 params, &buffer, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+    cos_pool_destroy(p);
+
+    printf("test_get_object_to_buffer2 ok\n");
+}
+
 void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
 {
     fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
@@ -504,6 +585,42 @@ void test_get_object_to_file(CuTest *tc)
     printf("test_get_object_to_file ok\n");
 }
 
+void test_get_object_to_file2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "cos_test_put_object_from_file2.txt";
+    cos_string_t object;
+    char *filename = "cos_test_get_object_to_file";
+    char *source_filename = __FILE__;
+    cos_string_t file;
+    cos_request_options_t *options = NULL; 
+    int is_cname = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_status_t *s = NULL;
+    char *content_type = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_str_set(&file, filename);
+
+    /* test get object to file */
+    set_object_key_simplify_check(COS_FALSE);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_get_object_to_file(options, &bucket, &object, headers, 
+                               params, &file, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+    cos_pool_destroy(p);
+
+    printf("test_get_object_to_file2 ok\n");
+}
+
 void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
 {
     fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
@@ -631,6 +748,34 @@ void test_delete_object(CuTest *tc)
     printf("test_delete_object ok\n");
 }
 
+void test_delete_object2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "cos_test_put_object";
+    cos_string_t object;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_status_t *s = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+ 
+    /* test delete object */
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_delete_object(options, &bucket, &object, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    cos_pool_destroy(p);
+
+    printf("test_delete_object2 ok\n");
+}
+
 void test_append_object_from_buffer(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -682,6 +827,56 @@ void test_append_object_from_buffer(CuTest *tc)
     printf("test_append_object_from_buffer ok\n");
 }
 
+void test_append_object_from_buffer2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    char *object_name = "cos_test_append_object";
+    cos_string_t bucket;
+    cos_string_t object;
+    char *str = "test cos c sdk";
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    int64_t position = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *headers1 = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_request_options_t *options = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *next_append_position = NULL;
+
+    /* test append object */
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    s = cos_head_object(options, &bucket, &object, headers, &resp_headers);
+    if(s->code == 200) {
+        next_append_position = (char*)(apr_table_get(resp_headers, 
+                        "x-cos-next-append-position"));
+        position = atoi(next_append_position);
+    }
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    /* append object */
+    resp_headers = NULL;
+    headers1 = cos_table_make(p, 0);
+    cos_list_init(&buffer);
+    content = cos_buf_pack(p, str, strlen(str));
+    cos_list_add_tail(&content->node, &buffer);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_append_object_from_buffer(options, &bucket, &object, 
+            position, &buffer, headers1, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    cos_pool_destroy(p);
+
+    printf("test_append_object_from_buffer2 ok\n");
+}
+
 void test_append_object_from_file(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -714,6 +909,41 @@ void test_append_object_from_file(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_append_object_from_file ok\n");
+}
+
+void test_append_object_from_file2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    char *object_name = "cos_test_append_object_from_file";
+    cos_string_t bucket;
+    cos_string_t object;
+    char *filename = __FILE__;
+    cos_string_t append_file;
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    int64_t position = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_request_options_t *options = NULL;
+
+    /* test append object */
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_str_set(&append_file, filename);
+
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_append_object_from_file(options, &bucket, &object, position, 
+                                    &append_file, headers, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    cos_pool_destroy(p);
+
+    printf("test_append_object_from_file2 ok\n");
 }
 
 void test_get_not_exist_object_to_file(CuTest *tc)
@@ -786,6 +1016,40 @@ void test_object_acl(CuTest *tc)
     cos_pool_destroy(p);
 }
 
+void test_object_acl2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_acl_e cos_acl = COS_ACL_PRIVATE;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *resp_headers = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "cos_test_put_object.ts");
+
+    //put acl
+    cos_string_t read;
+    cos_str_set(&read, "id=\"qcs::cam::uin/12345:uin/12345\", id=\"qcs::cam::uin/45678:uin/45678\"");
+    s = cos_put_object_acl(options, &bucket, &object, cos_acl, &read, NULL, NULL, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+
+    //get acl
+    cos_acl_params_t *acl_params2 = NULL;
+    acl_params2 = cos_create_acl_params(p);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_get_object_acl(options, &bucket, &object, acl_params2, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+    printf("test_object_acl2 ok\n");
+    cos_pool_destroy(p);
+}
+
 void test_object_copy(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -813,6 +1077,39 @@ void test_object_copy(CuTest *tc)
     s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertIntEquals(tc, 1, 0 != strcmp(params->etag.data, ""));
+    cos_pool_destroy(p);
+}
+
+
+void test_object_copy2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    cos_str_set(&src_bucket, TEST_BUCKET_NAME);
+    cos_str_set(&src_object, "cos_test_put_object.ts");
+    cos_str_set(&src_endpoint, options->config->endpoint.data);
+
+    cos_copy_object_params_t *params = NULL;
+    params = cos_create_copy_object_params(p);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_copy_object(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+    printf("test_object_copy2 ok\n");
     cos_pool_destroy(p);
 }
 
@@ -849,6 +1146,10 @@ void test_object_bigcopy(CuTest *tc)
 
     s = copy(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, 1);
     CuAssertIntEquals(tc, 200, s->code);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = copy(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, 1);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
     cos_pool_destroy(p);
 }
 
@@ -870,6 +1171,10 @@ void test_presigned_url(CuTest *tc)
 
     res = cos_gen_presigned_url_safe(options, &bucket, &object, 300, HTTP_GET, NULL, NULL, 1, &presigned_url);
     CuAssertIntEquals(tc, 0, res);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    res = cos_gen_presigned_url_safe(options, &bucket, &object, 300, HTTP_GET, NULL, NULL, 1, &presigned_url);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, res);
     
     cos_pool_destroy(p);
     
@@ -893,6 +1198,11 @@ void test_presigned_safe_url(CuTest *tc)
 
     res = cos_gen_presigned_url(options, &bucket, &object, 300, HTTP_GET, &presigned_url);
     CuAssertIntEquals(tc, 0, res);
+    
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    res = cos_gen_presigned_url(options, &bucket, &object, 300, HTTP_GET, &presigned_url);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, res);
     
     cos_pool_destroy(p);
     
@@ -1001,6 +1311,64 @@ void test_object_tagging(CuTest *tc)
     printf("test_object_tagging ok\n");
 }
 
+
+void test_object_tagging2(CuTest *tc)
+{
+    cos_pool_t *pool = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t version_id = cos_string("");
+    cos_tagging_params_t *params = NULL;
+    cos_tagging_params_t *result = NULL;
+    cos_tagging_tag_t *tag = NULL;
+
+    //创建内存池
+    cos_pool_create(&pool, NULL);
+
+    //初始化请求选项
+    options = cos_request_options_create(pool);
+    options->config = cos_config_create(options->pool);
+
+    init_test_request_options(options, is_cname);
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.xxxxxx");
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+
+    // put object tagging
+    params = cos_create_tagging_params(pool);
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "age");
+    cos_str_set(&tag->value, "18");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    tag = cos_create_tagging_tag(pool);
+    cos_str_set(&tag->key, "name");
+    cos_str_set(&tag->value, "xiaoming");
+    cos_list_add_tail(&tag->node, &params->node);
+
+    s = cos_put_object_tagging(options, &bucket, &object, &version_id, NULL, params, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    // get object tagging
+    result = cos_create_tagging_params(pool);
+    s = cos_get_object_tagging(options, &bucket, &object, &version_id, NULL, result, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    // delete tagging
+    s = cos_delete_object_tagging(options, &bucket, &object, &version_id, NULL, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    cos_pool_destroy(pool);
+
+    printf("test_object_tagging2 ok\n");
+}
+
 void test_object_restore(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -1023,6 +1391,10 @@ void test_object_restore(CuTest *tc)
     s = cos_post_object_restore(options, &bucket, &object, restore_params, NULL, NULL, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = cos_post_object_restore(options, &bucket, &object, restore_params, NULL, NULL, &resp_headers); 
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
 
     cos_pool_destroy(p);
 
@@ -1066,6 +1438,11 @@ void test_ci_image_process(CuTest *tc)
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = ci_put_object_from_file(options, &bucket, &object, &file, headers, &resp_headers, &results);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
     cos_pool_destroy(p);
 }
 
@@ -1092,6 +1469,10 @@ void test_ci_media_process_media_info(CuTest *tc)
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = ci_get_media_info(options, &bucket, &object, NULL, &resp_headers, &media_info);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
     // 销毁内存池
     cos_pool_destroy(p);
 }
@@ -1154,6 +1535,50 @@ void test_ci_media_process_snapshot(CuTest *tc)
     cos_pool_destroy(p);
 }
 
+void test_ci_media_process_snapshot2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    cos_list_t download_buffer;
+    cos_string_t object;
+    ci_get_snapshot_request_t *snapshot_request;
+    cos_buf_t *content = NULL;
+    cos_string_t pic_file = cos_string("snapshot.jpg");
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.mp4");
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/55671
+    snapshot_request = ci_snapshot_request_create(p);
+    snapshot_request->time = 7.5;
+    snapshot_request->width = 0;
+    snapshot_request->height = 0;
+    cos_str_set(&snapshot_request->format, "jpg");
+    cos_str_set(&snapshot_request->rotate, "auto");
+    cos_str_set(&snapshot_request->mode, "exactframe");
+    cos_list_init(&download_buffer);
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+
+    s = ci_get_snapshot_to_buffer(options, &bucket, &object, snapshot_request, NULL, &download_buffer, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+
+    s = ci_get_snapshot_to_file(options, &bucket, &object, snapshot_request, NULL, &pic_file, &resp_headers);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
 void test_ci_media_process_media_bucket(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -1186,6 +1611,10 @@ void test_ci_media_process_media_bucket(CuTest *tc)
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = ci_describe_media_buckets(options, media_buckets_request, NULL, &resp_headers, &media_buckets_result);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code); 
     // 销毁内存池
     cos_pool_destroy(p);
 }
@@ -1241,6 +1670,56 @@ void test_ci_video_auditing(CuTest *tc)
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
+    // 销毁内存池
+    cos_pool_destroy(p);
+}
+
+void test_ci_video_auditing2(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0; 
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_table_t *resp_headers;
+    ci_video_auditing_job_options_t *job_options;
+    ci_video_auditing_job_result_t *job_result;
+    ci_auditing_job_result_t *auditing_result;
+
+    // 基本配置
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    options->config = cos_config_create(options->pool);
+    cos_str_set(&options->config->endpoint, TEST_CI_ENDPOINT);     // https://ci.<Region>.myqcloud.com
+    cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
+    cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
+    cos_str_set(&options->config->appid, TEST_APPID);
+    options->config->is_cname = is_cname;
+    options->ctl = cos_http_controller_create(options->pool, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+
+    // 替换为您的配置信息，可参见文档 https://cloud.tencent.com/document/product/436/47316
+    job_options = ci_video_auditing_job_options_create(p);
+    cos_str_set(&job_options->input_object, "test.mp4");
+    cos_str_set(&job_options->job_conf.detect_type, "Porn,Terrorism,Politics,Ads");
+    cos_str_set(&job_options->job_conf.callback_version, "Detail");
+    job_options->job_conf.detect_content = 1;
+    cos_str_set(&job_options->job_conf.snapshot.mode, "Interval");
+    job_options->job_conf.snapshot.time_interval = 1.5;
+    job_options->job_conf.snapshot.count = 10;
+
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    // 提交一个视频审核任务
+    
+    s = ci_create_video_auditing_job(options, &bucket, job_options, NULL, &resp_headers, &job_result);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
+    
+    cos_string_t job_id;
+    cos_str_set(&job_id, "test.mp4");
+    // 获取审核任务结果
+    s = ci_get_auditing_job(options, &bucket, &job_id, NULL, &resp_headers, &auditing_result);
+     CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
     // 销毁内存池
     cos_pool_destroy(p);
 }
@@ -1301,6 +1780,10 @@ void test_ci_image_qrcode(CuTest *tc)
         printf("Point: %s\n", content->point[3].data);
     }
 
+    options->config->access_key_secret.data = "\n";
+    options->config->access_key_secret.len = 1;
+    s = ci_get_qrcode(options, &bucket, &object, 1, NULL, NULL, &resp_headers, &result2);
+    CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, s->code);
     //销毁内存池
     cos_pool_destroy(p); 
 }
@@ -1341,6 +1824,17 @@ CuSuite *test_cos_object()
     SUITE_ADD_TEST(suite, test_object_cleanup); 
     SUITE_ADD_TEST(suite, test_get_object_to_file_with_illega_getobject_key); 
     SUITE_ADD_TEST(suite, test_get_object_to_buffer_with_illega_getobject_key); 
+    SUITE_ADD_TEST(suite, test_get_object_to_file2); 
+    SUITE_ADD_TEST(suite, test_get_object_to_buffer2); 
+    SUITE_ADD_TEST(suite, test_put_object_from_buffer2); 
+    SUITE_ADD_TEST(suite, test_ci_video_auditing2); 
+    SUITE_ADD_TEST(suite, test_ci_media_process_snapshot2); 
+    SUITE_ADD_TEST(suite, test_object_tagging2); 
+    SUITE_ADD_TEST(suite, test_object_copy2); 
+    SUITE_ADD_TEST(suite, test_object_acl2); 
+    SUITE_ADD_TEST(suite, test_append_object_from_file2); 
+    SUITE_ADD_TEST(suite, test_append_object_from_buffer2); 
+    SUITE_ADD_TEST(suite, test_delete_object2); 
 
     return suite;
 }
