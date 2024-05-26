@@ -1035,6 +1035,7 @@ CuSuite *test_cos_multipart()
     SUITE_ADD_TEST(suite, test_multipart_upload_from_file_change_domain);
     SUITE_ADD_TEST(suite, test_upload_file);
     SUITE_ADD_TEST(suite, test_upload_file_failed_without_uploadid);
+    SUITE_ADD_TEST(suite, test_upload_part_copy);
     SUITE_ADD_TEST(suite, test_upload_file_from_recover);
     SUITE_ADD_TEST(suite, test_upload_file_from_recover_failed);
     SUITE_ADD_TEST(suite, test_list_upload_part_with_empty);
