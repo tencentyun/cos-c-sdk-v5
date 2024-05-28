@@ -143,7 +143,14 @@ static int is_ak_or_sk_valid(cos_string_t *str)
     return COS_TRUE;
 }
 
-
+#ifdef MOCK_IS_SHOULD_RETRY
+int is_should_retry(const cos_status_t *s, const char *str){
+    return get_test_retry_change_domin_config();
+}
+int is_should_retry_endpoint(const cos_status_t *s, const char *str){
+    return get_test_retry_change_domin_config();
+}
+#else
 int is_should_retry(const cos_status_t *s, const char *str){
     if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
         if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
@@ -160,6 +167,82 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     }
     return 0;
 }
+#endif
+
+char ** split(const char * s, char delim, int * returnSize) {
+    int n = strlen(s);
+    char ** ans = (char **)malloc(sizeof(char *) * n);
+    int pos = 0;
+    int curr = 0;
+    int len = 0;
+    
+    while (pos < n) {
+        while (pos < n && s[pos] == delim) {
+            ++pos;
+        }
+        curr = pos;
+        while (pos < n && s[pos] != delim) {
+            ++pos;
+        }
+        if (curr < n) {
+            ans[len] = (char *)malloc(sizeof(char) * (pos - curr + 1)); 
+            strncpy(ans[len], s + curr, pos - curr);
+            ans[len][pos - curr] = '\0';
+            ++len;
+        }
+    }
+    *returnSize = len;
+    return ans;
+}
+
+int object_key_simplify_check(const char * path){
+    if (!get_object_key_simplify_check()){
+        return 1;
+    }
+    int namesSize = 0;
+    int n = strlen(path);
+    char ** names = split(path, '/', &namesSize);
+    char ** stack = (char **)malloc(sizeof(char *) * namesSize);
+    int stackSize = 0;
+    int i = 0;
+    for (i = 0; i < namesSize; ++i) {
+        if (!strcmp(names[i], "..")) {
+            if (stackSize > 0) {
+                --stackSize;
+            } 
+        } else if (strcmp(names[i], ".")){
+            stack[stackSize] = names[i];
+            ++stackSize;
+        }
+    }
+
+    char * ans = (char *)malloc(sizeof(char) * (n + 1));
+    int curr = 0;
+    if (stackSize == 0) {
+        ans[curr] = '/';
+        ++curr;
+    } else {
+        for (i = 0; i < stackSize; ++i) {
+            ans[curr] = '/';
+            ++curr;
+            strcpy(ans + curr, stack[i]);
+            curr += strlen(stack[i]);
+        }
+    }
+    ans[curr] = '\0';
+    for (i = 0; i < namesSize; ++i) {
+        free(names[i]);
+    }
+    free(names);
+    free(stack);
+    if (strlen(ans) == 1 && ans[0] == '/'){
+        free(ans);
+        return 0;
+    }
+    free(ans);
+    return 1;
+}
+
 int is_default_endpoint(const char *str){
     if (str == NULL) {
         return 0;
@@ -245,7 +328,7 @@ int is_default_domain(const char *str){
 //     }
 // }
 
-void change_host_suffix(char **endpoint) {
+int change_host_suffix(char **endpoint) {
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
@@ -256,14 +339,16 @@ void change_host_suffix(char **endpoint) {
         size_t new_size = strlen(*endpoint) - old_len + new_len + 1;
         char *new_endpoint = (char *)malloc(new_size);
         if (new_endpoint == NULL) {
-            return;
+            return 0;
         }
 
         strncpy(new_endpoint, *endpoint, strlen(*endpoint) - old_len);
         strncpy(new_endpoint + strlen(*endpoint) - old_len, new_suffix, new_len);
         new_endpoint[new_size - 1] = '\0';
         *endpoint = new_endpoint;
+        return 1;
     }
+    return 0;
 }
 void change_endpoint_suffix(cos_string_t *endpoint) {
     const char *old_suffix = "myqcloud.com";
@@ -288,7 +373,9 @@ void change_endpoint_suffix(cos_string_t *endpoint) {
 }
 
 void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host){
-    free(endpoint->data);
+    if (strlen(endpoint->data) > 13 && strcmp(endpoint->data + strlen(endpoint->data)  - 13, "tencentcos.cn") == 0) {
+        free(endpoint->data);
+    }
     endpoint->data = host;
     endpoint->len = strlen(endpoint->data);
 }
@@ -1474,7 +1561,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
             apr_table_unset(req->headers, "Authorization");
         }
         char *host = req->host;
-        change_host_suffix(&req->host);
+        int malloc_host_flag = change_host_suffix(&req->host);
         reset_list_pos(&req->body);
         req->crc64 = 0;
         res = cos_sign_request(req, options->config);
@@ -1514,7 +1601,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
                 cos_list_del(&b->node);
             }
         }
-        free(req->host);
+        if(malloc_host_flag) free(req->host);
         req->host = host;
     }
     return s;

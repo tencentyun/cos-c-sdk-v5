@@ -1649,6 +1649,12 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
     cos_status_t *s = NULL; 
     cos_string_t checkpoint_path;
 
+    if (!object_key_simplify_check(object->data)){
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
+        return s;
+    }
+
     thread_num = cos_get_thread_num(clt_params);
     part_size = clt_params->part_size;
     part_size = cos_get_safe_size_for_download(part_size);

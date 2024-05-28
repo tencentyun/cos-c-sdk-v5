@@ -5,7 +5,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 set(CMAKE_VERSION 1.0.1)
 
 option(BUILD_UNITTEST "Build unittest" OFF)
-
+if(MOCK_IS_SHOULD_RETRY)
+    # 添加-DMOCK_IS_SHOULD_RETRY
+    add_definitions(-DMOCK_IS_SHOULD_RETRY)
+    message(DMOCK_IS_SHOULD_RETRY)
+endif()
 # default C / CXX flags
 set(CMAKE_C_FLAGS " -g -ggdb -O0 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
 set(CMAKE_CXX_FLAGS " -g -ggdb -O0 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")

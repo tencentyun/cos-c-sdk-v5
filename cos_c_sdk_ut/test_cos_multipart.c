@@ -157,8 +157,148 @@ void test_list_multipart_upload(CuTest *tc)
     printf("test_list_multipart_upload ok\n");    
 }
 
+void test_list_multipart_upload_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name1 = "cos_test_abort_multipart_upload1";
+    char *object_name2 = "cos_test_abort_multipart_upload2";
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_string_t upload_id1;
+    cos_string_t upload_id2;
+    cos_status_t *s = NULL;
+    cos_table_t *resp_headers;
+    cos_list_multipart_upload_params_t *params = NULL;
+    char *expect_next_key_marker = "cos_test_abort_multipart_upload1";
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, object_name1, &upload_id1);
+    
+
+    params = cos_create_list_multipart_upload_params(p);
+    params->max_ret = 1;
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    s = cos_list_multipart_upload(options, &bucket, params, &resp_headers);
+
+
+    cos_list_init(&params->upload_list);
+    if (params->next_key_marker.data) {
+        cos_str_set(&params->key_marker, params->next_key_marker.data);
+    }
+    if (params->next_upload_id_marker.data) {
+        cos_str_set(&params->upload_id_marker, params->next_upload_id_marker.data);
+    }
+
+    s = cos_list_multipart_upload(options, &bucket, params, &resp_headers);
+
+
+    s = abort_test_multipart_upload(options, TEST_BUCKET_NAME, object_name1, &upload_id1);
+    cos_pool_destroy(p);
+
+    printf("test_list_multipart_upload_change_domain ok\n");    
+}
+
+void test_multipart_upload_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "cos_test_multipart_upload";
+    cos_string_t object;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_status_t *s = NULL;
+    cos_list_t buffer;
+    cos_table_t *headers = NULL;
+    cos_table_t *upload_part_resp_headers = NULL;
+    cos_list_upload_part_params_t *params = NULL;
+    cos_table_t *list_part_resp_headers = NULL;
+    cos_string_t upload_id;
+    cos_list_t complete_part_list;
+    cos_list_part_content_t *part_content1 = NULL;
+    cos_list_part_content_t *part_content2 = NULL;
+    cos_complete_part_content_t *complete_content1 = NULL;
+    cos_complete_part_content_t *complete_content2 = NULL;
+    cos_table_t *complete_resp_headers = NULL;
+    cos_table_t *head_resp_headers = NULL;
+    cos_buf_t *content = NULL;
+    int part_num = 1;
+    int part_num1 = 2;
+    char *expect_part_num_marker = "1";
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+
+    headers = cos_table_make(options->pool, 2);
+
+    //init mulitipart
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, object_name, &upload_id);
+   
+    //upload part
+    cos_list_init(&buffer);
+    content = cos_buf_pack(options->pool, cos_palloc(p, 0x300000), 0x300000);
+    cos_list_add_tail(&content->node, &buffer);
+
+    s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
+        part_num, &buffer, &upload_part_resp_headers);
+
+    cos_list_init(&buffer);
+    content = cos_buf_pack(options->pool, cos_palloc(p, 0x200000), 0x200000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_upload_part_from_buffer(options, &bucket, &object, &upload_id,
+        part_num1, &buffer, &upload_part_resp_headers);
+
+    //list part
+    params = cos_create_list_upload_part_params(p);
+    params->max_ret = 1;
+    cos_list_init(&complete_part_list);
+
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+                             params, &list_part_resp_headers);
+
+    cos_list_for_each_entry(cos_list_part_content_t, part_content1, &params->part_list, node) {
+        complete_content1 = cos_create_complete_part_content(p);
+        cos_str_set(&complete_content1->part_number, part_content1->part_number.data);
+        cos_str_set(&complete_content1->etag, part_content1->etag.data);
+        cos_list_add_tail(&complete_content1->node, &complete_part_list);
+    }
+
+    cos_list_init(&params->part_list);
+    if (params->next_part_number_marker.data) {
+        cos_str_set(&params->part_number_marker, params->next_part_number_marker.data);
+    }
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id, params, &list_part_resp_headers);
+
+    cos_list_for_each_entry(cos_list_part_content_t, part_content2, &params->part_list, node) {
+        complete_content2 = cos_create_complete_part_content(p);
+        cos_str_set(&complete_content2->part_number, part_content2->part_number.data);
+        cos_str_set(&complete_content2->etag, part_content2->etag.data);
+        cos_list_add_tail(&complete_content2->node, &complete_part_list);
+    }
+
+    //complete multipart
+    s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
+            &complete_part_list, headers, &complete_resp_headers);
+    //check content type
+    apr_table_clear(headers);
+    s = cos_head_object(options, &bucket, &object, headers, &head_resp_headers);
+
+    cos_pool_destroy(p);
+
+    printf("test_multipart_upload_change_domain ok\n");
+    set_test_retry_change_domin_config(0);
+}
+
 void test_multipart_upload(CuTest *tc)
 {
+    set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload";
@@ -269,6 +409,7 @@ void test_multipart_upload(CuTest *tc)
 
 void test_multipart_upload_from_file(CuTest *tc)
 {
+    set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload_from_file";
@@ -358,8 +499,93 @@ void test_multipart_upload_from_file(CuTest *tc)
     printf("test_multipart_upload_from_file ok\n");
 }
 
+void test_multipart_upload_from_file_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    cos_string_t bucket;
+    char *object_name = "cos_test_multipart_upload_from_file";
+    char *file_path = "test_upload_part_copy.file";
+    FILE* fd = NULL;
+    cos_string_t object;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_status_t *s = NULL;
+    cos_upload_file_t *upload_file = NULL;
+    cos_table_t *upload_part_resp_headers = NULL;
+    cos_list_upload_part_params_t *params = NULL;
+    cos_table_t *list_part_resp_headers = NULL;
+    cos_string_t upload_id;
+    cos_list_t complete_part_list;
+    cos_list_part_content_t *part_content1 = NULL;
+    cos_complete_part_content_t *complete_content1 = NULL;
+    cos_table_t *complete_resp_headers = NULL;
+    cos_string_t data;
+    int part_num = 1;
+    int part_num1 = 2;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+
+    // create multipart upload local file    
+    make_rand_string(p, 1024 * 1024, &data);
+    fd = fopen(file_path, "w");
+    CuAssertTrue(tc, fd != NULL);
+    fwrite(data.data, sizeof(data.data[0]), data.len, fd);
+    fclose(fd);
+
+    //init mulitipart
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, object_name, &upload_id);
+
+    //upload part from file
+    upload_file = cos_create_upload_file(p);
+    cos_str_set(&upload_file->filename, file_path);
+    upload_file->file_pos = 0;
+    upload_file->file_last = 512 * 1024; //200k
+    
+    s = cos_upload_part_from_file(options, &bucket, &object, &upload_id,
+        part_num, upload_file, &upload_part_resp_headers);
+    
+    upload_file->file_pos = 512 *1024;//remain content start pos
+    upload_file->file_last = get_file_size(file_path);
+    
+    s = cos_upload_part_from_file(options, &bucket, &object, &upload_id,
+        part_num1, upload_file, &upload_part_resp_headers);
+    
+    //list part
+    params = cos_create_list_upload_part_params(p);
+    cos_str_set(&params->part_number_marker, "");
+    params->max_ret = 10;
+    params->truncated = 0;
+    cos_list_init(&complete_part_list);
+    
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id, params, &list_part_resp_headers);
+
+
+    cos_list_for_each_entry(cos_list_part_content_t, part_content1, &params->part_list, node) {
+        complete_content1 = cos_create_complete_part_content(p);
+        cos_str_set(&complete_content1->part_number, part_content1->part_number.data);
+        cos_str_set(&complete_content1->etag, part_content1->etag.data);
+        cos_list_add_tail(&complete_content1->node, &complete_part_list);
+    }
+
+    //complete multipart
+    s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
+            &complete_part_list, NULL, &complete_resp_headers);
+
+    remove(file_path);
+    cos_pool_destroy(p);
+
+    printf("test_multipart_upload_from_file_change_domain ok\n");
+    set_test_retry_change_domin_config(0);
+}
+
 void test_upload_part_copy(CuTest *tc)
 {
+    set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     int is_cname = 0;
@@ -802,10 +1028,14 @@ CuSuite *test_cos_multipart()
     SUITE_ADD_TEST(suite, test_multipart_setup);
     SUITE_ADD_TEST(suite, test_init_abort_multipart_upload);
     SUITE_ADD_TEST(suite, test_list_multipart_upload);
+    SUITE_ADD_TEST(suite, test_list_multipart_upload_change_domain);
     SUITE_ADD_TEST(suite, test_multipart_upload);
+    SUITE_ADD_TEST(suite, test_multipart_upload_change_domain);
     SUITE_ADD_TEST(suite, test_multipart_upload_from_file);
+    SUITE_ADD_TEST(suite, test_multipart_upload_from_file_change_domain);
     SUITE_ADD_TEST(suite, test_upload_file);
     SUITE_ADD_TEST(suite, test_upload_file_failed_without_uploadid);
+    SUITE_ADD_TEST(suite, test_upload_part_copy);
     SUITE_ADD_TEST(suite, test_upload_file_from_recover);
     SUITE_ADD_TEST(suite, test_upload_file_from_recover_failed);
     SUITE_ADD_TEST(suite, test_list_upload_part_with_empty);

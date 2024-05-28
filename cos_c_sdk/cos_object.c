@@ -143,6 +143,11 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
                                           cos_table_t **resp_headers)
 {
     cos_status_t *s = NULL;
+    if (!object_key_simplify_check(object->data)){
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
+        return s;
+    }
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     char *error_msg = NULL;
@@ -192,6 +197,11 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
                                         cos_table_t **resp_headers)
 {
     cos_status_t *s = NULL;
+    if (!object_key_simplify_check(object->data)){
+        s = cos_status_create(options->pool);
+        cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
+        return s;
+    }
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     int res = COSE_OK;
@@ -580,14 +590,10 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_acl_parse_from_body(options->pool, &resp->body, acl_param);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -631,14 +637,10 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_copy_object_parse_from_body(options->pool, &resp->body, copy_object_param);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
     return s;
 }
@@ -906,14 +908,10 @@ cos_status_t *cos_get_object_tagging(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     res = cos_get_tagging_parse_from_body(options->pool, &resp->body, tagging_params);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -972,9 +970,7 @@ int cos_gen_sign_string(const cos_request_options_t *options,
     res = cos_get_string_to_sign(options->pool, req->method, &options->config->access_key_id, &options->config->access_key_secret, &canon_res, 
                                  req->headers, req->query_params, expire, signstr);
     
-    if (res != COSE_OK) {
-        return res;
-    }
+    if (res != COSE_OK) return res;
     
     return COSE_OK;
 }
@@ -1008,9 +1004,7 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     cos_str_null(&signstr);
 
     if (!cos_init_object_request(options, bucket, object, method, 
-                            &req, cos_table_make(options->pool, 1), cos_table_make(options->pool, 1), NULL, 0, &resp, &error_msg)) {
-        return COSE_INVALID_ARGUMENT;
-    }
+                            &req, cos_table_make(options->pool, 1), cos_table_make(options->pool, 1), NULL, 0, &resp, &error_msg)) return COSE_INVALID_ARGUMENT;
     if (req->host) {
         apr_table_set(req->headers, COS_HOST, req->host);
     }
@@ -1169,15 +1163,11 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
 
     *results = ci_create_operation_result(options->pool);
     res = ci_get_operation_result_parse_from_body(options->pool, &resp->body, *results);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1198,14 +1188,10 @@ cos_status_t *ci_put_object_from_file(const cos_request_options_t *options,
     cos_list_init(&resp_body);
     s = cos_do_put_object_from_file(options, bucket, object, filename, headers, NULL, NULL, resp_headers, &resp_body);
     
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
     *results = ci_create_operation_result(options->pool);
     res = ci_get_operation_result_parse_from_body(options->pool, &resp_body, *results);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 
@@ -1240,14 +1226,10 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if (!cos_status_is_ok(s)) {
-        return s;
-    }
+    if (!cos_status_is_ok(s)) return s;
     *results = ci_create_qrcode_result(options->pool);
     res = ci_get_qrcode_result_parse_from_body(options->pool, &resp->body, *results);
-    if (res != COSE_OK) {
-        cos_xml_error_status_set(s, res);
-    }
+    if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
 

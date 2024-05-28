@@ -102,6 +102,13 @@ void cos_table_sort_by_dict(cos_table_t *table);
 int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type);
 int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type);
 
+int get_retry_change_domin();
+void set_retry_change_domin(int user_retry_change_domin);
+int get_test_retry_change_domin_config();
+void set_test_retry_change_domin_config(int user_retry_change_domin);
+int get_object_key_simplify_check();
+void set_object_key_simplify_check(int user_object_key_simplify_check);
+
 /*
  * @brief init/deinit sign header table.
 **/

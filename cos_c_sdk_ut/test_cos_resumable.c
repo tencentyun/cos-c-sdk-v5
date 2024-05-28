@@ -501,8 +501,187 @@ void test_resumable_upload_without_checkpoint(CuTest *tc)
     printf("test_resumable_upload_without_checkpoint ok\n");
 }
 
+void test_cos_upload_object_by_part_copy(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t copy_source;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    int length = snprintf(NULL, 0, "%s-%s.%s/test_3M.dat", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    char *result = (char *)malloc(length + 1);
+    snprintf(result, length + 1, "%s-%s.%s/test_3M.dat", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    cos_str_set(&copy_source, result);
+
+    s = cos_upload_object_by_part_copy(options, &copy_source, &bucket, &object, 2);
+    CuAssertIntEquals(tc, 200, s->code);
+    printf("test_cos_upload_object_by_part_copy ok\n");
+    free(result);
+    cos_pool_destroy(p);
+}
+
+void test_cos_upload_object_by_part_copy_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t copy_source;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy.txt");
+    int length = snprintf(NULL, 0, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    char *result = (char *)malloc(length + 1);
+    snprintf(result, length + 1, "%s-%s.%s/cos_test_put_object.ts", TEST_BUCKET_NAME, TEST_APPID, TEST_COS_ENDPOINT);
+    cos_str_set(&copy_source, result);
+
+    s = cos_upload_object_by_part_copy(options, &copy_source, &bucket, &object, 2);
+    printf("test_cos_upload_object_by_part_copy_change_domain ok\n");
+    free(result);
+    cos_pool_destroy(p);
+    set_test_retry_change_domin_config(0);
+}
+
+void test_cos_download_part_to_file(CuTest *tc)
+{
+    set_test_retry_change_domin_config(0);
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_table_t *resp_headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_3M.dat");
+    cos_str_set(&filepath, "download3Mtest.dat");
+
+    s = cos_download_part_to_file(options, &bucket, &object, &filepath, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    printf("test_cos_download_part_to_file ok\n");
+
+    cos_pool_destroy(p);
+}
+
+void test_cos_download_part_to_file_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_table_t *resp_headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_3M.dat");
+    cos_str_set(&filepath, "download3Mtest.dat");
+
+    s = cos_download_part_to_file(options, &bucket, &object, &filepath, &resp_headers);
+    printf("test_cos_download_part_to_file_change_domain ok\n");
+    set_test_retry_change_domin_config(0);
+    cos_pool_destroy(p);
+}
+
+void test_resumable_upload_partsize_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    char *object_name = "test_resumable_upload_partsize.jpg";
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filename;
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    cos_table_t *headers = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t resp_body;
+    cos_request_options_t *options = NULL;
+    cos_resumable_clt_params_t *clt_params;
+    int64_t content_length = 0;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 0);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_list_init(&resp_body);
+    cos_str_set(&filename, test_local_file);
+
+    // upload object with part size 10MB
+    clt_params = cos_create_resumable_clt_params_content(p, 1024 * 1024 * 10, 3, COS_FALSE, NULL);
+    s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
+        clt_params, NULL, &resp_headers, &resp_body);
+
+    cos_pool_destroy(p);
+
+    // head object
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
+
+    content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
+    printf("test_resumable_upload_partsize len%d\n",content_length);
+    printf("test_resumable_upload_partsize size%d\n",get_file_size(test_local_file));
+
+    cos_pool_destroy(p);
+
+    // upload object with part size 200K
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 0);
+
+    clt_params = cos_create_resumable_clt_params_content(p, 1024 * 200, 3, COS_FALSE, NULL);
+    s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
+        clt_params, NULL, &resp_headers, &resp_body);
+    cos_pool_destroy(p);
+
+    // head object
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    s = cos_head_object(options, &bucket, &object, NULL, &resp_headers);
+
+    content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
+    printf("test_resumable_upload_partsize_change_domain len%d\n",content_length);
+    printf("test_resumable_upload_partsize_change_domain size%d\n",get_file_size(test_local_file));
+
+    cos_pool_destroy(p);
+    set_test_retry_change_domin_config(0);
+
+    printf("test_resumable_upload_partsize_change_domain ok\n");
+}
+
 void test_resumable_upload_partsize(CuTest *tc)
 {
+    set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     char *object_name = "test_resumable_upload_partsize.jpg";
     cos_string_t bucket;
@@ -1248,8 +1427,47 @@ void test_resumable_download_file_with_cp(CuTest *tc)
     cos_pool_destroy(p);
 }
 
+void test_resumable_download_file_with_cp_change_domain(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t filepath;
+    cos_resumable_clt_params_t *clt_params;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *str = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "3m.bin");
+
+    cos_list_init(&buffer);
+    str = cos_palloc(p, 0x300000);
+    content = cos_buf_pack(options->pool, str, 0x300000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &object, &buffer, NULL, &resp_headers);
+
+    clt_params = cos_create_resumable_clt_params_content(p, 1*1024*1024, 3, COS_TRUE, NULL);
+    s = cos_resumable_download_file(options, &bucket, &object, &object, NULL, NULL, clt_params, NULL);
+
+    s = cos_delete_object(options, &bucket, &object, &resp_headers);
+
+    cos_pool_destroy(p);
+    set_test_retry_change_domin_config(0);
+    printf("test_resumable_download_file_with_cp_change_domain ok\n");
+}
+
 void test_resumable_copy_mt(CuTest *tc)
 {
+    set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1284,6 +1502,44 @@ void test_resumable_copy_mt(CuTest *tc)
     cos_pool_destroy(p);
 }
 
+void test_resumable_copy_mt_change_domin(CuTest *tc)
+{
+    set_test_retry_change_domin_config(1);
+    get_retry_change_domin();
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_status_t *s = NULL;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t *resp_headers = NULL;
+    cos_list_t buffer;
+    cos_buf_t *content = NULL;
+    char *str = NULL;
+   
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test_copy_dst.txt");
+    cos_str_set(&src_object, "test_copy_src.txt");
+    cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
+
+    cos_list_init(&buffer);
+    str = cos_palloc(p, 0x500000);
+    content = cos_buf_pack(options->pool, str, 0x500000);
+    cos_list_add_tail(&content->node, &buffer);
+    s = cos_put_object_from_buffer(options, &bucket, &src_object, &buffer, NULL, &resp_headers);
+
+    s = cos_upload_object_by_part_copy_mt(options, &bucket, &src_object, &src_endpoint, &bucket, &object, 1024*1024, 3, NULL);
+    set_test_retry_change_domin_config(0);
+    cos_pool_destroy(p);
+    printf("test_resumable_copy_mt_change_domin ok\n");
+}
+
 
 CuSuite *test_cos_resumable()
 {
@@ -1291,7 +1547,9 @@ CuSuite *test_cos_resumable()
 
     SUITE_ADD_TEST(suite, test_resumable_setup);
     SUITE_ADD_TEST(suite, test_resumable_copy_mt);
+    SUITE_ADD_TEST(suite, test_resumable_copy_mt_change_domin);
     SUITE_ADD_TEST(suite, test_resumable_download_file_with_cp);
+    SUITE_ADD_TEST(suite, test_resumable_download_file_with_cp_change_domain);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_thread_num);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_checkpoint_path);
     SUITE_ADD_TEST(suite, test_resumable_cos_get_file_info);
@@ -1303,6 +1561,11 @@ CuSuite *test_cos_resumable()
     SUITE_ADD_TEST(suite, test_resumable_upload_without_checkpoint);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint);
     SUITE_ADD_TEST(suite, test_resumable_upload_partsize);
+    SUITE_ADD_TEST(suite, test_resumable_upload_partsize_change_domain);
+    SUITE_ADD_TEST(suite, test_cos_download_part_to_file);
+    SUITE_ADD_TEST(suite, test_cos_download_part_to_file_change_domain);
+    SUITE_ADD_TEST(suite, test_cos_upload_object_by_part_copy);
+    SUITE_ADD_TEST(suite, test_cos_upload_object_by_part_copy_change_domain);
     SUITE_ADD_TEST(suite, test_resumable_upload_threads);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint_format_invalid);
     SUITE_ADD_TEST(suite, test_resumable_upload_with_checkpoint_path_invalid);
