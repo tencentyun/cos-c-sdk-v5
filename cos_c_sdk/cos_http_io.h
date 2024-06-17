@@ -18,6 +18,7 @@ static APR_INLINE const char *cos_http_controller_get_reason(cos_http_controller
 
 CURL *cos_request_get();
 void request_release(CURL *request);
+void request_release2(cos_curl_http_transport_t* t);
 
 int cos_http_io_initialize(const char *user_agent_info, int flag);
 void cos_http_io_deinitialize();

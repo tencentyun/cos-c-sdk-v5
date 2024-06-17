@@ -63,6 +63,27 @@ void request_release(CURL *request)
     }
 }
 
+void request_release2(cos_curl_http_transport_t* t)
+{
+    CURL* request = t->curl;
+    CURLcode code = t->curl_code;
+    apr_thread_mutex_lock(requestStackMutexG);
+
+    // If the request stack is full, destroy this one
+    // else put this one at the front of the request stack; we do this because
+    // we want the most-recently-used curl handle to be re-used on the next
+    // request, to maximize our chances of re-using a TCP connection before it
+    // times out
+    if (requestStackCountG == COS_REQUEST_STACK_SIZE || code != CURLE_OK) {
+        apr_thread_mutex_unlock(requestStackMutexG);
+        curl_easy_cleanup(request);
+    }
+    else {
+        requestStackG[requestStackCountG++] = request;
+        apr_thread_mutex_unlock(requestStackMutexG);
+    }
+}
+
 void cos_set_default_request_options(cos_http_request_options_t *op)
 {
     cos_default_http_request_options = op;
