@@ -152,8 +152,8 @@ cos_http_transport_t *cos_curl_http_transport_create(cos_pool_t *p)
     cos_fstack_push(t->cleanup, t, func, 1);
     
     t->curl = cos_request_get();
-    func.func1 = (cos_func1_pt)request_release;
-    cos_fstack_push(t->cleanup, t->curl, func, 1);
+    func.func1 = (cos_func1_pt)request_release2;
+    cos_fstack_push(t->cleanup, t, func, 1);
 
     t->header_callback = cos_curl_default_header_callback;
     t->read_callback = cos_curl_default_read_callback;
@@ -487,7 +487,8 @@ int cos_curl_http_transport_perform(cos_http_transport_t *t_)
     code = curl_easy_perform(t->curl);
     t->controller->finish_time = apr_time_now();
     cos_move_transport_state(t, TRANS_STATE_DONE);
-
+    
+    t->curl_code = code;
     if ((code != CURLE_OK) && (t->controller->error_code == COSE_OK)) {
         ecode = cos_curl_code_to_status(code);
         if (ecode != COSE_OK) {
