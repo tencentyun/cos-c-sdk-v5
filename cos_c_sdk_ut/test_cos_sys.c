@@ -45,6 +45,38 @@ void test_cos_status_parse_from_body(CuTest *tc){
     {
         cos_list_t body;
         cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status><Name>test</Name><ETag>test</ETag><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
+        CuAssertIntEquals(tc, res, COS_TRUE);
+        printf("test_cos_status_parse_from_body 400 1ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
+        const char *buffer = "<root><Status>active</Status><Name>test</Name><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+
+        cos_buf_t *b;
+        int len = strlen(buffer);
+        b = cos_create_buf(pool, len);
+        memcpy(b->pos, buffer, len);
+        b->last += len;
+        cos_list_add_tail(&b->node, &body);
+        cos_status_t s;
+        int res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
+        CuAssertIntEquals(tc, res, COS_FALSE);
+        printf("test_cos_status_parse_from_body 400 1ok\n");
+    }
+    {
+        cos_list_t body;
+        cos_list_init(&body);
         const char *buffer = "<root><Status>active</Status></root>";
 
         cos_buf_t *b;

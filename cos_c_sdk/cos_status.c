@@ -15,6 +15,7 @@ const char COS_INCONSISTENT_ERROR_CODE[] = "InconsistentError";
 const char COS_CREATE_QUEUE_ERROR_CODE[] = "CreateQueueFail";
 const char COS_CREATE_THREAD_POOL_ERROR_CODE[] = "CreateThreadPoolFail";
 const char COS_LACK_OF_CONTENT_LEN_ERROR_CODE[] = "LackOfContentLength";
+const char COS_SERVER_ERROR_CODE[] = "ServerError";
 
 
 cos_status_t *cos_status_create(cos_pool_t *p)
@@ -28,6 +29,7 @@ cos_status_t *cos_status_dup(cos_pool_t *p, cos_status_t *src)
     dst->code = src->code;
     dst->error_code = apr_pstrdup(p, src->error_code);
     dst->error_msg = apr_pstrdup(p, src->error_msg);
+    dst->req_id = apr_pstrdup(p, src->req_id);
     return dst;
 }
 
