@@ -888,6 +888,7 @@ void test_resumable_upload_with_checkpoint(CuTest *tc)
     cos_str_set(&filename, test_local_file);
 
     // upload object
+    apr_table_addn(headers, "test-header", "testheader");
     clt_params = cos_create_resumable_clt_params_content(p, 1024 * 100, 3, COS_TRUE, NULL);
     s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
         clt_params, NULL, &resp_headers, &resp_body);
