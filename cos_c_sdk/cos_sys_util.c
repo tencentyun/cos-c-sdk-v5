@@ -557,16 +557,16 @@ int cos_url_decode(const char *in, char *out)
 }
 
 /*
- * Convert a string to a long long integer.
+ * Convert a string to a int64_t integer.
  *
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-long long cos_strtoll(const char *nptr, char **endptr, int base)
+int64_t cos_strtoll(const char *nptr, char **endptr, int base)
 {
     const char *s;
     /* LONGLONG */
-    long long int acc, cutoff;
+    int64_t acc, cutoff;
     int c;
     int neg, any, cutlim;
 
@@ -610,7 +610,7 @@ long long cos_strtoll(const char *nptr, char **endptr, int base)
      * followed by a legal input character, is too big.  One that
      * is equal to this value may be valid or not; the limit
      * between valid and invalid numbers is then based on the last
-     * digit.  For instance, if the range for long longs is
+     * digit.  For instance, if the range for int64_ts is
      * [-9223372036854775808..9223372036854775807] and the input base
      * is 10, cutoff will be set to 922337203685477580 and cutlim to
      * either 7 (neg==0) or 8 (neg==1), meaning that if we have
@@ -675,10 +675,10 @@ int64_t cos_atoi64(const char *nptr)
     return cos_strtoull(nptr, NULL, 10);
 }
 
-unsigned long long cos_strtoull(const char *nptr, char **endptr, int base)
+uint64_t cos_strtoull(const char *nptr, char **endptr, int base)
 {
     const char *s;
-    unsigned long long acc, cutoff;
+    uint64_t acc, cutoff;
     int c;
     int neg, any, cutlim;
 
@@ -706,8 +706,8 @@ unsigned long long cos_strtoull(const char *nptr, char **endptr, int base)
     if (base == 0)
         base = c == '0' ? 8 : 10;
 
-    cutoff = ULLONG_MAX / (unsigned long long)base;
-    cutlim = ULLONG_MAX % (unsigned long long)base;
+    cutoff = ULLONG_MAX / (uint64_t)base;
+    cutlim = ULLONG_MAX % (uint64_t)base;
     for (acc = 0, any = 0;; c = (unsigned char) *s++) {
         if (isdigit(c))
             c -= '0';
@@ -725,7 +725,7 @@ unsigned long long cos_strtoull(const char *nptr, char **endptr, int base)
             errno = ERANGE;
         } else {
             any = 1;
-            acc *= (unsigned long long)base;
+            acc *= (uint64_t)base;
             acc += c;
         }
     }

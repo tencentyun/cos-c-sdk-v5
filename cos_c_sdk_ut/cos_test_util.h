@@ -47,7 +47,7 @@ cos_status_t *init_test_multipart_upload(const cos_request_options_t *options, c
 cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options, const char *bucket_name,
     const char *object_name, cos_string_t *upload_id);
 
-unsigned long get_file_size(const char *file_path);
+int64_t get_file_size(const char *file_path);
 
 char *decrypt(const char *encrypted_str, cos_pool_t *pool);
 
