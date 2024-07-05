@@ -478,6 +478,7 @@ void test_resumable_upload_without_checkpoint(CuTest *tc)
     cos_str_set(&filename, "../../../cos_c_sdk_ut/test_3M.dat");
 
     // upload object
+    apr_table_addn(headers, "test-header", "testheader");
     clt_params = cos_create_resumable_clt_params_content(p, 1024 * 1024, 4, COS_FALSE, NULL);
     s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
         clt_params, NULL, &resp_headers, &resp_body);

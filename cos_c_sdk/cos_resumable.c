@@ -503,6 +503,20 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
     cos_build_thread_params(thr_params, part_num, parent_pool, options, bucket, object, filepath,
                              headers , params, &upload_id, parts, results);
     
+    //提前拷贝header
+    int pos;
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+    cos_table_t *cb_headers_temp = NULL;
+    if ( headers != NULL){
+        cb_headers_temp = cos_table_make(parent_pool, 1);
+        tarr = cos_table_elts(headers);
+        telts = (cos_table_entry_t*)tarr->elts;
+        for (pos = 0; pos < tarr->nelts; ++pos) {
+            apr_table_set(cb_headers_temp, telts[pos].key, telts[pos].val);
+        }
+    }
+
     // init upload
     cos_pool_create(&subpool, parent_pool);
     options->pool = subpool;
@@ -600,6 +614,15 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
             apr_table_set(cb_headers, COS_CALLBACK_VAR, apr_table_get(headers, COS_CALLBACK_VAR));
         }
     }
+    //增加header复用逻辑
+    if (cb_headers_temp != NULL){
+        if (cb_headers == NULL) cb_headers = cos_table_make(subpool, 1);
+        tarr = cos_table_elts(cb_headers_temp);
+        telts = (cos_table_entry_t*)tarr->elts;
+        for (pos = 0; pos < tarr->nelts; ++pos) {
+            apr_table_set(cb_headers, telts[pos].key, telts[pos].val);
+        }
+    }
     s = cos_do_complete_multipart_upload(options, bucket, object, &upload_id, 
         &completed_part_list, cb_headers, NULL, resp_headers, resp_body);
     s = cos_status_dup(parent_pool, s);
@@ -663,6 +686,19 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
                 need_init_upload = COS_FALSE;
         } else {
             apr_file_remove(checkpoint_path->data, parent_pool);
+        }
+    }
+    //提前拷贝header
+    int pos;
+    const cos_array_header_t *tarr;
+    const cos_table_entry_t *telts;
+    cos_table_t *cb_headers_temp = NULL;
+    if ( headers != NULL){
+        cb_headers_temp = cos_table_make(parent_pool, 1);
+        tarr = cos_table_elts(headers);
+        telts = (cos_table_entry_t*)tarr->elts;
+        for (pos = 0; pos < tarr->nelts; ++pos) {
+            apr_table_set(cb_headers_temp, telts[pos].key, telts[pos].val);
         }
     }
 
@@ -799,6 +835,15 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
         apr_table_set(cb_headers, COS_CALLBACK, apr_table_get(headers, COS_CALLBACK));
         if (NULL != apr_table_get(headers, COS_CALLBACK_VAR)) {
             apr_table_set(cb_headers, COS_CALLBACK_VAR, apr_table_get(headers, COS_CALLBACK_VAR));
+        }
+    }
+    //增加header复用逻辑
+    if (cb_headers_temp != NULL){
+        if (cb_headers == NULL) cb_headers = cos_table_make(subpool, 1);
+        tarr = cos_table_elts(cb_headers_temp);
+        telts = (cos_table_entry_t*)tarr->elts;
+        for (pos = 0; pos < tarr->nelts; ++pos) {
+            apr_table_set(cb_headers, telts[pos].key, telts[pos].val);
         }
     }
     s = cos_do_complete_multipart_upload(options, bucket, object, &upload_id, 
