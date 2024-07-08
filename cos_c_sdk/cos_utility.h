@@ -30,6 +30,7 @@ int is_cos_domain(const cos_string_t *str);
 int is_should_retry(const cos_status_t *s, const char *str);
 int is_default_domain(const char *str);
 int is_should_retry_endpoint(const cos_status_t *s, const char *str);
+int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *target);
 int is_default_endpoint(const char *str);
 int change_host_suffix(char **endpoint);
 void change_endpoint_suffix(cos_string_t *endpoint);

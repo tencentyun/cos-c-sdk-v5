@@ -54,6 +54,7 @@ extern const char COS_INCONSISTENT_ERROR_CODE[];
 extern const char COS_CREATE_QUEUE_ERROR_CODE[];
 extern const char COS_CREATE_THREAD_POOL_ERROR_CODE[];
 extern const char COS_LACK_OF_CONTENT_LEN_ERROR_CODE[];
+extern const char COS_SERVER_ERROR_CODE[];
 
 COS_CPP_END
 

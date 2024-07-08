@@ -227,9 +227,9 @@ cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options,
     return s;
 }
 
-unsigned long get_file_size(const char *file_path)
+int64_t get_file_size(const char *file_path)
 {
-    unsigned long filesize = -1; 
+    int64_t filesize = -1; 
     struct stat statbuff;
 
     if(stat(file_path, &statbuff) < 0){

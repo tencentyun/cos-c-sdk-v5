@@ -1387,9 +1387,9 @@ void make_rand_string(cos_pool_t *p, int len, cos_string_t *data)
     cos_str_set(data, str);
 }
 
-unsigned long get_file_size(const char *file_path)
+int64_t get_file_size(const char *file_path)
 {
-    unsigned long filesize = -1; 
+    int64_t filesize = -1; 
     struct stat statbuff;
 
     if(stat(file_path, &statbuff) < 0){

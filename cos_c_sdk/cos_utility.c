@@ -169,6 +169,25 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 }
 #endif
 
+
+int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
+    cos_list_t *current = body->next;
+    int target_len = strlen(target);
+    while (current != body)
+    {
+        cos_buf_t *buf = (cos_buf_t *)current;
+        uint8_t *p;
+        for (p = buf->start; p < buf->last - target_len +1 ; ++p)
+        {
+            if (memcmp(p, target, target_len) == 0) {
+                return COS_TRUE;
+            }
+        }
+        current = current->next;
+    }
+    return COS_FALSE;
+}
+
 char ** split(const char * s, char delim, int * returnSize) {
     int n = strlen(s);
     char ** ans = (char **)malloc(sizeof(char *) * n);

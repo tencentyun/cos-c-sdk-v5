@@ -68,7 +68,7 @@ int cos_url_decode(const char *in, char *out);
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-long long cos_strtoll(const char *nptr, char **endptr, int base);
+int64_t cos_strtoll(const char *nptr, char **endptr, int base);
 
 /*
  * @brief Convert a string to int64_t.
@@ -81,7 +81,7 @@ int64_t cos_atoi64(const char *nptr);
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
 **/
-unsigned long long cos_strtoull(const char *nptr, char **endptr, int base);
+uint64_t cos_strtoull(const char *nptr, char **endptr, int base);
 
 /*
  * @brief Convert a string to uint64_t.
