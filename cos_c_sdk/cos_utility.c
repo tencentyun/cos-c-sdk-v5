@@ -169,7 +169,6 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 }
 #endif
 
-
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
     cos_list_t *current = body->next;
     int target_len = strlen(target);
@@ -214,11 +213,20 @@ char ** split(const char * s, char delim, int * returnSize) {
     return ans;
 }
 
-int object_key_simplify_check(const char * path){
+int object_key_simplify_check(const char * object_path){
     if (!get_object_key_simplify_check()){
         return 1;
     }
     int namesSize = 0;
+    char *path;
+    if (object_path[0] == '/'){
+        path = (char *)malloc(sizeof(char *) * (strlen(object_path) + 1));
+        strcpy(path, object_path);
+    }else {
+        path = (char *)malloc(sizeof(char *) * (strlen(object_path) + 2));
+        path[0] = '/';
+        strcpy(path + 1, object_path);
+    }
     int n = strlen(path);
     char ** names = split(path, '/', &namesSize);
     char ** stack = (char **)malloc(sizeof(char *) * namesSize);
@@ -254,6 +262,7 @@ int object_key_simplify_check(const char * path){
     }
     free(names);
     free(stack);
+    free(path);
     if (strlen(ans) == 1 && ans[0] == '/'){
         free(ans);
         return 0;
