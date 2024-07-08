@@ -169,6 +169,7 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 }
 #endif
 
+
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
     cos_list_t *current = body->next;
     int target_len = strlen(target);
