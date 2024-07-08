@@ -217,7 +217,7 @@ size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t nitems
 
 static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t)
 {
-    long http_code;
+    int32_t http_code;
     CURLcode code;
     const char *value;
 

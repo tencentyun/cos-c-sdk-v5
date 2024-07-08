@@ -642,6 +642,9 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     res = cos_copy_object_parse_from_body(options->pool, &resp->body, copy_object_param);
     if (res != COSE_OK) cos_xml_error_status_set(s, res);
 
+    if (resp->body_len == 0 || check_status_with_resp_body(&resp->body, resp->body_len, "ETag") != COS_TRUE){
+        cos_status_set(s, COSE_SERVICE_ERROR, COS_SERVER_ERROR_CODE, "Server Error");
+    }
     return s;
 }
 
