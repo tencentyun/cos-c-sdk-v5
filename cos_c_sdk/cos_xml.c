@@ -2012,7 +2012,7 @@ void cos_object_key_parse(cos_pool_t *p, mxml_node_t * xml_node,
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         encoded_key = (char*)node_content;
-        key = (char *) cos_palloc(p, strlen(encoded_key));
+        key = (char *) cos_palloc(p, strlen(encoded_key) + 1);
         cos_url_decode(encoded_key, key);
         cos_str_set(&content->key, key);
     }
