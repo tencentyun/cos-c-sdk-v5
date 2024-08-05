@@ -8,7 +8,7 @@
 
 /**
  * 本样例演示了如何使用 COS C SDK 进行对象复制和移动
- * 包括：普通复制、分块复制
+ * 包括：高级复制、普通复制、分块复制
  */
 
 // COS 的 bucket 名称, [bucket]-[appid], 如: mybucket-1253666666，可在 https://console.cloud.tencent.com/cos5/bucket 查看
@@ -46,6 +46,50 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->error_msg: %s", s->error_msg);
     if (s->req_id)
         cos_warn_log("status->req_id: %s", s->req_id);
+}
+
+void copy_demo(){
+    char object_name[] = "test_dst.txt";      // 目标对象名称
+    char* src_bucket_name = bucket_name;     // 复制源 bucket 名称
+    char src_object_name[] = "test_src.txt";  // 复制源对象名称
+    char* src_endpoint_str = endpoint;       // 复制源endpoint
+    int thread_nums = 2; // 复制线程数
+
+    cos_pool_t* p = NULL;
+    cos_status_t* s = NULL;
+    cos_request_options_t* options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t src_bucket;
+    cos_string_t src_object;
+    cos_string_t src_endpoint;
+    cos_table_t* resp_headers = NULL;
+
+    // 创建内存池
+    cos_pool_create(&p, NULL);
+
+    // 初始化请求选项
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, bucket_name);
+
+    // 设置对象复制
+    cos_str_set(&object, object_name);
+    cos_str_set(&src_bucket, src_bucket_name);
+    cos_str_set(&src_endpoint, src_endpoint_str);
+    cos_str_set(&src_object, src_object_name);
+    
+
+    s = copy(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, thread_nums);
+    log_status(s);
+    if (cos_status_is_ok(s)) {
+        printf("put object copy succeeded\n");
+    } else {
+        printf("put object copy failed\n");
+    }
+
+    // 销毁内存池
+    cos_pool_destroy(p);
 }
 
 void copy_object_demo() {
@@ -220,6 +264,7 @@ int main() {
     }
     // set log level, default COS_LOG_WARN
     cos_log_set_level(COS_LOG_WARN);
+    copy_demo();
     copy_object_demo();
     part_copy_demo();
     // cos_http_io_deinitialize last
