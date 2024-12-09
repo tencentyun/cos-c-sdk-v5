@@ -122,6 +122,7 @@ static char *cos_invaild_params_error_msg[] = {
     "bucket is null or empty, please check it",
     "ak is start with space or end with space, please check it",
     "sk is start with space or end with space, please check it",
+    "bucket is nillegal, please check it",
 };
 
 static uintptr_t ignore_bucket_check_ptr = -1;
@@ -141,6 +142,54 @@ static int is_ak_or_sk_valid(cos_string_t *str)
     }
 
     return COS_TRUE;
+}
+
+int is_alnum(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+}
+
+int matches_pattern_2(cos_string_t* str) {
+    if (str->len != 1 || !is_alnum(str->data[0])) {
+        return COS_FALSE;
+    }
+    return COS_TRUE;
+}
+
+int matches_pattern_1(cos_string_t* str) {
+    if (str->len  == 0) {
+        return COS_FALSE;
+    }
+
+    // 检查第一个字符是否为字母或数字
+    if (!is_alnum(str->data[0])) {
+        return COS_FALSE;
+    }
+
+    // 检查最后一个字符是否为字母或数字
+    if (!is_alnum(str->data[str->len - 1])) {
+        return COS_FALSE;
+    }
+
+    // 检查中间字符是否为字母、数字或短横线
+    int i = 1;
+    for (i = 1; i < str->len - 1; ++i) {
+        char c = str->data[i];
+        if (!is_alnum(c) && c != '-') {
+            return COS_FALSE;
+        }
+    }
+
+    return COS_TRUE;
+}
+
+int check_bucket(cos_string_t* bucket) {
+    if (matches_pattern_1(bucket)) {
+        return COS_TRUE;
+    }
+    if (matches_pattern_2(bucket)) {
+        return COS_TRUE;
+    }
+    return COS_FALSE;
 }
 
 #ifdef MOCK_IS_SHOULD_RETRY
@@ -429,6 +478,11 @@ static int is_config_params_vaild(const cos_request_options_t *options,
     }
     if (!is_ak_or_sk_valid(&options->config->access_key_secret)) {
         *error_msg = cos_invaild_params_error_msg[4];
+        cos_error_log("config params invaild, msg: %s", *error_msg);
+        return COS_FALSE;
+    }
+    if ((uintptr_t)bucket != ignore_bucket_check_ptr && !check_bucket(bucket)) {
+        *error_msg = cos_invaild_params_error_msg[5];
         cos_error_log("config params invaild, msg: %s", *error_msg);
         return COS_FALSE;
     }
