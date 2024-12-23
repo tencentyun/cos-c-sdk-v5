@@ -7,8 +7,7 @@
 #include "cos_log.h"
 
 /**
- * 本样例演示了如何使用 COS C SDK 进行对象上传
- * 包括：上传本地文件、上传 buffer 中数据、上传目录类型、高级上传、分块上传和取消分块上传
+ * 本样例演示了如何使用 COS C SDK 创建存储桶
  */
 
 // COS 的 bucket 名称, [bucket]-[appid], 如: mybucket-1253666666，可在 https://console.cloud.tencent.com/cos5/bucket 查看
