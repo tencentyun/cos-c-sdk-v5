@@ -240,7 +240,8 @@ int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_str
 static int is_sign_header(const char *header)
 {
     return (apr_table_get(g_sign_header_table, header) != NULL) || 
-            (strstr(header, X_COS_HEADER) == header);
+            (strstr(header, X_COS_HEADER) == header) ||
+            (strstr(header, X_CI_HEADER) == header);
 }
 
 static int is_empty_header_value(char *value)
