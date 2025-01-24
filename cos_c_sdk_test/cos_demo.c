@@ -1089,7 +1089,7 @@ void test_cos_download_part_to_file()
     cos_str_set(&object, TEST_MULTIPART_OBJECT4);
     cos_str_set(&filepath, TEST_DOWNLOAD_NAME4);
 
-    s = cos_download_part_to_file(options, &bucket, &object, &filepath, &resp_headers);
+    s = cos_download_part_to_file(options, &bucket, &object, (cos_upload_file_t*) &filepath, &resp_headers);
     log_status(s);
 
     cos_pool_destroy(p);
