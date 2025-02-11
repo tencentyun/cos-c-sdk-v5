@@ -47,7 +47,8 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
-    cos_write_request_body_from_buffer(buffer, req);
+    // cos_write_request_body_from_buffer(buffer, req);
+    cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_body(resp, resp_body);
@@ -104,7 +105,8 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    res = cos_write_request_body_from_file(options->pool, filename, req);
+    // res = cos_write_request_body_from_file(options->pool, filename, req);
+    res = cos_write_request_body_from_file(options->pool, filename, req, headers);
     if (res != COSE_OK) {
         cos_file_error_status_set(s, res);
         return s;
@@ -365,7 +367,8 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
-    cos_write_request_body_from_buffer(buffer, req);
+    // cos_write_request_body_from_buffer(buffer, req);
+    cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
@@ -406,7 +409,8 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
-    cos_write_request_body_from_buffer(buffer, req);
+    // cos_write_request_body_from_buffer(buffer, req);
+    cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
@@ -449,7 +453,8 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
-    res = cos_write_request_body_from_file(options->pool, append_file, req);
+    // res = cos_write_request_body_from_file(options->pool, append_file, req);
+    res = cos_write_request_body_from_file(options->pool, append_file, req, headers);
 
     s = cos_status_create(options->pool);
     if (res != COSE_OK) {
@@ -497,7 +502,8 @@ cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *option
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
     }
-    res = cos_write_request_body_from_file(options->pool, append_file, req);
+    // res = cos_write_request_body_from_file(options->pool, append_file, req);
+    res = cos_write_request_body_from_file(options->pool, append_file, req, headers);
 
     s = cos_status_create(options->pool);
     if (res != COSE_OK) {
@@ -808,7 +814,8 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     b64_value[b64_len] = '\0';
     apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
     
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
@@ -875,7 +882,8 @@ cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1162,6 +1170,13 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
+    }
+
+    //add Content-Length
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(options->pool, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
     }
 
     s = cos_process_request(options, req, resp, 1);

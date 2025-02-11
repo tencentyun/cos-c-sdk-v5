@@ -37,6 +37,13 @@ cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
         return s;
     }
 
+    //add Content-Length
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(options->pool, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
+    }
+
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
@@ -74,6 +81,13 @@ cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *op
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
+    }
+    
+    //add Content-Length
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(options->pool, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
     }
 
     s = cos_process_request(options, req, resp, 0);
@@ -282,7 +296,8 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
     }
 
     build_complete_multipart_upload_body(options->pool, part_list, &body);
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
     s = cos_process_request(options, req, resp, 0); 
     if(is_should_retry(s, req->host)){
@@ -308,7 +323,8 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
             return s;
         }
         build_complete_multipart_upload_body(options->pool, part_list, &body);
-        cos_write_request_body_from_buffer(&body, req);
+        // cos_write_request_body_from_buffer(&body, req);
+        cos_write_request_body_from_buffer(options->pool, &body, req, headers);
         ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
         s = cos_process_request(options, req, resp, 0); 
         clear_change_endpoint_suffix(&options->config->endpoint, host);
@@ -368,7 +384,8 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
         return s;
     }
 
-    cos_write_request_body_from_buffer(buffer, req);
+    // cos_write_request_body_from_buffer(buffer, req);
+    cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
@@ -430,7 +447,8 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+    // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+    res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
     if (res != COSE_OK) {
         cos_file_error_status_set(s, res);
         return s;
@@ -462,7 +480,8 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
             return s;
         }
 
-        res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+        // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+        res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
         if (res != COSE_OK) {
             cos_file_error_status_set(s, res);
             return s;
@@ -519,7 +538,8 @@ cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t 
         return s;
     }
 
-    res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+    // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
+    res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
     if (res != COSE_OK) {
         cos_file_error_status_set(s, res);
         return s;

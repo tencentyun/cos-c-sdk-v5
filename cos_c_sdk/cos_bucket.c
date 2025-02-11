@@ -290,7 +290,8 @@ cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
     b64_value[b64_len] = '\0';
     apr_table_addn(pHeaders, COS_CONTENT_MD5, b64_value);
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
@@ -521,7 +522,8 @@ cos_status_t *cos_put_bucket_lifecycle(const cos_request_options_t *options,
     b64_value[b64_len] = '\0';
     apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
     
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -640,7 +642,8 @@ cos_status_t *cos_put_bucket_cors(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -762,7 +765,8 @@ cos_status_t *cos_put_bucket_versioning
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -856,7 +860,8 @@ cos_status_t *cos_put_bucket_replication
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -977,7 +982,8 @@ cos_status_t *cos_put_bucket_website(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1089,7 +1095,8 @@ cos_status_t *cos_put_bucket_domain(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1174,7 +1181,8 @@ cos_status_t *cos_put_bucket_logging(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1259,7 +1267,8 @@ cos_status_t *cos_put_bucket_inventory(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1416,7 +1425,8 @@ cos_status_t *cos_put_bucket_tagging(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1527,7 +1537,8 @@ cos_status_t *cos_put_bucket_referer(const cos_request_options_t *options,
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -1611,7 +1622,9 @@ cos_status_t *cos_put_bucket_intelligenttiering(const cos_request_options_t *opt
 
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    cos_write_request_body_from_buffer(&body, req);
+    // cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
+
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 

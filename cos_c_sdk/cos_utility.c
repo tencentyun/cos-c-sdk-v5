@@ -847,16 +847,25 @@ void cos_get_rtmp_uri(const cos_request_options_t *options,
 }
 #endif
 
-void cos_write_request_body_from_buffer(cos_list_t *buffer, 
-                                        cos_http_request_t *req)
+void cos_write_request_body_from_buffer(cos_pool_t *p,
+                                        cos_list_t *buffer, 
+                                        cos_http_request_t *req,
+                                        cos_table_t *headers)
 {
     cos_list_movelist(buffer, &req->body);
     req->body_len = cos_buf_list_len(&req->body);
+    
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
+    }
 }
 
 int cos_write_request_body_from_file(cos_pool_t *p, 
                                      const cos_string_t *filename, 
-                                     cos_http_request_t *req)
+                                     cos_http_request_t *req, 
+                                     cos_table_t *headers)
 {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
@@ -872,12 +881,19 @@ int cos_write_request_body_from_file(cos_pool_t *p,
     req->type = BODY_IN_FILE;
     req->read_body = cos_read_http_body_file;
 
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
+    }
+
     return res;
 }
 
 int cos_write_request_body_from_upload_file(cos_pool_t *p, 
                                             cos_upload_file_t *upload_file, 
-                                            cos_http_request_t *req)
+                                            cos_http_request_t *req,
+                                            cos_table_t *headers)
 {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
@@ -894,6 +910,12 @@ int cos_write_request_body_from_upload_file(cos_pool_t *p,
     req->file_buf = fb;
     req->type = BODY_IN_FILE;
     req->read_body = cos_read_http_body_file;
+
+    if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
+        char* length;
+        length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_addn(headers, COS_CONTENT_LENGTH, length);
+    }
 
     return res;
 }
@@ -1654,7 +1676,8 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         if (req->file_path != NULL) {
             cos_string_t file;
             cos_str_set(&file, req->file_path);
-            res = cos_write_request_body_from_file(options->pool, &file, req);
+            // res = cos_write_request_body_from_file(options->pool, &file, req);
+            res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
             if (res != COSE_OK) {
                 cos_file_error_status_set(s, res);
                 return s;
@@ -1663,7 +1686,8 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         if (req->file_path != NULL) {
             cos_string_t file;
             cos_str_set(&file, req->file_path);
-            res = cos_write_request_body_from_file(options->pool, &file, req);
+            // res = cos_write_request_body_from_file(options->pool, &file, req);
+            res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
             if (res != COSE_OK) {
                 cos_file_error_status_set(s, res);
                 return s;
@@ -1869,7 +1893,7 @@ int cos_add_content_md5_from_buffer(const cos_request_options_t *options,
     unsigned char md5_data[APR_MD5_DIGESTSIZE + 1];
     apr_md5_ctx_t context;
     cos_buf_t *content;
-    
+
     /* do not add content-md5 if the option is disabled */
     if (!is_enable_md5(options)) {
         return 0;
