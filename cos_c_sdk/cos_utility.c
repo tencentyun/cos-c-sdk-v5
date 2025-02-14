@@ -915,6 +915,10 @@ int cos_write_request_body_from_upload_file(cos_pool_t *p,
         char* length;
         length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
         apr_table_addn(headers, COS_CONTENT_LENGTH, length);
+    } else {
+        char* length;
+        length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
+        apr_table_set(headers, COS_CONTENT_LENGTH, length);
     }
 
     return res;
