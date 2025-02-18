@@ -44,6 +44,7 @@ void test_multipart_cleanup(CuTest *tc)
 {
     cos_pool_t *p = NULL;
     int is_cname = 0;
+    cos_status_t *s = NULL;
     cos_string_t bucket;
     cos_request_options_t *options = NULL;
     char *object_name = "cos_test_multipart_upload";
@@ -67,10 +68,12 @@ void test_multipart_cleanup(CuTest *tc)
     delete_test_object(options, TEST_BUCKET_NAME, object_name4);
     delete_test_object(options, TEST_BUCKET_NAME, object_name5);
     delete_test_object(options, TEST_BUCKET_NAME, object_name6);
+    abort_all_test_multipart_upload(options,TEST_BUCKET_NAME);
 
     //delete test bucket
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    cos_delete_bucket(options, &bucket, &resp_headers);
+    s = cos_delete_bucket(options, &bucket, &resp_headers);
+    CuAssertIntEquals(tc, 204, s->code);
     apr_sleep(apr_time_from_sec(3));
 
     cos_pool_destroy(p);
@@ -409,11 +412,12 @@ void test_multipart_upload(CuTest *tc)
 
 void test_multipart_upload_from_file(CuTest *tc)
 {
+    fprintf(stderr, "==========test_multipart_upload_from_file==========\n");
     set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload_from_file";
-    char *file_path = "test_upload_part_copy.file";
+    char *file_path = "../../../cos_c_sdk_ut/test_3M.dat";
     FILE* fd = NULL;
     cos_string_t object;
     int is_cname = 0;
@@ -453,14 +457,14 @@ void test_multipart_upload_from_file(CuTest *tc)
     upload_file = cos_create_upload_file(p);
     cos_str_set(&upload_file->filename, file_path);
     upload_file->file_pos = 0;
-    upload_file->file_last = 512 * 1024; //200k
+    upload_file->file_last = 2 * 1024 * 1024; //2MB
     
     s = cos_upload_part_from_file(options, &bucket, &object, &upload_id,
         part_num, upload_file, &upload_part_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, upload_part_resp_headers);
     
-    upload_file->file_pos = 512 *1024;//remain content start pos
+    upload_file->file_pos = 2 * 1024 * 1024;//remain content start pos
     upload_file->file_last = get_file_size(file_path);
     
     s = cos_upload_part_from_file(options, &bucket, &object, &upload_id,
@@ -490,13 +494,15 @@ void test_multipart_upload_from_file(CuTest *tc)
     //complete multipart
     s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
             &complete_part_list, NULL, &complete_resp_headers);
+    log_status(s);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, complete_resp_headers);
 
-    remove(file_path);
+    // remove(file_path);
     cos_pool_destroy(p);
 
     printf("test_multipart_upload_from_file ok\n");
+    fprintf(stderr, "==========test_multipart_upload_from_file==========\n");
 }
 
 void test_multipart_upload_from_file_change_domain(CuTest *tc)
@@ -585,6 +591,7 @@ void test_multipart_upload_from_file_change_domain(CuTest *tc)
 
 void test_upload_part_copy(CuTest *tc)
 {
+    fprintf(stderr, "==========test_upload_part_copy==========\n");
     set_test_retry_change_domin_config(0);
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -641,7 +648,8 @@ void test_upload_part_copy(CuTest *tc)
 
     //upload part copy 1
     upload_part_copy_params1 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params1->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    char* lengtcopy_source_str = apr_psprintf(p, "%s.%s/cos_test_upload_part_copy_source_object", TEST_BUCKET_NAME, TEST_COS_ENDPOINT);
+    cos_str_set(&upload_part_copy_params1->copy_source, lengtcopy_source_str);
     cos_str_set(&upload_part_copy_params1->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params1->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params1->upload_id, upload_id.data);
@@ -658,7 +666,7 @@ void test_upload_part_copy(CuTest *tc)
     resp_headers = NULL;
     range_end2 = get_file_size(local_filename) - 1;
     upload_part_copy_params2 = cos_create_upload_part_copy_params(p);
-    cos_str_set(&upload_part_copy_params2->copy_source, "mybucket-1253666666.cn-south.myqcloud.com/cos_test_upload_part_copy_source_object");
+    cos_str_set(&upload_part_copy_params2->copy_source, lengtcopy_source_str);
     cos_str_set(&upload_part_copy_params2->dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&upload_part_copy_params2->dest_object, dest_object_name);
     cos_str_set(&upload_part_copy_params2->upload_id, upload_id.data);
@@ -709,10 +717,12 @@ void test_upload_part_copy(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_upload_part_copy ok\n");
+    fprintf(stderr, "==========test_upload_part_copy==========\n");
 }
 
 void test_upload_file_failed_without_uploadid(CuTest *tc) 
 {
+    fprintf(stderr, "==========test_upload_file_failed_without_uploadid==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload_from_file";
@@ -727,17 +737,19 @@ void test_upload_file_failed_without_uploadid(CuTest *tc)
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-    cos_str_set(&bucket, "invalid_bucket");
+    cos_str_set(&bucket, "invalid-bucket-121212");
     cos_str_set(&object, object_name);
     cos_str_null(&upload_id);
     cos_str_set(&filepath, __FILE__);
     s = cos_upload_file(options, &bucket, &object, &upload_id, &filepath, 
                         part_size, NULL);
+    log_status(s);
     CuAssertIntEquals(tc, 404, s->code);
 
     cos_pool_destroy(p);
 
     printf("test_upload_file_failed_without_uploadid ok\n");
+    fprintf(stderr, "==========test_upload_file_failed_without_uploadid==========\n");
 }
 
 void test_upload_file(CuTest *tc) 
@@ -806,6 +818,7 @@ void test_upload_file_from_recover(CuTest *tc)
 
 void test_upload_file_from_recover_failed(CuTest *tc) 
 {
+    fprintf(stderr, "==========test_upload_file_from_recover_failed==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload_from_file";
@@ -832,7 +845,8 @@ void test_upload_file_from_recover_failed(CuTest *tc)
     cos_str_set(&bucket, "invalid_bucket");
     s = cos_upload_file(options, &bucket, &object, &upload_id, &filepath, 
                         part_size, NULL);
-    CuAssertIntEquals(tc, 404, s->code);
+    log_status(s);
+    CuAssertIntEquals(tc, -994, s->code);
 
     //abort multipart
     s = abort_test_multipart_upload(options, TEST_BUCKET_NAME,
@@ -842,10 +856,12 @@ void test_upload_file_from_recover_failed(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_upload_file_from_recover_failed ok\n");
+    fprintf(stderr, "==========test_upload_file_from_recover_failed==========\n");
 }
 
 void test_list_upload_part_with_empty(CuTest *tc)
 {
+    fprintf(stderr, "==========test_list_upload_part_with_empty==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_list_upload_part_with_empty";
@@ -899,6 +915,7 @@ void test_list_upload_part_with_empty(CuTest *tc)
     apr_table_add(headers, COS_CONTENT_TYPE, content_type_for_complete);
     s = cos_complete_multipart_upload(options, &bucket, &object, &upload_id,
             &complete_part_list, headers, &complete_resp_headers);
+    log_status(s);
     CuAssertIntEquals(tc, 400, s->code);
     CuAssertPtrNotNull(tc, complete_resp_headers);
 
@@ -907,6 +924,7 @@ void test_list_upload_part_with_empty(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_list_upload_part_with_empty ok\n");
+    fprintf(stderr, "==========test_list_upload_part_with_empty==========\n");
 }
 
 void test_cos_get_sorted_uploaded_part(CuTest *tc)

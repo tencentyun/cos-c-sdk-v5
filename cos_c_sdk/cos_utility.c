@@ -219,6 +219,9 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 #endif
 
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
+    if (body_len == 0){
+        return COS_FALSE;
+    }
     cos_list_t *current = body->next;
     int target_len = strlen(target);
     while (current != body)
@@ -854,6 +857,10 @@ void cos_write_request_body_from_buffer(cos_pool_t *p,
 {
     cos_list_movelist(buffer, &req->body);
     req->body_len = cos_buf_list_len(&req->body);
+
+    if (headers == NULL) {
+        headers = cos_table_make(p, 0);
+    }
     
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;
@@ -885,6 +892,10 @@ int cos_write_request_body_from_file(cos_pool_t *p,
     req->type = BODY_IN_FILE;
     req->read_body = cos_read_http_body_file;
 
+    if (headers == NULL) {
+        headers = cos_table_make(p, 0);
+    }
+    
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;
         length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
@@ -918,6 +929,11 @@ int cos_write_request_body_from_upload_file(cos_pool_t *p,
     req->file_buf = fb;
     req->type = BODY_IN_FILE;
     req->read_body = cos_read_http_body_file;
+
+    if (headers == NULL) {
+        headers = cos_table_make(p, 0);
+    }
+    
 
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;

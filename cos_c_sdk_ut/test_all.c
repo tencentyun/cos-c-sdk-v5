@@ -27,8 +27,8 @@ static const struct testlist {
     {"test_cos_multipart", test_cos_multipart},
     {"test_cos_progress", test_cos_progress},
     {"test_cos_resumable", test_cos_resumable},
-    {"test_cos_sys", test_cos_sys},
     {"test_cos_crc", test_cos_crc},
+    {"test_cos_sys", test_cos_sys},
     {"LastTest", NULL}
 };
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    cos_log_set_level(COS_LOG_OFF);
+    cos_log_set_level(COS_LOG_DEBUG);
     exit_code = run_all_tests(argc, argv);
 
     //cos_http_io_deinitialize last

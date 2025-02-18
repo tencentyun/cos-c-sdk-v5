@@ -291,7 +291,7 @@ cos_status_t *cos_do_delete_objects(const cos_request_options_t *options,
     apr_table_addn(pHeaders, COS_CONTENT_MD5, b64_value);
 
     // cos_write_request_body_from_buffer(&body, req);
-    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
+    cos_write_request_body_from_buffer(options->pool, &body, req, pHeaders);
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);

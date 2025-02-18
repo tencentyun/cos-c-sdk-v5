@@ -331,7 +331,7 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
     }
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
-    if (resp->body_len == 0 || check_status_with_resp_body(&resp->body, resp->body_len, "ETag") != COS_TRUE){
+    if ((s->code / 100 == 2) && ((resp->body_len == 0) || (check_status_with_resp_body(resp_body!=NULL ? resp_body : &resp->body, resp->body_len, "ETag") != COS_TRUE))) {
         cos_status_set(s, COSE_SERVICE_ERROR, COS_SERVER_ERROR_CODE, "Server Error");
     }
 
