@@ -813,6 +813,7 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     b64_len = cos_base64_encode(md5, 16, b64_value);
     b64_value[b64_len] = '\0';
     apr_table_addn(headers, COS_CONTENT_MD5, b64_value);
+    apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     
     // cos_write_request_body_from_buffer(&body, req);
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
@@ -1178,6 +1179,7 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
         length = apr_psprintf(options->pool, "%" APR_INT64_T_FMT, req->body_len);
         apr_table_addn(headers, COS_CONTENT_LENGTH, length);
     }
+    apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
