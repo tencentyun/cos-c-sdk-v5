@@ -365,6 +365,70 @@ void test_put_object_from_file_with_content_type(CuTest *tc)
     printf("test_put_object_from_file ok\n");
 }
 
+void test_put_object_with_all_headers()
+{
+    cos_pool_t *p = NULL;
+    char *object_name = "test_put_object_with_all_headers";
+    char *str = "test cos c sdk";
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *headers = NULL;
+    cos_table_t *head_headers = NULL;
+    cos_table_t *head_resp_headers = NULL;
+    char *content_type = NULL;
+    char *self_define_header = NULL;
+    cos_request_options_t *options = NULL;
+    cos_list_t buffer;
+    cos_buf_t* content = NULL;
+
+    /* test put object */
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    headers = cos_table_make(p, 10);
+
+    cos_list_init(&buffer);
+    content = cos_buf_pack(options->pool, str, strlen(str));
+    cos_list_add_tail(&content->node, &buffer);
+
+    apr_table_set(headers, "x-cos-meta-author", "cos");
+    apr_table_set(headers, COS_CONTENT_TYPE, "text/plain");
+    char lengthStr[20];
+    sprintf(lengthStr, "%d", strlen(str));
+    apr_table_set(headers, COS_CONTENT_LENGTH, lengthStr);
+    apr_table_set(headers, "cache-control", "no-cache");
+    apr_table_set(headers, COS_EXPIRES, "900");
+    apr_table_set(headers, COS_DATE, "Wed,29May201904:10:12GMT");
+    apr_table_set(headers, COS_CANNONICALIZED_HEADER_ACL, "private");
+    s = cos_put_object_from_buffer(options, &bucket, &object, &buffer, headers, &head_resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, headers);
+
+    cos_pool_destroy(p);
+
+    /* head object */
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    init_test_request_options(options, is_cname);
+    s = cos_head_object(options, &bucket, &object, 
+                        head_headers, &head_resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, head_resp_headers);
+    
+    content_type = (char*)(apr_table_get(head_resp_headers, COS_CONTENT_TYPE));
+    self_define_header = (char*)(apr_table_get(head_resp_headers, "x-cos-meta-author"));
+    CuAssertStrEquals(tc, "text/plain", content_type);
+    CuAssertStrEquals(tc, "cos", self_define_header);
+
+    printf("test_put_object_with_all_headers ok\n");
+}
+
 void test_get_object_to_buffer(CuTest *tc)
 {
     cos_pool_t *p = NULL;
@@ -660,6 +724,69 @@ void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_get_object_to_file_with_illega_getobject_key ok\n");
+}
+
+void test_get_object_with_params(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    char *object_name = "test_put_object_with_all_headers";
+    char *str = "test cos c sdk";
+    cos_status_t *s = NULL;
+    int is_cname = 0;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_table_t *headers = NULL;
+    cos_table_t *params = NULL;
+    cos_table_t *resp_headers = NULL;
+    cos_request_options_t *options = NULL;
+    char *content_type = NULL;
+    cos_list_t buffer;
+    char *buf = NULL;
+    int64_t len = 0;
+    int64_t size = 0;
+    int64_t pos = 0;
+    cos_buf_t *content = NULL;
+
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, object_name);
+    init_test_request_options(options, is_cname);
+    cos_list_init(&buffer);
+    params = cos_table_make(p, 10);
+    apr_table_set(params, "response-content-type", "text/plain");
+
+    /* test get object to buffer */
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+                                 params, &buffer, &resp_headers);
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertPtrNotNull(tc, resp_headers);
+
+    /* get buffer len */
+    len = cos_buf_list_len(&buffer);
+
+    buf = cos_pcalloc(p, (apr_size_t)(len + 1));
+    buf[len] = '\0';
+
+    /* copy buffer content to memory */
+    cos_list_for_each_entry(cos_buf_t, content, &buffer, node) {
+        size = cos_buf_size(content);
+        memcpy(buf + pos, content->pos, (size_t)size);
+        pos += size;
+    }
+
+    CuAssertStrEquals(tc, str, buf);
+    content_type = (char*)(apr_table_get(resp_headers, COS_CONTENT_TYPE));
+    CuAssertStrEquals(tc, "text/plain", content_type);
+
+    //with versionid no exsit
+    apr_table_set(params, "versionId", "test");
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+                                 params, &buffer, &resp_headers);
+    CuAssertIntEquals(tc, 404, s->code);
+    cos_pool_destroy(p);
+
+    printf("test_get_object_with_params ok\n");
 }
 
 void test_head_object(CuTest *tc)
@@ -1211,6 +1338,44 @@ void test_presigned_safe_url(CuTest *tc)
     CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, res);
     
     cos_pool_destroy(p);
+    
+}
+
+void test_presigned_url_with_params_headers(CuTest *tc)
+{
+    cos_pool_t *p = NULL;
+    int is_cname = 0;
+    cos_request_options_t *options = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+    cos_string_t presigned_url;
+    int res;
+    cos_table_t *params = NULL;
+    cos_table_t *headers = NULL;
+    
+    cos_pool_create(&p, NULL);
+    options = cos_request_options_create(p);
+    init_test_request_options(options, is_cname);
+    cos_str_set(&bucket, TEST_BUCKET_NAME);
+    cos_str_set(&object, "test.dat");
+    headers = cos_table_make(p, 10);
+    params = cos_table_make(p, 10);
+    apr_table_set(params, "versionId", "test");
+    apr_table_set(headers, "x-cos-meta-author", "cos");
+    apr_table_set(headers, COS_EXPIRES, "900");
+    apr_table_set(headers, COS_DATE, "Wed,29May201904:10:12GMT");
+    apr_table_set(headers, "Range", "bytes=5-13");
+
+    res = cos_gen_presigned_url_safe(options, &bucket, &object, 300, HTTP_GET, headers, params, 1, &presigned_url);
+    CuAssertTrue(tc, strstr(presigned_url.data, "expires") != NULL);
+    CuAssertTrue(tc, strstr(presigned_url.data, "host") != NULL);
+    CuAssertTrue(tc, strstr(presigned_url.data, "range") != NULL);
+    CuAssertTrue(tc, strstr(presigned_url.data, "x-cos-meta-author") != NULL);
+    CuAssertTrue(tc, strstr(presigned_url.data, "versionid") != NULL);
+
+    cos_pool_destroy(p);
+
+    printf("test_presigned_url_with_params_headers ok\n");
     
 }
 
