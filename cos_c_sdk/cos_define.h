@@ -114,6 +114,7 @@ extern const char *SIGN_HEADER[];
 extern const int SIGN_HEADER_NUM;
 extern const char X_COS_HEADER[];
 extern const char COS_VERSION_ID[];
+extern const char X_CI_HEADER[];
 
 
 
