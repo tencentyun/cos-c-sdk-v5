@@ -114,3 +114,4 @@ const char *SIGN_HEADER[] = {
 };
 const int SIGN_HEADER_NUM = (int)(sizeof(SIGN_HEADER) / sizeof(SIGN_HEADER[0]));
 const char X_COS_HEADER[] = "x-cos-";
+const char X_CI_HEADER[] = "x-ci-";
