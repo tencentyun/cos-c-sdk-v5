@@ -365,7 +365,7 @@ void test_put_object_from_file_with_content_type(CuTest *tc)
     printf("test_put_object_from_file ok\n");
 }
 
-void test_put_object_with_all_headers() {
+void test_put_object_with_all_headers(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "test_put_object_with_all_headers";
     char *str = "test cos c sdk";
@@ -1373,7 +1373,7 @@ void test_presigned_url_with_params_headers(CuTest *tc) {
     cos_pool_destroy(p);
 
     printf("test_presigned_url_with_params_headers ok\n");
-    
+
 }
 
 void test_check_object_exist(CuTest *tc)
