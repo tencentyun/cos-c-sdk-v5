@@ -852,7 +852,7 @@ void cos_get_rtmp_uri(const cos_request_options_t *options,
 #endif
 
 void cos_write_request_body_from_buffer(cos_pool_t *p,
-                                        cos_list_t *buffer, 
+                                        cos_list_t *buffer,
                                         cos_http_request_t *req,
                                         cos_table_t *headers)
 {
@@ -876,7 +876,7 @@ void cos_write_request_body_from_buffer(cos_pool_t *p,
 
 int cos_write_request_body_from_file(cos_pool_t *p, 
                                      const cos_string_t *filename, 
-                                     cos_http_request_t *req, 
+                                     cos_http_request_t *req,
                                      cos_table_t *headers)
 {
     int res = COSE_OK;
@@ -896,7 +896,7 @@ int cos_write_request_body_from_file(cos_pool_t *p,
     if (headers == NULL) {
         headers = cos_table_make(p, 0);
     }
-    
+
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;
         length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);

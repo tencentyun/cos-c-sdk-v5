@@ -68,7 +68,7 @@ void test_multipart_cleanup(CuTest *tc)
     delete_test_object(options, TEST_BUCKET_NAME, object_name4);
     delete_test_object(options, TEST_BUCKET_NAME, object_name5);
     delete_test_object(options, TEST_BUCKET_NAME, object_name6);
-    abort_all_test_multipart_upload(options,TEST_BUCKET_NAME);
+    abort_all_test_multipart_upload(options, TEST_BUCKET_NAME);
 
     //delete test bucket
     cos_str_set(&bucket, TEST_BUCKET_NAME);

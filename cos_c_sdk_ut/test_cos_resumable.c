@@ -56,7 +56,7 @@ void test_resumable_cleanup(CuTest *tc)
     s = cos_delete_objects_by_prefix(options, &bucket, &prefix);
     printf("delete all objects, status code=%d\n", s->code);
 
-    abort_all_test_multipart_upload(options,TEST_BUCKET_NAME);
+    abort_all_test_multipart_upload(options, TEST_BUCKET_NAME);
     
     /* delete test bucket */
     cos_delete_bucket(options, &bucket, &resp_headers);
@@ -498,8 +498,8 @@ void test_resumable_upload_without_checkpoint(CuTest *tc)
 
     content_length = atol((char*)apr_table_get(resp_headers, COS_CONTENT_LENGTH));
     CuAssertTrue(tc, content_length == get_file_size(filename.data));
-    printf("test_resumable_upload_without_checkpoint len%d\n",content_length);
-    printf("test_resumable_upload_without_checkpoint size%d\n",get_file_size(filename.data));
+    printf("test_resumable_upload_without_checkpoint len%d\n", content_length);
+    printf("test_resumable_upload_without_checkpoint size%d\n", get_file_size(filename.data));
     cos_pool_destroy(p);
 
     printf("test_resumable_upload_without_checkpoint ok\n");

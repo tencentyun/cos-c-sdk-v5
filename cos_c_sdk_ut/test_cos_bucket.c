@@ -125,12 +125,11 @@ void test_bucket_delete(CuTest *tc)
     cos_pool_destroy(p);
 
     printf("test_bucket_delete ok\n");
-    
+
     fprintf(stderr, "==========test_bucket_delete==========\n");
 }
 
-void test_bucket_cleanup(CuTest *tc)
-{
+void test_bucket_cleanup(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_cleanup==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -142,7 +141,7 @@ void test_bucket_cleanup(CuTest *tc)
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
 
-    abort_all_test_multipart_upload(options,TEST_BUCKET_NAME);
+    abort_all_test_multipart_upload(options, TEST_BUCKET_NAME);
 
     cos_pool_destroy(p);
 

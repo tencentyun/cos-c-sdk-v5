@@ -227,8 +227,8 @@ cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options,
     return s;
 }
 
-int abort_all_test_multipart_upload(const cos_request_options_t *options, 
-                                          const char *bucket_name){
+int abort_all_test_multipart_upload(const cos_request_options_t *options,
+                                          const char *bucket_name) {
     cos_string_t bucket;
     cos_status_t *s = NULL;
     cos_table_t *resp_headers;
@@ -248,7 +248,7 @@ int abort_all_test_multipart_upload(const cos_request_options_t *options,
         abort_all_test_multipart_upload(options, bucket_name);
     }
 
-    printf("test_list_multipart_upload ok\n");    
+    printf("test_list_multipart_upload ok\n");
 }
 
 int64_t get_file_size(const char *file_path)

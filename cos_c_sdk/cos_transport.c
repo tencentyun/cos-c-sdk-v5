@@ -400,7 +400,7 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
     }
 
     curl_easy_setopt_safe(CURLOPT_PRIVATE, t);
-    if (cos_log_level>=COS_LOG_DEBUG){
+    if (cos_log_level >= COS_LOG_DEBUG) {
         curl_easy_setopt_safe(CURLOPT_VERBOSE, t);
     }
 

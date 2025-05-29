@@ -58,7 +58,7 @@ void test_object_cleanup(CuTest *tc)
     s = cos_delete_objects_by_prefix(options, &bucket, &prefix);
     printf("delete all objects, status code=%d\n", s->code);
 
-    abort_all_test_multipart_upload(options,TEST_BUCKET_NAME);
+    abort_all_test_multipart_upload(options, TEST_BUCKET_NAME);
     
     /* delete test bucket */
     cos_delete_bucket(options, &bucket, &resp_headers);
@@ -365,8 +365,7 @@ void test_put_object_from_file_with_content_type(CuTest *tc)
     printf("test_put_object_from_file ok\n");
 }
 
-void test_put_object_with_all_headers()
-{
+void test_put_object_with_all_headers() {
     cos_pool_t *p = NULL;
     char *object_name = "test_put_object_with_all_headers";
     char *str = "test cos c sdk";
@@ -416,11 +415,11 @@ void test_put_object_with_all_headers()
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, object_name);
     init_test_request_options(options, is_cname);
-    s = cos_head_object(options, &bucket, &object, 
+    s = cos_head_object(options, &bucket, &object,
                         head_headers, &head_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, head_resp_headers);
-    
+
     content_type = (char*)(apr_table_get(head_resp_headers, COS_CONTENT_TYPE));
     self_define_header = (char*)(apr_table_get(head_resp_headers, "x-cos-meta-author"));
     CuAssertStrEquals(tc, "text/plain", content_type);
@@ -726,8 +725,7 @@ void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
     printf("test_get_object_to_file_with_illega_getobject_key ok\n");
 }
 
-void test_get_object_with_params(CuTest *tc)
-{
+void test_get_object_with_params(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "test_put_object_with_all_headers";
     char *str = "test cos c sdk";
@@ -757,7 +755,7 @@ void test_get_object_with_params(CuTest *tc)
     apr_table_set(params, "response-content-type", "text/plain");
 
     /* test get object to buffer */
-    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers,
                                  params, &buffer, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
@@ -781,7 +779,7 @@ void test_get_object_with_params(CuTest *tc)
 
     //with versionid no exsit
     apr_table_set(params, "versionId", "test");
-    s = cos_get_object_to_buffer(options, &bucket, &object, headers, 
+    s = cos_get_object_to_buffer(options, &bucket, &object, headers,
                                  params, &buffer, &resp_headers);
     CuAssertIntEquals(tc, 404, s->code);
     cos_pool_destroy(p);
@@ -1341,8 +1339,7 @@ void test_presigned_safe_url(CuTest *tc)
     
 }
 
-void test_presigned_url_with_params_headers(CuTest *tc)
-{
+void test_presigned_url_with_params_headers(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_request_options_t *options = NULL;
@@ -1352,7 +1349,7 @@ void test_presigned_url_with_params_headers(CuTest *tc)
     int res;
     cos_table_t *params = NULL;
     cos_table_t *headers = NULL;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1575,7 +1572,7 @@ void test_object_restore(CuTest *tc)
         cos_str_set(&bucket, TEST_BUCKET_NAME);
         cos_str_set(&object, object_name);
         init_test_request_options(options, is_cname);
-        s = cos_head_object(options, &bucket, &object, 
+        s = cos_head_object(options, &bucket, &object,
                             head_headers, &head_resp_headers);
         CuAssertIntEquals(tc, 200, s->code);
     }
@@ -2041,8 +2038,8 @@ CuSuite *test_cos_object()
     SUITE_ADD_TEST(suite, test_object_acl2); 
     SUITE_ADD_TEST(suite, test_append_object_from_file2); 
     SUITE_ADD_TEST(suite, test_append_object_from_buffer2); 
-    SUITE_ADD_TEST(suite, test_delete_object2); 
-    SUITE_ADD_TEST(suite, test_object_cleanup); 
+    SUITE_ADD_TEST(suite, test_delete_object2);
+    SUITE_ADD_TEST(suite, test_object_cleanup);
 
     return suite;
 }
