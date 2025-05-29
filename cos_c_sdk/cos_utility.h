@@ -166,17 +166,17 @@ void cos_get_rtmp_uri(const cos_request_options_t *options,
 /**
  * @brief  write body content into cos request body from buffer
  **/
-void cos_write_request_body_from_buffer(cos_list_t *buffer, cos_http_request_t *req);
+void cos_write_request_body_from_buffer(cos_pool_t *p, cos_list_t *buffer, cos_http_request_t *req, cos_table_t *headers);
 
 /**
  * @brief   write body content into cos request body from file
  **/
-int cos_write_request_body_from_file(cos_pool_t *p, const cos_string_t *filename, cos_http_request_t *req);
+int cos_write_request_body_from_file(cos_pool_t *p, const cos_string_t *filename, cos_http_request_t *req, cos_table_t *headers);
 
 /**
  * @brief   write body content into cos request body from multipart upload file
  **/
-int cos_write_request_body_from_upload_file(cos_pool_t *p, cos_upload_file_t *upload_file, cos_http_request_t *req);
+int cos_write_request_body_from_upload_file(cos_pool_t *p, cos_upload_file_t *upload_file, cos_http_request_t *req, cos_table_t *headers);
 
 /**
  * @brief  read body content from cos response body to buffer

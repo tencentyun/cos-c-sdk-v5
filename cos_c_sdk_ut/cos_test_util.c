@@ -227,6 +227,30 @@ cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options,
     return s;
 }
 
+int abort_all_test_multipart_upload(const cos_request_options_t *options,
+                                          const char *bucket_name) {
+    cos_string_t bucket;
+    cos_status_t *s = NULL;
+    cos_table_t *resp_headers;
+    cos_list_multipart_upload_params_t *params = NULL;
+    cos_list_multipart_upload_content_t *upload_content = NULL;
+
+
+    params = cos_create_list_multipart_upload_params(options->pool);
+    params->max_ret = 1000;
+    cos_str_set(&bucket, bucket_name);
+    s = cos_list_multipart_upload(options, &bucket, params, &resp_headers);
+
+    cos_list_for_each_entry(cos_list_multipart_upload_content_t, upload_content, &params->upload_list, node) {
+        s = abort_test_multipart_upload(options, bucket_name, upload_content->key.data, &upload_content->upload_id);
+    }
+    while (params->truncated) {
+        abort_all_test_multipart_upload(options, bucket_name);
+    }
+
+    printf("test_list_multipart_upload ok\n");
+}
+
 int64_t get_file_size(const char *file_path)
 {
     int64_t filesize = -1; 

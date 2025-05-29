@@ -170,20 +170,23 @@ void test_cos_serveral_parse_from_xml_node(CuTest *tc) {
 }
 
 void print_node_values(mxml_node_t *node) {
-    mxml_node_t *current_node = node;
+    mxml_type_t type = mxmlGetType(node);
+    
+    switch (type) {
+        case MXML_ELEMENT:
+            printf("ELEMENT: %s\n", mxmlGetElement(node));
+            break;
+        case MXML_TEXT:
+            printf("TEXT: '%s'\n", mxmlGetText(node, NULL));
+            break;
+        default:
+            printf("UNKNOWN TYPE: %d\n", type);
+    }
 
-    while (current_node != NULL) {
-        if (current_node->type == MXML_ELEMENT) {
-            printf("Node: %s\n", current_node->value.element.name);
-        } else if (current_node->type == MXML_OPAQUE) {
-            printf("Value: %s\n", current_node->value.opaque);
-        }
-
-        if (current_node->child != NULL) {
-            print_node_values(current_node->child);
-        }
-
-        current_node = current_node->next;
+    mxml_node_t *child = mxmlGetFirstChild(node);
+    while (child) {
+        print_node_values(child);
+        child = mxmlGetNextSibling(child);
     }
 }
 
