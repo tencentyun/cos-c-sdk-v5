@@ -26,10 +26,12 @@ static void cos_init_curl_headers(cos_curl_http_transport_t *t)
     const cos_table_entry_t *telts;
     union cos_func_u func;
 
-    // if (t->req->method == HTTP_PUT || t->req->method == HTTP_POST) {
-    //     header = apr_psprintf(t->pool, "Content-Length: %" APR_INT64_T_FMT, t->req->body_len);
-    //     t->headers = curl_slist_append(t->headers, header);
-    // }
+#if 0
+    if (t->req->method == HTTP_PUT || t->req->method == HTTP_POST) {
+        header = apr_psprintf(t->pool, "Content-Length: %" APR_INT64_T_FMT, t->req->body_len);
+        t->headers = curl_slist_append(t->headers, header);
+    }
+#endif
 
     tarr = cos_table_elts(t->req->headers);
     telts = (cos_table_entry_t*)tarr->elts;

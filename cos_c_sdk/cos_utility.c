@@ -219,9 +219,10 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 #endif
 
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
-    if (body_len == 0){
+    if (body_len == 0) {
         return COS_FALSE;
     }
+
     cos_list_t *current = body->next;
     int target_len = strlen(target);
     while (current != body)
@@ -861,7 +862,7 @@ void cos_write_request_body_from_buffer(cos_pool_t *p,
     if (headers == NULL) {
         headers = cos_table_make(p, 0);
     }
-    
+
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;
         length = apr_psprintf(p, "%" APR_INT64_T_FMT, req->body_len);
@@ -933,7 +934,6 @@ int cos_write_request_body_from_upload_file(cos_pool_t *p,
     if (headers == NULL) {
         headers = cos_table_make(p, 0);
     }
-    
 
     if (NULL == apr_table_get(headers, COS_CONTENT_LENGTH)) {
         char* length;
@@ -1704,7 +1704,6 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         if (req->file_path != NULL) {
             cos_string_t file;
             cos_str_set(&file, req->file_path);
-            // res = cos_write_request_body_from_file(options->pool, &file, req);
             res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
             if (res != COSE_OK) {
                 cos_file_error_status_set(s, res);
@@ -1714,7 +1713,6 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         if (req->file_path != NULL) {
             cos_string_t file;
             cos_str_set(&file, req->file_path);
-            // res = cos_write_request_body_from_file(options->pool, &file, req);
             res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
             if (res != COSE_OK) {
                 cos_file_error_status_set(s, res);

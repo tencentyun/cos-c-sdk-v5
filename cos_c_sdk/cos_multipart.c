@@ -296,7 +296,6 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
     }
 
     build_complete_multipart_upload_body(options->pool, part_list, &body);
-    // cos_write_request_body_from_buffer(&body, req);
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
     s = cos_process_request(options, req, resp, 0); 
@@ -323,7 +322,6 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
             return s;
         }
         build_complete_multipart_upload_body(options->pool, part_list, &body);
-        // cos_write_request_body_from_buffer(&body, req);
         cos_write_request_body_from_buffer(options->pool, &body, req, headers);
         ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
         s = cos_process_request(options, req, resp, 0); 
@@ -384,7 +382,6 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
         return s;
     }
 
-    // cos_write_request_body_from_buffer(buffer, req);
     cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
     s = cos_process_request(options, req, resp, 1);
@@ -447,7 +444,6 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
     res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
     if (res != COSE_OK) {
         cos_file_error_status_set(s, res);
@@ -480,7 +476,6 @@ cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
             return s;
         }
 
-        // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
         res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
         if (res != COSE_OK) {
             cos_file_error_status_set(s, res);
@@ -538,7 +533,6 @@ cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t 
         return s;
     }
 
-    // res = cos_write_request_body_from_upload_file(options->pool, upload_file, req);
     res = cos_write_request_body_from_upload_file(options->pool, upload_file, req, headers);
     if (res != COSE_OK) {
         cos_file_error_status_set(s, res);
