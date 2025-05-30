@@ -23,10 +23,9 @@ static char cos_user_agent[256];
 
 static cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p);
 
-CURL *cos_request_get()
-{
+CURL *cos_request_get() {
     CURL *request = NULL;
-    
+
     apr_thread_mutex_lock(requestStackMutexG);
     if (requestStackCountG > 0) {
         request = requestStackG[--requestStackCountG];
@@ -44,8 +43,7 @@ CURL *cos_request_get()
     return request;
 }
 
-void request_release(CURL *request)
-{
+void request_release(CURL *request) {
     apr_thread_mutex_lock(requestStackMutexG);
 
     // If the request stack is full, destroy this one
@@ -63,8 +61,7 @@ void request_release(CURL *request)
     }
 }
 
-void request_release2(cos_curl_http_transport_t* t)
-{
+void request_release2(cos_curl_http_transport_t* t) {
     CURL* request = t->curl;
     CURLcode code = t->curl_code;
     apr_thread_mutex_lock(requestStackMutexG);
@@ -84,20 +81,17 @@ void request_release2(cos_curl_http_transport_t* t)
     }
 }
 
-void cos_set_default_request_options(cos_http_request_options_t *op)
-{
+void cos_set_default_request_options(cos_http_request_options_t *op) {
     cos_default_http_request_options = op;
 }
 
-void cos_set_default_transport_options(cos_http_transport_options_t *op)
-{
+void cos_set_default_transport_options(cos_http_transport_options_t *op) {
     cos_default_http_transport_options = op;
 }
 
-cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p)
-{
+cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p) {
     cos_http_request_options_t *options;
-    
+
     options = (cos_http_request_options_t *)cos_pcalloc(p, sizeof(cos_http_request_options_t));
     options->speed_limit = COS_MIN_SPEED_LIMIT;
     options->speed_time = COS_MIN_SPEED_TIME;
@@ -112,13 +106,11 @@ cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p)
     return options;
 }
 
-cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p)
-{
+cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p) {
     return (cos_http_transport_options_t *)cos_pcalloc(p, sizeof(cos_http_transport_options_t));
 }
 
-cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner)
-{
+cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner) {
     int s;
     cos_http_controller_t *ctl;
 
@@ -137,8 +129,7 @@ cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner)
     return ctl;
 }
 
-cos_http_request_t *cos_http_request_create(cos_pool_t *p)
-{
+cos_http_request_t *cos_http_request_create(cos_pool_t *p) {
     cos_http_request_t *req;
 
     req = (cos_http_request_t *)cos_pcalloc(p, sizeof(cos_http_request_t));
@@ -154,8 +145,7 @@ cos_http_request_t *cos_http_request_create(cos_pool_t *p)
     return req;
 }
 
-cos_http_response_t *cos_http_response_create(cos_pool_t *p)
-{
+cos_http_response_t *cos_http_response_create(cos_pool_t *p) {
     cos_http_response_t *resp;
 
     resp = (cos_http_response_t *)cos_pcalloc(p, sizeof(cos_http_response_t));
@@ -170,13 +160,12 @@ cos_http_response_t *cos_http_response_create(cos_pool_t *p)
     return resp;
 }
 
-int cos_read_http_body_memory(cos_http_request_t *req, char *buffer, int len)
-{
+int cos_read_http_body_memory(cos_http_request_t *req, char *buffer, int len) {
     int wsize;
     int bytes = 0;
     cos_buf_t *b;
     cos_buf_t *n;
-    
+
     cos_list_for_each_entry_safe(cos_buf_t, b, n, &req->body, node) {
         wsize = cos_buf_size(b);
         if (wsize == 0) {
@@ -199,8 +188,7 @@ int cos_read_http_body_memory(cos_http_request_t *req, char *buffer, int len)
     return bytes;
 }
 
-int cos_read_http_body_file(cos_http_request_t *req, char *buffer, int len)
-{
+int cos_read_http_body_file(cos_http_request_t *req, char *buffer, int len) {
     int s;
     char buf[256];
     apr_size_t nbytes = len;
@@ -229,8 +217,7 @@ int cos_read_http_body_file(cos_http_request_t *req, char *buffer, int len)
     return nbytes;
 }
 
-int cos_write_http_body_memory(cos_http_response_t *resp, const char *buffer, int len)
-{
+int cos_write_http_body_memory(cos_http_response_t *resp, const char *buffer, int len) {
     cos_buf_t *b;
 
     b = cos_create_buf(resp->pool, len);
@@ -242,8 +229,7 @@ int cos_write_http_body_memory(cos_http_response_t *resp, const char *buffer, in
     return len;
 }
 
-int cos_write_http_body_file(cos_http_response_t *resp, const char *buffer, int len)
-{
+int cos_write_http_body_file(cos_http_response_t *resp, const char *buffer, int len) {
     int elen;
     int s;
     char buf[256];
@@ -276,8 +262,7 @@ int cos_write_http_body_file(cos_http_response_t *resp, const char *buffer, int 
     return nbytes;
 }
 
-int cos_write_http_body_file_part(cos_http_response_t *resp, const char *buffer, int len)
-{
+int cos_write_http_body_file_part(cos_http_response_t *resp, const char *buffer, int len) {
     int s;
     char buf[256];
     apr_size_t nbytes = len;
@@ -300,8 +285,7 @@ int cos_write_http_body_file_part(cos_http_response_t *resp, const char *buffer,
 }
 
 
-int cos_http_io_initialize(const char *user_agent_info, int flags)
-{
+int cos_http_io_initialize(const char *user_agent_info, int flags) {
     CURLcode ecode;
     int s;
     char buf[256];
@@ -355,8 +339,7 @@ int cos_http_io_initialize(const char *user_agent_info, int flags)
     return COSE_OK;
 }
 
-void cos_http_io_deinitialize()
-{
+void cos_http_io_deinitialize() {
     apr_thread_mutex_destroy(requestStackMutexG);
     apr_thread_mutex_destroy(downloadMutex);
 
@@ -378,8 +361,7 @@ void cos_http_io_deinitialize()
     apr_terminate();
 }
 
-int cos_http_send_request(cos_http_controller_t *ctl, cos_http_request_t *req, cos_http_response_t *resp)
-{
+int cos_http_send_request(cos_http_controller_t *ctl, cos_http_request_t *req, cos_http_response_t *resp) {
     cos_http_transport_t *t;
 
     t = cos_http_transport_create(ctl->pool);

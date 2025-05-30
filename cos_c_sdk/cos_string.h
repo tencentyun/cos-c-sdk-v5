@@ -1,5 +1,5 @@
-#ifndef LIBCOS_STRING_H
-#define LIBCOS_STRING_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_STRING_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_STRING_H_
 
 #include "cos_sys_define.h"
 
@@ -22,8 +22,7 @@ typedef struct {
 
 #define cos_string_valid(str) ((str)->data != NULL && (str)->len > 0)
 
-static APR_INLINE void cos_string_tolower(cos_string_t *str)
-{
+static APR_INLINE void cos_string_tolower(cos_string_t *str) {
     int i = 0;
     while (i < str->len) {
         str->data[i] = cos_tolower(str->data[i]);
@@ -31,8 +30,7 @@ static APR_INLINE void cos_string_tolower(cos_string_t *str)
     }
 }
 
-static APR_INLINE char *cos_strlchr(char *p, char *last, char c)
-{
+static APR_INLINE char *cos_strlchr(char *p, char *last, char c) {
     while (p < last) {
         if (*p == c) {
             return p;
@@ -42,23 +40,19 @@ static APR_INLINE char *cos_strlchr(char *p, char *last, char c)
     return NULL;
 }
 
-static APR_INLINE int cos_is_quote(char c)
-{
+static APR_INLINE int cos_is_quote(char c) {
     return c == '\"';
 }
 
-static APR_INLINE int cos_is_space(char c)
-{
+static APR_INLINE int cos_is_space(char c) {
     return ((c == ' ') || (c == '\t'));
 }
 
-static APR_INLINE int cos_is_space_or_cntrl(char c)
-{
+static APR_INLINE int cos_is_space_or_cntrl(char c) {
     return c <= ' ';
 }
 
-static APR_INLINE int cos_is_null_string(const cos_string_t *str)
-{
+static APR_INLINE int cos_is_null_string(const cos_string_t *str) {
     if (str == NULL || str->data == NULL || str->len == 0) {
         return COS_TRUE;
     }
@@ -75,4 +69,4 @@ int cos_ends_with(const cos_string_t *str, const cos_string_t *suffix);
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_STRING_H_

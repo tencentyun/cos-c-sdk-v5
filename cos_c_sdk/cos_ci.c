@@ -59,7 +59,7 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
         *job_result = NULL;
         return s;
     }
-    
+
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     build_video_auditing_job_body(options->pool, job_options, &body);
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);

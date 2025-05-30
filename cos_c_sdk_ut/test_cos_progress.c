@@ -10,8 +10,7 @@
 #include "cos_config.h"
 #include "cos_test_util.h"
 
-void test_progress_setup(CuTest *tc)
-{
+void test_progress_setup(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -28,8 +27,7 @@ void test_progress_setup(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_progress_cleanup(CuTest *tc)
-{
+void test_progress_cleanup(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_string_t bucket;
@@ -56,8 +54,7 @@ void test_progress_cleanup(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_progress_put_and_get_from_buffer(CuTest *tc)
-{
+void test_progress_put_and_get_from_buffer(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_progress_put_object.ts";
     char *str = NULL;
@@ -112,8 +109,7 @@ void test_progress_put_and_get_from_buffer(CuTest *tc)
     printf("test_progress_put_object_from_buffer ok\n");
 }
 
-void test_progress_put_and_get_from_file(CuTest *tc)
-{
+void test_progress_put_and_get_from_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_progress_put_object.ts";
     cos_status_t *s = NULL;
@@ -159,8 +155,7 @@ void test_progress_put_and_get_from_file(CuTest *tc)
     printf("test_progress_put_and_get_from_file ok\n");
 }
 
-void test_progress_put_and_get_empty_body(CuTest *tc)
-{
+void test_progress_put_and_get_empty_body(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_progress_put_object.ts";
     char *str = "";
@@ -213,8 +208,7 @@ void test_progress_put_and_get_empty_body(CuTest *tc)
     printf("test_progress_put_and_get_empty_body ok\n");
 }
 
-void test_progress_append_object(CuTest *tc)
-{
+void test_progress_append_object(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_progress_append_object.ts";
     char *str = NULL;
@@ -276,8 +270,7 @@ void test_progress_append_object(CuTest *tc)
     printf("test_progress_append_object ok\n");
 }
 
-void test_progress_multipart_from_buffer(CuTest *tc)
-{
+void test_progress_multipart_from_buffer(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_progress_multipart_object.ts";
@@ -343,8 +336,7 @@ void test_progress_multipart_from_buffer(CuTest *tc)
     printf("test_progress_multipart_from_buffer ok\n");
 }
 
-void test_progress_multipart_from_file(CuTest *tc)
-{
+void test_progress_multipart_from_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_progress_multipart_object.ts";
@@ -415,8 +407,7 @@ void test_progress_multipart_from_file(CuTest *tc)
     printf("void test_progress_multipart_from_file ok\n");
 }
 
-CuSuite *test_cos_progress()
-{
+CuSuite *test_cos_progress() {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_progress_setup);
