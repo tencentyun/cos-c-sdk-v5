@@ -1,5 +1,5 @@
-#ifndef LIBCOS_XML_H
-#define LIBCOS_XML_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_XML_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_XML_H_
 
 #include <mxml.h>
 #include "cos_string.h"
@@ -133,7 +133,7 @@ char *build_objects_xml(cos_pool_t *p, cos_list_t *object_list, const char *quie
 /**
   * @brief  build body for delete objects
 **/
-void build_delete_objects_body(cos_pool_t *p, cos_list_t *object_list, int is_quiet, 
+void build_delete_objects_body(cos_pool_t *p, cos_list_t *object_list, int is_quiet,
             cos_list_t *body);
 
 mxml_node_t *set_xmlnode_value_str(mxml_node_t *parent, const char *name, const cos_string_t *value);
@@ -384,4 +384,4 @@ int ci_media_info_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_media
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_XML_H_

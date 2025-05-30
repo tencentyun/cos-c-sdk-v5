@@ -18,8 +18,7 @@ static size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t
 static size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
 static size_t cos_curl_default_read_callback(char *buffer, size_t size, size_t nitems, void *instream);
 
-static void cos_init_curl_headers(cos_curl_http_transport_t *t)
-{
+static void cos_init_curl_headers(cos_curl_http_transport_t *t) {
     int pos;
     char *header;
     const cos_array_header_t *tarr;
@@ -39,7 +38,7 @@ static void cos_init_curl_headers(cos_curl_http_transport_t *t)
         header = apr_psprintf(t->pool, "%s: %s", telts[pos].key, telts[pos].val);
         t->headers = curl_slist_append(t->headers, header);
     }
-    
+
     /* Disable these headers if they're not set explicitly */
     if (NULL == apr_table_get(t->req->headers, COS_EXPECT)) {
         header = apr_psprintf(t->pool, "%s: %s", COS_EXPECT, "");
@@ -49,13 +48,12 @@ static void cos_init_curl_headers(cos_curl_http_transport_t *t)
         header = apr_psprintf(t->pool, "%s: %s", COS_TRANSFER_ENCODING, "");
         t->headers = curl_slist_append(t->headers, header);
     }
-    
+
     func.func1 = (cos_func1_pt)curl_slist_free_all;
     cos_fstack_push(t->cleanup, t->headers, func, 1);
 }
 
-static int cos_init_curl_url(cos_curl_http_transport_t *t)
-{
+static int cos_init_curl_url(cos_curl_http_transport_t *t) {
     int rs;
     const char *proto;
     cos_string_t querystr;
@@ -63,7 +61,7 @@ static int cos_init_curl_url(cos_curl_http_transport_t *t)
 
     uristr[0] = '\0';
     cos_str_null(&querystr);
-    
+
     if ((rs = cos_url_encode(uristr, t->req->uri, COS_MAX_URI_LEN)) != COSE_OK) {
         t->controller->error_code = rs;
         t->controller->reason = "uri invalid argument.";
@@ -111,14 +109,13 @@ static int cos_init_curl_url(cos_curl_http_transport_t *t)
                                   querystr.data);
         }
     }
-    
+
     cos_info_log("url:%s", t->url);
 
     return COSE_OK;
 }
 
-static void cos_transport_cleanup(cos_http_transport_t *t)
-{
+static void cos_transport_cleanup(cos_http_transport_t *t) {
     int s;
     char buf[256];
 
@@ -129,7 +126,7 @@ static void cos_transport_cleanup(cos_http_transport_t *t)
         }
         t->req->file_buf = NULL;
     }
-    
+
     if (t->resp->file_buf != NULL && t->resp->file_buf->owner) {
         cos_trace_log("close response body file.");
         if ((s = apr_file_close(t->resp->file_buf->file)) != APR_SUCCESS) {
@@ -139,8 +136,7 @@ static void cos_transport_cleanup(cos_http_transport_t *t)
     }
 }
 
-cos_http_transport_t *cos_curl_http_transport_create(cos_pool_t *p)
-{
+cos_http_transport_t *cos_curl_http_transport_create(cos_pool_t *p) {
     cos_func_u func;
     cos_curl_http_transport_t *t;
 
@@ -152,7 +148,7 @@ cos_http_transport_t *cos_curl_http_transport_create(cos_pool_t *p)
 
     func.func1 = (cos_func1_pt)cos_transport_cleanup;
     cos_fstack_push(t->cleanup, t, func, 1);
-    
+
     t->curl = cos_request_get();
     func.func1 = (cos_func1_pt)request_release2;
     cos_fstack_push(t->cleanup, t, func, 1);
@@ -164,20 +160,18 @@ cos_http_transport_t *cos_curl_http_transport_create(cos_pool_t *p)
     return (cos_http_transport_t *)t;
 }
 
-static void cos_move_transport_state(cos_curl_http_transport_t *t, cos_transport_state_e s)
-{
+static void cos_move_transport_state(cos_curl_http_transport_t *t, cos_transport_state_e s) {
     if (t->state < s) {
         t->state = s;
     }
 }
 
-void cos_curl_response_headers_parse(cos_pool_t *p, cos_table_t *headers, char *buffer, int len)
-{
+void cos_curl_response_headers_parse(cos_pool_t *p, cos_table_t *headers, char *buffer, int len) {
     char *pos;
     cos_string_t str;
     cos_string_t key;
     cos_string_t value;
-    
+
     str.data = buffer;
     str.len = len;
 
@@ -198,8 +192,7 @@ void cos_curl_response_headers_parse(cos_pool_t *p, cos_table_t *headers, char *
     apr_table_addn(headers, cos_pstrdup(p, &key), cos_pstrdup(p, &value));
 }
 
-size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
-{
+size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t nitems, void *userdata) {
     int len;
     cos_curl_http_transport_t *t;
 
@@ -217,8 +210,7 @@ size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t nitems
     return len;
 }
 
-static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t)
-{
+static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t) {
     int32_t http_code;
     CURLcode code;
     const char *value;
@@ -227,7 +219,7 @@ static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t)
         cos_debug_log("has error %d.", t->controller->error_code);
         return;
     }
-    
+
     if (t->resp->status > 0) {
         cos_trace_log("http response status %d.", t->resp->status);
         return;
@@ -248,8 +240,7 @@ static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t)
     }
 }
 
-size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
+size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
     int len;
     int bytes;
     cos_curl_http_transport_t *t;
@@ -260,7 +251,7 @@ size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, voi
     if (t->controller->first_byte_time == 0) {
         t->controller->first_byte_time = apr_time_now();
     }
-    
+
     cos_curl_transport_headers_done(t);
 
     if (t->controller->error_code != COSE_OK) {
@@ -268,7 +259,7 @@ size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, voi
         return 0;
     }
 
-    // On HTTP error, we expect to parse an HTTP error response    
+    // On HTTP error, we expect to parse an HTTP error response
     if (t->resp->status < 200 || t->resp->status > 299) {
         bytes = cos_write_http_body_memory(t->resp, ptr, len);
         assert(bytes == len);
@@ -303,18 +294,17 @@ size_t cos_curl_default_write_callback(char *ptr, size_t size, size_t nmemb, voi
             t->resp->crc64 = cos_crc64(t->resp->crc64, ptr, bytes);
         }
     }
-    
+
     cos_move_transport_state(t, TRANS_STATE_BODY_IN);
-    
+
     return bytes;
 }
 
-size_t cos_curl_default_read_callback(char *buffer, size_t size, size_t nitems, void *instream)
-{
+size_t cos_curl_default_read_callback(char *buffer, size_t size, size_t nitems, void *instream) {
     int len;
     int bytes;
     cos_curl_http_transport_t *t;
-    
+
     t = (cos_curl_http_transport_t *)(instream);
     len = size * nitems;
 
@@ -329,7 +319,7 @@ size_t cos_curl_default_read_callback(char *buffer, size_t size, size_t nitems, 
         t->controller->reason = "read body failure.";
         return CURL_READFUNC_ABORT;
     }
-    
+
     if (bytes >= 0) {
         // progress callback
         t->req->consumed_bytes += bytes;
@@ -348,8 +338,7 @@ size_t cos_curl_default_read_callback(char *buffer, size_t size, size_t nitems, 
     return bytes;
 }
 
-int cos_curl_code_to_status(CURLcode code)
-{
+int cos_curl_code_to_status(CURLcode code) {
     switch (code) {
         case CURLE_OUT_OF_MEMORY:
             return COSE_OUT_MEMORY;
@@ -370,25 +359,22 @@ int cos_curl_code_to_status(CURLcode code)
     }
 }
 
-static void cos_curl_transport_finish(cos_curl_http_transport_t *t)
-{
+static void cos_curl_transport_finish(cos_curl_http_transport_t *t) {
     cos_curl_transport_headers_done(t);
-    
+
     if (t->cleanup != NULL) {
         cos_fstack_destory(t->cleanup);
         t->cleanup = NULL;
     }
 }
-int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
-{
+int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
     if (type == CURLINFO_DATA_OUT)
     {
         printf("Request body: %.*s\n", (int)size, data);
     }
     return 0;
 }
-int cos_curl_transport_setup(cos_curl_http_transport_t *t)
-{
+int cos_curl_transport_setup(cos_curl_http_transport_t *t) {
     CURLcode code;
 
 #define curl_easy_setopt_safe(opt, val)                                 \
@@ -406,11 +392,11 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
 
     curl_easy_setopt_safe(CURLOPT_HEADERDATA, t);
     curl_easy_setopt_safe(CURLOPT_HEADERFUNCTION, t->header_callback);
-    
+
     curl_easy_setopt_safe(CURLOPT_READDATA, t);
     curl_easy_setopt_safe(CURLOPT_READFUNCTION, t->read_callback);
-    
-    curl_easy_setopt_safe(CURLOPT_WRITEDATA, t);    
+
+    curl_easy_setopt_safe(CURLOPT_WRITEDATA, t);
     curl_easy_setopt_safe(CURLOPT_WRITEFUNCTION, t->write_callback);
 
     curl_easy_setopt_safe(CURLOPT_FILETIME, 1);
@@ -450,7 +436,7 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
         }
     }
     else {
-        t->url = t->req->signed_url; 
+        t->url = t->req->signed_url;
     }
     curl_easy_setopt_safe(CURLOPT_URL, t->url);
 
@@ -470,16 +456,15 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t)
         default: // HTTP_GET
             break;
     }
-    
+
 #undef curl_easy_setopt_safe
-    
+
     t->state = TRANS_STATE_INIT;
-    
+
     return COSE_OK;
 }
 
-int cos_curl_http_transport_perform(cos_http_transport_t *t_)
-{
+int cos_curl_http_transport_perform(cos_http_transport_t *t_) {
     int ecode;
     CURLcode code;
     cos_curl_http_transport_t *t = (cos_curl_http_transport_t *)(t_);
@@ -492,7 +477,7 @@ int cos_curl_http_transport_perform(cos_http_transport_t *t_)
     code = curl_easy_perform(t->curl);
     t->controller->finish_time = apr_time_now();
     cos_move_transport_state(t, TRANS_STATE_DONE);
-    
+
     t->curl_code = code;
     if ((code != CURLE_OK) && (t->controller->error_code == COSE_OK)) {
         ecode = cos_curl_code_to_status(code);

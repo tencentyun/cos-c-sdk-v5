@@ -41,12 +41,12 @@ void test_progress_cleanup(CuTest *tc) {
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     /* delete test object */
     cos_str_set(&prefix, prefix_str);
     s = cos_delete_objects_by_prefix(options, &bucket, &prefix);
     printf("delete all objects, status code=%d\n", s->code);
-    
+
     /* delete test bucket */
     cos_delete_bucket(options, &bucket, &resp_headers);
     apr_sleep(apr_time_from_sec(3));
@@ -75,7 +75,7 @@ void test_progress_put_and_get_from_buffer(CuTest *tc) {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-   
+
     str = (char *)cos_palloc(p, length);
     memset(str, 'A', length - 1);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
@@ -88,9 +88,9 @@ void test_progress_put_and_get_from_buffer(CuTest *tc) {
 
     headers = cos_table_make(p, 1);
     apr_table_set(headers, "x-cos-meta-author", "cos");
-    
+
     /* test put object */
-    s = cos_do_put_object_from_buffer(options, &bucket, &object, &buffer, 
+    s = cos_do_put_object_from_buffer(options, &bucket, &object, &buffer,
         headers, params, percentage, &resp_headers, &resp_body);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, headers);
@@ -101,7 +101,7 @@ void test_progress_put_and_get_from_buffer(CuTest *tc) {
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
 
-    s = cos_do_get_object_to_buffer(options, &bucket, &object, NULL, NULL, 
+    s = cos_do_get_object_to_buffer(options, &bucket, &object, NULL, NULL,
         &buffer, percentage, NULL);
     CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
@@ -126,7 +126,7 @@ void test_progress_put_and_get_from_file(CuTest *tc) {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-   
+
     make_random_file(p, object_name, length);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, object_name);
@@ -134,10 +134,10 @@ void test_progress_put_and_get_from_file(CuTest *tc) {
     cos_list_init(&resp_body);
 
     /* test put object */
-    s = cos_do_put_object_from_file(options, &bucket, &object, &filename, 
+    s = cos_do_put_object_from_file(options, &bucket, &object, &filename,
         NULL, NULL, percentage, &resp_headers, &resp_body);
     CuAssertIntEquals(tc, 200, s->code);
-    
+
     cos_pool_destroy(p);
 
     /* test get object */
@@ -145,7 +145,7 @@ void test_progress_put_and_get_from_file(CuTest *tc) {
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
 
-    s = cos_do_get_object_to_file(options, &bucket, &object, NULL, NULL, 
+    s = cos_do_get_object_to_file(options, &bucket, &object, NULL, NULL,
         &filename, percentage, NULL);
     CuAssertIntEquals(tc, 200, s->code);
 
@@ -189,7 +189,7 @@ void test_progress_put_and_get_empty_body(CuTest *tc) {
     apr_table_set(headers, "x-cos-meta-author", "cos");
 
     /* test put object */
-    s = cos_do_put_object_from_buffer(options, &bucket, &object, &buffer, 
+    s = cos_do_put_object_from_buffer(options, &bucket, &object, &buffer,
         headers, params, percentage, &resp_headers, &resp_body);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, headers);
@@ -200,7 +200,7 @@ void test_progress_put_and_get_empty_body(CuTest *tc) {
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
 
-    s = cos_do_get_object_to_buffer(options, &bucket, &object, NULL, NULL, 
+    s = cos_do_get_object_to_buffer(options, &bucket, &object, NULL, NULL,
         &buffer, percentage, NULL);
     CuAssertIntEquals(tc, 200, s->code);
     cos_pool_destroy(p);
@@ -231,7 +231,7 @@ void test_progress_append_object(CuTest *tc) {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-   
+
     str = (char *)cos_palloc(p, length);
     memset(str, 'A', length - 1);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
@@ -244,9 +244,9 @@ void test_progress_append_object(CuTest *tc) {
 
     headers = cos_table_make(p, 1);
     apr_table_set(headers, "x-cos-meta-author", "cos");
-    
+
     /* test append object from buffer */
-    s = cos_do_append_object_from_buffer(options, &bucket, &object, 0, initcrc, &buffer, 
+    s = cos_do_append_object_from_buffer(options, &bucket, &object, 0, initcrc, &buffer,
         headers, params, percentage, &resp_headers, &resp_body);
     CuAssertIntEquals(tc, 200, s->code);
 
@@ -315,7 +315,7 @@ void test_progress_multipart_from_buffer(CuTest *tc) {
     params->max_ret = 1;
     cos_list_init(&complete_part_list);
 
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              params, NULL);
     CuAssertIntEquals(tc, 200, s->code);
 
@@ -351,7 +351,7 @@ void test_progress_multipart_from_file(CuTest *tc) {
     cos_list_part_content_t *part_content1 = NULL;
     cos_complete_part_content_t *complete_content1 = NULL;
     size_t length = 1024 * 16 * 10;
-    int part_num = 1;    
+    int part_num = 1;
 
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
@@ -385,7 +385,7 @@ void test_progress_multipart_from_file(CuTest *tc) {
     params->max_ret = 1;
     cos_list_init(&complete_part_list);
 
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              params, NULL);
     CuAssertIntEquals(tc, 200, s->code);
 
@@ -415,8 +415,8 @@ CuSuite *test_cos_progress() {
     SUITE_ADD_TEST(suite, test_progress_put_and_get_from_file);
     SUITE_ADD_TEST(suite, test_progress_put_and_get_empty_body);
     SUITE_ADD_TEST(suite, test_progress_append_object);
-    SUITE_ADD_TEST(suite, test_progress_multipart_from_buffer); 
-    SUITE_ADD_TEST(suite, test_progress_multipart_from_file); 
+    SUITE_ADD_TEST(suite, test_progress_multipart_from_buffer);
+    SUITE_ADD_TEST(suite, test_progress_multipart_from_file);
     SUITE_ADD_TEST(suite, test_progress_cleanup);
 
     return suite;

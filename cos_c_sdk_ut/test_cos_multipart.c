@@ -808,8 +808,8 @@ void test_upload_file_from_recover_failed(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_multipart_upload_from_file";
-    cos_string_t object; 
-    int is_cname = 0; 
+    cos_string_t object;
+    int is_cname = 0;
     cos_request_options_t *options = NULL;
     cos_status_t *s = NULL;
     int part_size = 100*1024;
@@ -823,13 +823,13 @@ void test_upload_file_from_recover_failed(CuTest *tc) {
     cos_str_set(&object, object_name);
 
     //init mulitipart
-    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, 
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME,
                                    object_name, &upload_id);
     CuAssertIntEquals(tc, 200, s->code);
-    
+
     cos_str_set(&filepath, __FILE__);
     cos_str_set(&bucket, "invalid_bucket");
-    s = cos_upload_file(options, &bucket, &object, &upload_id, &filepath, 
+    s = cos_upload_file(options, &bucket, &object, &upload_id, &filepath,
                         part_size, NULL);
     log_status(s);
     CuAssertIntEquals(tc, -994, s->code);
@@ -881,7 +881,7 @@ void test_list_upload_part_with_empty(CuTest *tc) {
     params->max_ret = 1;
     cos_list_init(&complete_part_list);
 
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              params, &list_part_resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertIntEquals(tc, 0, params->truncated);
@@ -938,7 +938,7 @@ void test_cos_get_sorted_uploaded_part(CuTest *tc) {
     cos_str_set(&object, object_name);
 
     //init mulitipart
-    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, 
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME,
                                    object_name, &upload_id);
     CuAssertIntEquals(tc, 200, s->code);
 
@@ -961,7 +961,7 @@ void test_cos_get_sorted_uploaded_part(CuTest *tc) {
     //get sorted uploaded part
     cos_list_init(&complete_part_list);
 
-    s = cos_get_sorted_uploaded_part(options, &bucket, &object, 
+    s = cos_get_sorted_uploaded_part(options, &bucket, &object,
             &upload_id, &complete_part_list, &part_count);
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertIntEquals(tc, 2, part_count);
@@ -999,7 +999,7 @@ void test_cos_get_sorted_uploaded_part_with_empty(CuTest *tc) {
     cos_str_set(&object, object_name);
 
     //init mulitipart
-    s = init_test_multipart_upload(options, TEST_BUCKET_NAME, 
+    s = init_test_multipart_upload(options, TEST_BUCKET_NAME,
                                    object_name, &upload_id);
     CuAssertIntEquals(tc, 200, s->code);
 

@@ -14,8 +14,8 @@ void cos_fstack_push(cos_array_header_t *fstack, void *data, cos_func_u func, in
 }
 
 cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack) {
-    cos_fstack_item_t *item;    
-    
+    cos_fstack_item_t *item;
+
     item = (cos_fstack_item_t*)apr_array_pop(fstack);
     if (item == NULL) {
         return NULL;

@@ -53,8 +53,7 @@ static uint64_t crc64_little_table[8][256];
 static uint64_t crc64_big_table[8][256];
 
 /* Fill in the CRC-64 constants table. */
-static void crc64_init(uint64_t table[][256])
-{
+static void crc64_init(uint64_t table[][256]) {
     unsigned n, k;
     uint64_t crc;
 
@@ -208,7 +207,7 @@ uint64_t cos_crc64(uint64_t crc, void *buf, size_t len)
                          crc64_big(crc, buf, len);
 }
 
-uint64_t cos_crc64_big(uint64_t crc, void *buf, size_t len){
+uint64_t cos_crc64_big(uint64_t crc, void *buf, size_t len) {
     return crc64_big(crc, buf, len);
 }
 
