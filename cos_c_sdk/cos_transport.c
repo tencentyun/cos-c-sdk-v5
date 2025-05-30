@@ -368,8 +368,7 @@ static void cos_curl_transport_finish(cos_curl_http_transport_t *t) {
     }
 }
 int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
-    if (type == CURLINFO_DATA_OUT)
-    {
+    if (type == CURLINFO_DATA_OUT) {
         printf("Request body: %.*s\n", (int)size, data);
     }
     return 0;

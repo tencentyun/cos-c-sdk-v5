@@ -1,5 +1,5 @@
-#ifndef LIBCOS_API_H
-#define LIBCOS_API_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_API_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_API_H_
 
 #include "cos_sys_util.h"
 #include "cos_string.h"
@@ -1795,4 +1795,4 @@ cos_status_t *ci_get_media_info(const cos_request_options_t *options,
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_API_H_

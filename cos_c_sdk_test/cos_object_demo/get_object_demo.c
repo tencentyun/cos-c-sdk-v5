@@ -78,10 +78,9 @@ void get_object_to_file_demo() {
     {
         int i = 0;
         apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
-        for ( ; i < pp->nelts; i++)
-        {
+        for ( ; i < pp->nelts; i++) {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key, ele->val);
+            printf("%s: %s\n", ele->key, ele->val);
         }
     }
 

@@ -77,14 +77,12 @@ static void crc64_init(uint64_t table[][256]) {
 
 /* This function is called once to initialize the CRC-64 table for use on a
    little-endian architecture. */
-static void crc64_little_init(void)
-{
+static void crc64_little_init(void) {
     crc64_init(crc64_little_table);
 }
 
 /* Reverse the bytes in a 64-bit word. */
-static APR_INLINE uint64_t rev8(uint64_t a)
-{
+static APR_INLINE uint64_t rev8(uint64_t a) {
     uint64_t m;
 
     m = UINT64_C(0xff00ff00ff00ff);

@@ -141,7 +141,7 @@ void cos_sign_headers(cos_pool_t *p,
     return;
 }
 
-int cos_get_signed_headers(cos_pool_t *p, 
+int cos_get_signed_headers(cos_pool_t *p,
                            const cos_string_t *access_key_id,
                            const cos_string_t *access_key_secret,
                            const cos_string_t* canon_res,
@@ -152,7 +152,7 @@ int cos_get_signed_headers(cos_pool_t *p,
 
     res = cos_get_string_to_sign(p, req->method, access_key_id, access_key_secret, canon_res,
                                  req->headers, req->query_params, COS_AUTH_EXPIRE_DEFAULT, &signstr);
-    
+
     if (res != COSE_OK) return res;
 
     cos_debug_log("signstr:%.*s.", signstr.len, signstr.data);

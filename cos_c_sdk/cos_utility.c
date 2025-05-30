@@ -127,8 +127,7 @@ static char *cos_invaild_params_error_msg[] = {
 
 static uintptr_t ignore_bucket_check_ptr = -1;
 
-static int is_ak_or_sk_valid(cos_string_t *str)
-{
+static int is_ak_or_sk_valid(cos_string_t *str) {
     char *data;
     int len;
 
@@ -200,17 +199,17 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
     return get_test_retry_change_domin_config();
 }
 #else
-int is_should_retry(const cos_status_t *s, const char *str){
-    if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()){
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
+int is_should_retry(const cos_status_t *s, const char *str) {
+    if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()) {
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))){
             return 1;
         }
     }
     return 0;
 }
-int is_should_retry_endpoint(const cos_status_t *s, const char *str){
-    if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()){
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id==NULL || s->req_id==""))){
+int is_should_retry_endpoint(const cos_status_t *s, const char *str) {
+    if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()) {
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))){
             return 1;
         }
     }
@@ -218,7 +217,7 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str){
 }
 #endif
 
-int check_status_with_resp_body(cos_list_t *body, int64_t body_len,const char *target){
+int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *target) {
     if (body_len == 0) {
         return COS_FALSE;
     }
@@ -266,16 +265,16 @@ char ** split(const char * s, char delim, int * returnSize) {
     return ans;
 }
 
-int object_key_simplify_check(const char * object_path){
-    if (!get_object_key_simplify_check()){
+int object_key_simplify_check(const char * object_path) {
+    if (!get_object_key_simplify_check()) {
         return 1;
     }
     int namesSize = 0;
     char *path;
-    if (object_path[0] == '/'){
+    if (object_path[0] == '/') {
         path = (char *)malloc(sizeof(char *) * (strlen(object_path) + 1));
         strcpy(path, object_path);
-    }else {
+    } else {
         path = (char *)malloc(sizeof(char *) * (strlen(object_path) + 2));
         path[0] = '/';
         strcpy(path + 1, object_path);
@@ -290,7 +289,7 @@ int object_key_simplify_check(const char * object_path){
             if (stackSize > 0) {
                 --stackSize;
             } 
-        } else if (strcmp(names[i], ".")){
+        } else if (strcmp(names[i], ".")) {
             stack[stackSize] = names[i];
             ++stackSize;
         }
@@ -316,7 +315,7 @@ int object_key_simplify_check(const char * object_path){
     free(names);
     free(stack);
     free(path);
-    if (strlen(ans) == 1 && ans[0] == '/'){
+    if (strlen(ans) == 1 && ans[0] == '/') {
         free(ans);
         return 0;
     }
@@ -324,7 +323,7 @@ int object_key_simplify_check(const char * object_path){
     return 1;
 }
 
-int is_default_endpoint(const char *str){
+int is_default_endpoint(const char *str) {
     if (str == NULL) {
         return 0;
     }
@@ -357,7 +356,7 @@ int is_default_endpoint(const char *str){
 
     return i == len;
 }
-int is_default_domain(const char *str){
+int is_default_domain(const char *str) {
     if (str == NULL) {
         return 0;
     }
@@ -453,7 +452,7 @@ void change_endpoint_suffix(cos_string_t *endpoint) {
     }
 }
 
-void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host){
+void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host) {
     if (strlen(endpoint->data) > 13 && strcmp(endpoint->data + strlen(endpoint->data)  - 13, "tencentcos.cn") == 0) {
         free(endpoint->data);
     }
@@ -463,8 +462,7 @@ void clear_change_endpoint_suffix(cos_string_t *endpoint , char * host){
 
 static int is_config_params_vaild(const cos_request_options_t *options,
                                   const cos_string_t *bucket,
-                                  char **error_msg)
-{
+                                  char **error_msg) {
     if (cos_is_null_string(&options->config->endpoint)) {
         *error_msg = cos_invaild_params_error_msg[0];
         cos_error_log("config params invaild, msg: %s", *error_msg);
@@ -506,8 +504,7 @@ int starts_with(const cos_string_t *str, const char *prefix) {
 }
 
 static void generate_proto(const cos_request_options_t *options, 
-                           cos_http_request_t *req) 
-{
+                           cos_http_request_t *req) {
     const char *proto;
     proto = starts_with(&options->config->endpoint, COS_HTTP_PREFIX) ? 
             COS_HTTP_PREFIX : "";
@@ -515,48 +512,19 @@ static void generate_proto(const cos_request_options_t *options,
             COS_HTTPS_PREFIX : proto;
     req->proto = apr_psprintf(options->pool, "%.*s", (int)strlen(proto), proto);
 }
-#if 0
-static void generate_rtmp_proto(const cos_request_options_t *options,
-                           cos_http_request_t *req)
-{
-    const char *proto = COS_RTMP_PREFIX;
-    req->proto = apr_psprintf(options->pool, "%.*s", (int)strlen(proto), proto);
-}
-#endif
 
-int is_valid_ip(const char *str)
-{
+int is_valid_ip(const char *str) {
     if (INADDR_NONE == inet_addr(str) || INADDR_ANY == inet_addr(str)) {
         return 0;
     }
     return 1;
 }
 
-cos_config_t *cos_config_create(cos_pool_t *p)
-{
+cos_config_t *cos_config_create(cos_pool_t *p) {
     return (cos_config_t *)cos_pcalloc(p, sizeof(cos_config_t));
 }
-#if 0
-void cos_config_resolve(cos_pool_t *pool, cos_config_t *config, cos_http_controller_t *ctl)
-{
-    if(!cos_is_null_string(&config->proxy_host)) {
-        // proxy host:port
-        if (config->proxy_port == 0) {
-            ctl->options->proxy_host = apr_psprintf(pool, "%.*s", config->proxy_host.len, config->proxy_host.data);
-        } else {
-            ctl->options->proxy_host = apr_psprintf(pool, "%.*s:%d", config->proxy_host.len, config->proxy_host.data, 
-                config->proxy_port);
-        }
-        // authorize user:passwd
-        if (!cos_is_null_string(&config->proxy_user) && !cos_is_null_string(&config->proxy_passwd)) {
-            ctl->options->proxy_auth = apr_psprintf(pool, "%.*s:%.*s", config->proxy_user.len, 
-                config->proxy_user.data, config->proxy_passwd.len, config->proxy_passwd.data);
-        }
-    }
-}
-#endif
-cos_request_options_t *cos_request_options_create(cos_pool_t *p)
-{
+
+cos_request_options_t *cos_request_options_create(cos_pool_t *p) {
     int s;
     cos_request_options_t *options;
 
@@ -573,8 +541,7 @@ cos_request_options_t *cos_request_options_create(cos_pool_t *p)
     return options;
 }
 
-void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_port)
-{
+void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_port) {
     ctl->options->host_ip = apr_pstrdup(ctl->pool, host_ip);
     ctl->options->host_port = host_port;
 }
@@ -582,8 +549,7 @@ void cos_set_request_route(cos_http_controller_t *ctl, char *host_ip, int host_p
 int cos_get_service_uri(const cos_request_options_t *options,
                          const int all_region,
                          cos_http_request_t *req,
-                         char **error_msg)
-{
+                         char **error_msg) {
     int32_t proto_len;
     cos_string_t raw_endpoint;
 
@@ -610,8 +576,7 @@ int cos_get_service_uri(const cos_request_options_t *options,
 
 static int cos_get_media_buckets_uri(const cos_request_options_t *options,
                                cos_http_request_t *req,
-                               char **error_msg)
-{
+                               char **error_msg) {
     static const char *media_bucket_uri = "mediabucket";
     int32_t proto_len;
     cos_string_t raw_endpoint;
@@ -637,8 +602,7 @@ int cos_get_object_uri(const cos_request_options_t *options,
                         const cos_string_t *bucket,
                         const cos_string_t *object,
                         cos_http_request_t *req,
-                        char **error_msg)
-{
+                        char **error_msg) {
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
@@ -694,8 +658,7 @@ int cos_get_object_uri(const cos_request_options_t *options,
 
 const char *cos_gen_object_url(const cos_request_options_t *options,
                                 const cos_string_t *bucket,
-                                const cos_string_t *object)
-{
+                                const cos_string_t *object) {
     int32_t proto_len;
     const char *proto;
     const char *host;
@@ -754,8 +717,7 @@ const char *cos_gen_object_url(const cos_request_options_t *options,
 int cos_get_bucket_uri(const cos_request_options_t *options, 
                         const cos_string_t *bucket,
                         cos_http_request_t *req,
-                        char **error_msg)
-{
+                        char **error_msg) {
     int32_t proto_len;
     const char *raw_endpoint_str;
     cos_string_t raw_endpoint;
@@ -808,54 +770,10 @@ int cos_get_bucket_uri(const cos_request_options_t *options,
     return COS_TRUE;
 }
 
-#if 0
-void cos_get_rtmp_uri(const cos_request_options_t *options,
-                      const cos_string_t *bucket,
-                      const cos_string_t *live_channel_id,
-                      cos_http_request_t *req)
-{
-    int32_t proto_len = 0;
-    const char *raw_endpoint_str = NULL;
-    cos_string_t raw_endpoint;
-
-    generate_rtmp_proto(options, req);
-
-    proto_len = strlen(req->proto);
-
-    req->resource = apr_psprintf(options->pool, "%.*s/%.*s", bucket->len, bucket->data,
-        live_channel_id->len, live_channel_id->data);
-
-    raw_endpoint_str = cos_pstrdup(options->pool,
-            &options->config->endpoint) + proto_len;
-    raw_endpoint.len = options->config->endpoint.len - proto_len;
-    raw_endpoint.data = options->config->endpoint.data + proto_len;
-
-    if (options->config->is_cname) {
-        req->host = apr_psprintf(options->pool, "%.*s",
-                raw_endpoint.len, raw_endpoint.data);
-        req->uri = apr_psprintf(options->pool, "live/%.*s",
-            live_channel_id->len, live_channel_id->data);
-    } else if (is_valid_ip(raw_endpoint_str)) {
-        req->host = apr_psprintf(options->pool, "%.*s",
-                raw_endpoint.len, raw_endpoint.data);
-        req->uri = apr_psprintf(options->pool, "%.*s/live/%.*s",
-                                bucket->len, bucket->data,
-                                live_channel_id->len, live_channel_id->data);
-    } else {
-        req->host = apr_psprintf(options->pool, "%.*s.%.*s",
-                bucket->len, bucket->data,
-                raw_endpoint.len, raw_endpoint.data);
-        req->uri = apr_psprintf(options->pool, "live/%.*s",
-            live_channel_id->len, live_channel_id->data);
-    }
-}
-#endif
-
 void cos_write_request_body_from_buffer(cos_pool_t *p,
                                         cos_list_t *buffer,
                                         cos_http_request_t *req,
-                                        cos_table_t *headers)
-{
+                                        cos_table_t *headers) {
     cos_list_movelist(buffer, &req->body);
     req->body_len = cos_buf_list_len(&req->body);
 
@@ -877,8 +795,7 @@ void cos_write_request_body_from_buffer(cos_pool_t *p,
 int cos_write_request_body_from_file(cos_pool_t *p, 
                                      const cos_string_t *filename, 
                                      cos_http_request_t *req,
-                                     cos_table_t *headers)
-{
+                                     cos_table_t *headers) {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
     res = cos_open_file_for_all_read(p, filename->data, fb);
@@ -913,8 +830,7 @@ int cos_write_request_body_from_file(cos_pool_t *p,
 int cos_write_request_body_from_upload_file(cos_pool_t *p, 
                                             cos_upload_file_t *upload_file, 
                                             cos_http_request_t *req,
-                                            cos_table_t *headers)
-{
+                                            cos_table_t *headers) {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
     res = cos_open_file_for_range_read(p, upload_file->filename.data, 
@@ -949,8 +865,7 @@ int cos_write_request_body_from_upload_file(cos_pool_t *p,
 }
 
 void cos_fill_read_response_body(cos_http_response_t *resp, 
-                                 cos_list_t *buffer)
-{
+                                 cos_list_t *buffer) {
     if (NULL != buffer) {
         cos_list_movelist(&resp->body, buffer);
     }
@@ -958,8 +873,7 @@ void cos_fill_read_response_body(cos_http_response_t *resp,
 
 int cos_init_read_response_body_to_file(cos_pool_t *p, 
                                         const cos_string_t *filename, 
-                                        cos_http_response_t *resp)
-{
+                                        cos_http_response_t *resp) {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
     res = cos_open_file_for_write(p, filename->data, fb);
@@ -977,8 +891,7 @@ int cos_init_read_response_body_to_file(cos_pool_t *p,
 
 int cos_init_read_response_body_to_file_part(cos_pool_t *p, 
                                         cos_upload_file_t *download_file,
-                                        cos_http_response_t *resp)
-{
+                                        cos_http_response_t *resp) {
     int res = COSE_OK;
     cos_file_buf_t *fb = cos_create_file_buf(p);
     res = cos_open_file_for_range_write(p, download_file->filename.data, download_file->file_pos, download_file->file_last, fb);
@@ -996,15 +909,13 @@ int cos_init_read_response_body_to_file_part(cos_pool_t *p,
 
 
 void cos_fill_read_response_header(cos_http_response_t *resp, 
-                                   cos_table_t **headers)
-{
+                                   cos_table_t **headers) {
     if (NULL != headers && NULL != resp) {        
         *headers = resp->headers;
     }
 }
 
-void *cos_create_api_result_content(cos_pool_t *p, size_t size)
-{
+void *cos_create_api_result_content(cos_pool_t *p, size_t size) {
     void *result_content = cos_palloc(p, size);
     if (NULL == result_content) {
         return NULL;
@@ -1015,8 +926,7 @@ void *cos_create_api_result_content(cos_pool_t *p, size_t size)
     return result_content;
 }
 
-cos_acl_grantee_content_t *cos_create_acl_list_content(cos_pool_t *p)
-{
+cos_acl_grantee_content_t *cos_create_acl_list_content(cos_pool_t *p) {
     cos_acl_grantee_content_t *content = NULL;
     content = (cos_acl_grantee_content_t *)cos_create_api_result_content(p, sizeof(cos_acl_grantee_content_t));
     cos_str_set(&content->type, "");
@@ -1026,8 +936,7 @@ cos_acl_grantee_content_t *cos_create_acl_list_content(cos_pool_t *p)
     return content;
 }
 
-cos_get_service_content_t *cos_create_get_service_content(cos_pool_t *p)
-{
+cos_get_service_content_t *cos_create_get_service_content(cos_pool_t *p) {
     cos_get_service_content_t *content = NULL;
     content = (cos_get_service_content_t*)cos_create_api_result_content(p, sizeof(cos_get_service_content_t));
     cos_str_set(&content->bucket_name, "");
@@ -1036,26 +945,22 @@ cos_get_service_content_t *cos_create_get_service_content(cos_pool_t *p)
     return content;
 }
 
-cos_list_object_content_t *cos_create_list_object_content(cos_pool_t *p)
-{
+cos_list_object_content_t *cos_create_list_object_content(cos_pool_t *p) {
     return (cos_list_object_content_t *)cos_create_api_result_content(
             p, sizeof(cos_list_object_content_t));
 }
 
-cos_list_object_common_prefix_t *cos_create_list_object_common_prefix(cos_pool_t *p)
-{
+cos_list_object_common_prefix_t *cos_create_list_object_common_prefix(cos_pool_t *p) {
     return (cos_list_object_common_prefix_t *)cos_create_api_result_content(
             p, sizeof(cos_list_object_common_prefix_t));
 }
 
-cos_list_multipart_upload_content_t *cos_create_list_multipart_upload_content(cos_pool_t *p)
-{
+cos_list_multipart_upload_content_t *cos_create_list_multipart_upload_content(cos_pool_t *p) {
     return (cos_list_multipart_upload_content_t*)cos_create_api_result_content(
             p, sizeof(cos_list_multipart_upload_content_t));
 }
 
-cos_list_part_content_t *cos_create_list_part_content(cos_pool_t *p)
-{
+cos_list_part_content_t *cos_create_list_part_content(cos_pool_t *p) {
     cos_list_part_content_t *list_part_content = NULL;
     list_part_content = (cos_list_part_content_t*)cos_create_api_result_content(p,
         sizeof(cos_list_part_content_t));
@@ -1063,8 +968,7 @@ cos_list_part_content_t *cos_create_list_part_content(cos_pool_t *p)
     return list_part_content;
 }
 
-cos_complete_part_content_t *cos_create_complete_part_content(cos_pool_t *p)
-{
+cos_complete_part_content_t *cos_create_complete_part_content(cos_pool_t *p) {
     cos_complete_part_content_t *complete_part_content = NULL;
     complete_part_content = (cos_complete_part_content_t*)cos_create_api_result_content(
             p, sizeof(cos_complete_part_content_t));
@@ -1072,8 +976,7 @@ cos_complete_part_content_t *cos_create_complete_part_content(cos_pool_t *p)
     return complete_part_content;
 }
 
-cos_get_service_params_t *cos_create_get_service_params(cos_pool_t *p)
-{
+cos_get_service_params_t *cos_create_get_service_params(cos_pool_t *p) {
     cos_get_service_params_t *params = NULL;
     params = (cos_get_service_params_t *)cos_pcalloc(p, sizeof(cos_get_service_params_t));
     params->all_region = 1;
@@ -1083,8 +986,7 @@ cos_get_service_params_t *cos_create_get_service_params(cos_pool_t *p)
     return params;
 }
 
-cos_acl_params_t *cos_create_acl_params(cos_pool_t *p)
-{
+cos_acl_params_t *cos_create_acl_params(cos_pool_t *p) {
     cos_acl_params_t *params = NULL;
     params = (cos_acl_params_t *)cos_pcalloc(p, sizeof(cos_acl_params_t));
     cos_list_init(&params->grantee_list);
@@ -1093,8 +995,7 @@ cos_acl_params_t *cos_create_acl_params(cos_pool_t *p)
     return params;
 }
 
-cos_copy_object_params_t *cos_create_copy_object_params(cos_pool_t *p)
-{
+cos_copy_object_params_t *cos_create_copy_object_params(cos_pool_t *p) {
     cos_copy_object_params_t *params = NULL;
     params = (cos_copy_object_params_t *)cos_pcalloc(p, sizeof(cos_copy_object_params_t));
     cos_str_set(&params->etag, "");
@@ -1102,8 +1003,7 @@ cos_copy_object_params_t *cos_create_copy_object_params(cos_pool_t *p)
     return params;
 }
 
-cos_list_object_params_t *cos_create_list_object_params(cos_pool_t *p)
-{
+cos_list_object_params_t *cos_create_list_object_params(cos_pool_t *p) {
     cos_list_object_params_t * params;
     params = (cos_list_object_params_t *)cos_pcalloc(
             p, sizeof(cos_list_object_params_t));
@@ -1117,8 +1017,7 @@ cos_list_object_params_t *cos_create_list_object_params(cos_pool_t *p)
     return params;
 }
 
-cos_list_upload_part_params_t *cos_create_list_upload_part_params(cos_pool_t *p)
-{
+cos_list_upload_part_params_t *cos_create_list_upload_part_params(cos_pool_t *p) {
     cos_list_upload_part_params_t *params;
     params = (cos_list_upload_part_params_t *)cos_pcalloc(
             p, sizeof(cos_list_upload_part_params_t));
@@ -1129,8 +1028,7 @@ cos_list_upload_part_params_t *cos_create_list_upload_part_params(cos_pool_t *p)
     return params;
 }
 
-cos_list_multipart_upload_params_t *cos_create_list_multipart_upload_params(cos_pool_t *p)
-{
+cos_list_multipart_upload_params_t *cos_create_list_multipart_upload_params(cos_pool_t *p) {
     cos_list_multipart_upload_params_t *params;
     params = (cos_list_multipart_upload_params_t *)cos_pcalloc(
             p, sizeof(cos_list_multipart_upload_params_t));
@@ -1144,8 +1042,7 @@ cos_list_multipart_upload_params_t *cos_create_list_multipart_upload_params(cos_
     return params;
 }
 
-cos_upload_part_copy_params_t *cos_create_upload_part_copy_params(cos_pool_t *p)
-{
+cos_upload_part_copy_params_t *cos_create_upload_part_copy_params(cos_pool_t *p) {
     cos_upload_part_copy_params_t *copy_param;
     copy_param = (cos_upload_part_copy_params_t *)cos_pcalloc(p, sizeof(cos_upload_part_copy_params_t));
     cos_str_set(&copy_param->copy_source, "");
@@ -1159,8 +1056,7 @@ cos_upload_part_copy_params_t *cos_create_upload_part_copy_params(cos_pool_t *p)
     return copy_param;
 }
 
-cos_lifecycle_rule_content_t *cos_create_lifecycle_rule_content(cos_pool_t *p)
-{
+cos_lifecycle_rule_content_t *cos_create_lifecycle_rule_content(cos_pool_t *p) {
     cos_lifecycle_rule_content_t *rule;
     rule = (cos_lifecycle_rule_content_t *)cos_pcalloc(
             p, sizeof(cos_lifecycle_rule_content_t));
@@ -1176,8 +1072,7 @@ cos_lifecycle_rule_content_t *cos_create_lifecycle_rule_content(cos_pool_t *p)
     return rule;
 }
 
-cos_cors_rule_content_t *cos_create_cors_rule_content(cos_pool_t *p)
-{
+cos_cors_rule_content_t *cos_create_cors_rule_content(cos_pool_t *p) {
     cos_cors_rule_content_t *rule;
     rule = (cos_cors_rule_content_t *)cos_pcalloc(
             p, sizeof(cos_cors_rule_content_t));
@@ -1190,16 +1085,14 @@ cos_cors_rule_content_t *cos_create_cors_rule_content(cos_pool_t *p)
     return rule;
 }
 
-cos_versioning_content_t *cos_create_versioning_content(cos_pool_t *p)
-{
+cos_versioning_content_t *cos_create_versioning_content(cos_pool_t *p) {
     cos_versioning_content_t *versioning;
     versioning = (cos_versioning_content_t *)cos_pcalloc(p, sizeof(cos_versioning_content_t));
     cos_str_set(&versioning->status, "");
     return versioning;
 }
 
-cos_replication_params_t *cos_create_replication_params(cos_pool_t *p)
-{
+cos_replication_params_t *cos_create_replication_params(cos_pool_t *p) {
     cos_replication_params_t *params = NULL;
     params = (cos_replication_params_t *)cos_pcalloc(p, sizeof(cos_replication_params_t));
     cos_list_init(&params->rule_list);
@@ -1207,8 +1100,7 @@ cos_replication_params_t *cos_create_replication_params(cos_pool_t *p)
     return params;
 }
 
-cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *p)
-{
+cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *p) {
     cos_replication_rule_content_t *rule;
     rule = (cos_replication_rule_content_t *)cos_pcalloc(p, sizeof(cos_replication_rule_content_t));
     cos_str_set(&rule->id, "");
@@ -1219,8 +1111,7 @@ cos_replication_rule_content_t *cos_create_replication_rule_content(cos_pool_t *
     return rule;
 }
 
-cos_website_rule_content_t *cos_create_website_rule_content(cos_pool_t *p)
-{
+cos_website_rule_content_t *cos_create_website_rule_content(cos_pool_t *p) {
     cos_website_rule_content_t *content = NULL;
     content = (cos_website_rule_content_t*) cos_palloc(p, sizeof(cos_website_rule_content_t));
     cos_list_init(&content->node);
@@ -1232,8 +1123,7 @@ cos_website_rule_content_t *cos_create_website_rule_content(cos_pool_t *p)
     return content;
 }
 
-cos_website_params_t *cos_create_website_params(cos_pool_t *p)
-{
+cos_website_params_t *cos_create_website_params(cos_pool_t *p) {
     cos_website_params_t *params = NULL;
     params = (cos_website_params_t*) cos_palloc(p, sizeof(cos_website_params_t));
     cos_list_init(&params->rule_list);
@@ -1243,8 +1133,7 @@ cos_website_params_t *cos_create_website_params(cos_pool_t *p)
     return params;
 }
 
-cos_domain_params_t *cos_create_domain_params(cos_pool_t *p)
-{
+cos_domain_params_t *cos_create_domain_params(cos_pool_t *p) {
     cos_domain_params_t *params = NULL;
     params = (cos_domain_params_t*) cos_palloc(p, sizeof(cos_domain_params_t));
     cos_str_set(&params->status, "");
@@ -1255,8 +1144,7 @@ cos_domain_params_t *cos_create_domain_params(cos_pool_t *p)
     return params;
 }
 
-cos_logging_params_t *cos_create_logging_params(cos_pool_t *p) 
-{
+cos_logging_params_t *cos_create_logging_params(cos_pool_t *p) {
     cos_logging_params_t *params;
     params = (cos_logging_params_t*) cos_palloc(p, sizeof(cos_logging_params_t));
     cos_str_set(&params->target_bucket, "");
@@ -1265,8 +1153,7 @@ cos_logging_params_t *cos_create_logging_params(cos_pool_t *p)
     return params;
 }
 
-cos_list_inventory_params_t *cos_create_list_inventory_params(cos_pool_t *p)
-{
+cos_list_inventory_params_t *cos_create_list_inventory_params(cos_pool_t *p) {
     cos_list_inventory_params_t *params = NULL;
     params = (cos_list_inventory_params_t*) cos_palloc(p, sizeof(cos_list_inventory_params_t));
     cos_list_init(&params->inventorys);
@@ -1277,8 +1164,7 @@ cos_list_inventory_params_t *cos_create_list_inventory_params(cos_pool_t *p)
     return params;
 }
 
-cos_inventory_params_t *cos_create_inventory_params(cos_pool_t *p)
-{
+cos_inventory_params_t *cos_create_inventory_params(cos_pool_t *p) {
     cos_inventory_params_t *params = NULL;
     params = (cos_inventory_params_t*) cos_palloc(p, sizeof(cos_inventory_params_t));
     cos_str_set(&params->id, "");
@@ -1299,8 +1185,7 @@ cos_inventory_params_t *cos_create_inventory_params(cos_pool_t *p)
     return params;
 }
 
-cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p)
-{
+cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p) {
     cos_inventory_optional_t *params = NULL;
     params = (cos_inventory_optional_t*) cos_palloc(p, sizeof(cos_inventory_optional_t));
     cos_str_set(&params->field, "");
@@ -1309,16 +1194,14 @@ cos_inventory_optional_t *cos_create_inventory_optional(cos_pool_t *p)
     return params;
 }
 
-cos_tagging_params_t *cos_create_tagging_params(cos_pool_t *p)
-{
+cos_tagging_params_t *cos_create_tagging_params(cos_pool_t *p) {
     cos_tagging_params_t *params = NULL;
     params = (cos_tagging_params_t*) cos_palloc(p, sizeof(cos_tagging_params_t));
     cos_list_init(&params->node);
     return params;
 }
 
-cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p)
-{
+cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p) {
     cos_tagging_tag_t *params = NULL;
     params = (cos_tagging_tag_t*) cos_palloc(p, sizeof(cos_tagging_tag_t));
     cos_list_init(&params->node);
@@ -1327,23 +1210,20 @@ cos_tagging_tag_t *cos_create_tagging_tag(cos_pool_t *p)
     return params;
 }
 
-cos_referer_params_t *cos_create_referer_params(cos_pool_t *p)
-{
+cos_referer_params_t *cos_create_referer_params(cos_pool_t *p) {
     cos_referer_params_t *params = NULL;
     params = (cos_referer_params_t*) cos_pcalloc(p, sizeof(cos_referer_params_t));
     cos_list_init(&params->domain_list);
     return params;
 }
 
-cos_referer_domain_t *cos_create_referer_domain(cos_pool_t *p)
-{
+cos_referer_domain_t *cos_create_referer_domain(cos_pool_t *p) {
     cos_referer_domain_t *params = NULL;
     params = (cos_referer_domain_t*) cos_pcalloc(p, sizeof(cos_referer_domain_t));
     return params;
 }
 
-cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t *p)
-{
+cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t *p) {
     cos_intelligenttiering_params_t *params = NULL;
     params = (cos_intelligenttiering_params_t*) cos_palloc(p, sizeof(cos_intelligenttiering_params_t));
     cos_str_set(&params->status, "");
@@ -1351,8 +1231,7 @@ cos_intelligenttiering_params_t *cos_create_intelligenttiering_params(cos_pool_t
     return params;
 }
 
-cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
-{
+cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p) {
     cos_object_restore_params_t *params;
     params = (cos_object_restore_params_t *)cos_pcalloc(
             p, sizeof(cos_object_restore_params_t));
@@ -1361,86 +1240,33 @@ cos_object_restore_params_t *cos_create_object_restore_params(cos_pool_t *p)
     return params;
 }
 
-cos_upload_file_t *cos_create_upload_file(cos_pool_t *p)
-{
+cos_upload_file_t *cos_create_upload_file(cos_pool_t *p) {
     return (cos_upload_file_t *)cos_pcalloc(p, sizeof(cos_upload_file_t));
 }
 
-cos_object_key_t *cos_create_cos_object_key(cos_pool_t *p)
-{
+cos_object_key_t *cos_create_cos_object_key(cos_pool_t *p) {
     return (cos_object_key_t *)cos_pcalloc(p, sizeof(cos_object_key_t));
 }
 
-ci_qrcode_info_t *ci_create_qrcode_info(cos_pool_t *p)
-{
+ci_qrcode_info_t *ci_create_qrcode_info(cos_pool_t *p) {
     ci_qrcode_info_t *res = (ci_qrcode_info_t *)cos_palloc(p, sizeof(ci_qrcode_info_t));
     cos_list_init(&res->node);
     return res;
 }
 
-ci_operation_result_t *ci_create_operation_result(cos_pool_t *p)
-{
+ci_operation_result_t *ci_create_operation_result(cos_pool_t *p) {
     ci_operation_result_t *res = (ci_operation_result_t *)cos_palloc(p, sizeof(ci_operation_result_t));
     cos_list_init(&res->object.qrcode_info);
     return res;
 }
 
-ci_qrcode_result_t *ci_create_qrcode_result(cos_pool_t *p)
-{
+ci_qrcode_result_t *ci_create_qrcode_result(cos_pool_t *p) {
     ci_qrcode_result_t*res = (ci_qrcode_result_t *)cos_palloc(p, sizeof(ci_qrcode_result_t));
     cos_list_init(&res->qrcode_info);
     return res;
 }
 
-#if 0
-cos_live_channel_publish_url_t *cos_create_live_channel_publish_url(cos_pool_t *p)
-{
-    return (cos_live_channel_publish_url_t *)cos_pcalloc(p, sizeof(cos_live_channel_publish_url_t));
-}
-
-cos_live_channel_play_url_t *cos_create_live_channel_play_url(cos_pool_t *p)
-{
-    return (cos_live_channel_play_url_t *)cos_pcalloc(p, sizeof(cos_live_channel_play_url_t));
-}
-
-cos_live_channel_content_t *cos_create_list_live_channel_content(cos_pool_t *p)
-{
-    cos_live_channel_content_t *list_live_channel_content = NULL;
-    list_live_channel_content = (cos_live_channel_content_t*)cos_create_api_result_content(p,
-        sizeof(cos_live_channel_content_t));
-    cos_list_init(&list_live_channel_content->publish_url_list);
-    cos_list_init(&list_live_channel_content->play_url_list);
-    return list_live_channel_content;
-}
-
-cos_live_record_content_t *cos_create_live_record_content(cos_pool_t *p)
-{
-    cos_live_record_content_t *live_record_content = NULL;
-    live_record_content = (cos_live_record_content_t*)cos_create_api_result_content(p,
-        sizeof(cos_live_record_content_t));
-    return live_record_content;
-}
-
-cos_live_channel_configuration_t *cos_create_live_channel_configuration_content(cos_pool_t *p)
-{
-    cos_live_channel_configuration_t *config;
-    config = (cos_live_channel_configuration_t *)cos_pcalloc(
-            p, sizeof(cos_live_channel_configuration_t));
-
-    cos_str_set(&config->name, "");
-    cos_str_set(&config->description, "");
-    cos_str_set(&config->status, LIVE_CHANNEL_STATUS_ENABLED);
-    cos_str_set(&config->target.type, LIVE_CHANNEL_DEFAULT_TYPE);
-    cos_str_set(&config->target.play_list_name, LIVE_CHANNEL_DEFAULT_PLAYLIST);
-    config->target.frag_duration = LIVE_CHANNEL_DEFAULT_FRAG_DURATION;
-    config->target.frag_count = LIVE_CHANNEL_DEFAULT_FRAG_COUNT;
-
-    return config;
-}
-#endif
-
-cos_checkpoint_t *cos_create_checkpoint_content(cos_pool_t *p) 
-{
+cos_checkpoint_t *cos_create_checkpoint_content(cos_pool_t *p) {
     cos_checkpoint_t *cp;
     cp = (cos_checkpoint_t *)cos_pcalloc(p, sizeof(cos_checkpoint_t));
     cp->parts = (cos_checkpoint_part_t *)cos_pcalloc(p, sizeof(cos_checkpoint_part_t) * COS_MAX_PART_NUM);
@@ -1454,8 +1280,7 @@ cos_checkpoint_t *cos_create_checkpoint_content(cos_pool_t *p)
     return cp;
 }
 
-cos_checkpoint_t *cos_create_checkpoint_content_with_partnum(cos_pool_t *p, int part_num) 
-{
+cos_checkpoint_t *cos_create_checkpoint_content_with_partnum(cos_pool_t *p, int part_num) {
     cos_checkpoint_t *cp;
     cp = (cos_checkpoint_t *)cos_pcalloc(p, sizeof(cos_checkpoint_t));
     cp->parts = (cos_checkpoint_part_t *)cos_pcalloc(p, sizeof(cos_checkpoint_part_t) * cos_max(part_num, COS_MAX_PART_NUM));
@@ -1470,8 +1295,7 @@ cos_checkpoint_t *cos_create_checkpoint_content_with_partnum(cos_pool_t *p, int 
 }
 
 cos_resumable_clt_params_t *cos_create_resumable_clt_params_content(cos_pool_t *p, int64_t part_size, int32_t thread_num,
-                                                                    int enable_checkpoint, const char *checkpoint_path)
-{
+                                                                    int enable_checkpoint, const char *checkpoint_path) {
     cos_resumable_clt_params_t *clt;
     clt = (cos_resumable_clt_params_t *)cos_pcalloc(p, sizeof(cos_resumable_clt_params_t));
     clt->part_size = part_size;
@@ -1483,31 +1307,14 @@ cos_resumable_clt_params_t *cos_create_resumable_clt_params_content(cos_pool_t *
     return clt;
 }
 
-#if 0
-cos_list_live_channel_params_t *cos_create_list_live_channel_params(cos_pool_t *p)
-{
-    cos_list_live_channel_params_t *params;
-    params = (cos_list_live_channel_params_t *)cos_pcalloc(
-            p, sizeof(cos_list_live_channel_params_t));
-    cos_list_init(&params->live_channel_list);
-    cos_str_set(&params->prefix, "");
-    cos_str_set(&params->marker, "");
-    params->truncated = 1;
-    params->max_keys = COS_PER_RET_NUM;
-    return params;
-}
-#endif
-
-void cos_set_multipart_content_type(cos_table_t *headers)
-{
+void cos_set_multipart_content_type(cos_table_t *headers) {
     const char *content_type;
     content_type = (char*)(apr_table_get(headers, COS_CONTENT_TYPE));
     content_type = content_type == NULL ? COS_MULTIPART_CONTENT_TYPE : content_type;
     apr_table_set(headers, COS_CONTENT_TYPE, content_type);
 }
 
-const char *get_cos_acl_str(cos_acl_e cos_acl)
-{
+const char *get_cos_acl_str(cos_acl_e cos_acl) {
     switch (cos_acl) {
         case COS_ACL_PRIVATE:
             return  "private";
@@ -1527,8 +1334,7 @@ void cos_init_request(const cos_request_options_t *options,
                       cos_http_request_t **req, 
                       cos_table_t *params, 
                       cos_table_t *headers, 
-                      cos_http_response_t **resp)
-{
+                      cos_http_response_t **resp) {
     *req = cos_http_request_create(options->pool);
     *resp = cos_http_response_create(options->pool);
     (*req)->method = method;
@@ -1544,8 +1350,7 @@ int cos_init_service_request(const cos_request_options_t *options,
                               cos_table_t *headers,
                               const int all_region,
                               cos_http_response_t **resp,
-                              char **error_msg)
-{
+                              char **error_msg) {
     cos_init_request(options, method, req, params, headers, resp);
     return cos_get_service_uri(options, all_region, *req, error_msg);
 }
@@ -1556,8 +1361,7 @@ int cos_init_media_buckets_request(const cos_request_options_t *options,
                               cos_table_t *params,
                               cos_table_t *headers,
                               cos_http_response_t **resp,
-                              char **error_msg)
-{
+                              char **error_msg) {
     cos_init_request(options, method, req, params, headers, resp);
     return cos_get_media_buckets_uri(options, *req, error_msg);
 }
@@ -1569,8 +1373,7 @@ int cos_init_bucket_request(const cos_request_options_t *options,
                              cos_table_t *params, 
                              cos_table_t *headers,
                              cos_http_response_t **resp,
-                             char **error_msg)
-{
+                             char **error_msg) {
     cos_init_request(options, method, req, params, headers, resp);
     return cos_get_bucket_uri(options, bucket, *req, error_msg);
 }
@@ -1585,8 +1388,7 @@ int cos_init_object_request(const cos_request_options_t *options,
                              cos_progress_callback cb,
                              uint64_t init_crc,
                              cos_http_response_t **resp,
-                             char **error_msg)
-{
+                             char **error_msg) {
     cos_init_request(options, method, req, params, headers, resp);
     if (HTTP_GET == method) {
         (*resp)->progress_callback = cb;
@@ -1598,41 +1400,9 @@ int cos_init_object_request(const cos_request_options_t *options,
     return cos_get_object_uri(options, bucket, object, *req, error_msg);
 }
 
-#if 0
-void cos_init_live_channel_request(const cos_request_options_t *options, 
-                                   const cos_string_t *bucket,
-                                   const cos_string_t *live_channel,
-                                   http_method_e method,
-                                   cos_http_request_t **req,
-                                   cos_table_t *params,
-                                   cos_table_t *headers,
-                                   cos_http_response_t **resp)
-{
-    cos_init_request(options, method, req, params, headers, resp);
-    cos_get_object_uri(options, bucket, live_channel, *req);
-}
-
-void cos_init_signed_url_request(const cos_request_options_t *options, 
-                                 const cos_string_t *signed_url,
-                                 http_method_e method, 
-                                 cos_http_request_t **req, 
-                                 cos_table_t *params, 
-                                 cos_table_t *headers, 
-                                 cos_http_response_t **resp)
-{
-    *req = cos_http_request_create(options->pool);
-    *resp = cos_http_response_create(options->pool);
-    (*req)->method = method;
-    (*req)->headers = headers;
-    (*req)->query_params = params;
-    (*req)->signed_url = signed_url->data;
-}
-#endif
-
 cos_status_t *cos_send_request(cos_http_controller_t *ctl, 
                                cos_http_request_t *req,
-                               cos_http_response_t *resp)
-{
+                               cos_http_response_t *resp) {
     cos_status_t *s;
     const char *reason;
     int res = COSE_OK;
@@ -1670,8 +1440,7 @@ void reset_list_pos(cos_list_t *list) {
 cos_status_t *cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req, 
                                   cos_http_response_t *resp,
-                                  const int retry)
-{
+                                  const int retry) {
     int res = COSE_OK;
     cos_status_t *s;
 
@@ -1726,7 +1495,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
 
         s = cos_send_request(options->ctl, req, resp);
         //clear body
-        if (req->clear_body){
+        if (req->clear_body) {
             cos_buf_t *b;
             cos_buf_t *n;
             cos_list_for_each_entry_safe(cos_buf_t, b, n, &req->body, node) {
@@ -1741,13 +1510,11 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
 
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,
                                          cos_http_request_t *req, 
-                                         cos_http_response_t *resp)
-{
+                                         cos_http_response_t *resp) {
     return cos_send_request(options->ctl, req, resp);
 }
 
-void cos_get_part_size(int64_t filesize, int64_t *part_size)
-{
+void cos_get_part_size(int64_t filesize, int64_t *part_size) {
     *part_size = (1024*1024 > *part_size) ? 1024*1024 : *part_size;
     if (filesize > (*part_size) * COS_MAX_PART_NUM) {
         *part_size = (filesize + COS_MAX_PART_NUM - 
@@ -1759,14 +1526,12 @@ void cos_get_part_size(int64_t filesize, int64_t *part_size)
     } 
 }
 
-int part_sort_cmp(const void *a, const void *b)
-{
+int part_sort_cmp(const void *a, const void *b) {
     return (((cos_upload_part_t*)a)->part_num -
             ((cos_upload_part_t*)b)->part_num > 0 ? 1 : -1);
 }
 
-char *get_content_type_by_suffix(const char *suffix)
-{
+char *get_content_type_by_suffix(const char *suffix) {
     cos_content_type_t *content_type;
 
     for (content_type = file_type; content_type->suffix; ++content_type) {
@@ -1778,8 +1543,7 @@ char *get_content_type_by_suffix(const char *suffix)
     return default_content_type;
 }
 
-char *get_content_type(const char *name)
-{
+char *get_content_type(const char *name) {
     char *begin;
     char *content_type = NULL;
     begin = strrchr(name, '.');
@@ -1791,8 +1555,7 @@ char *get_content_type(const char *name)
 
 void set_content_type(const char* file_name,
                       const char* key,
-                      cos_table_t *headers)
-{
+                      cos_table_t *headers) {
     char *user_content_type = NULL;
     char *content_type = NULL;
     const char *mime_key = NULL;
@@ -1812,26 +1575,22 @@ void set_content_type(const char* file_name,
 
 cos_table_t* cos_table_create_if_null(const cos_request_options_t *options, 
                                       cos_table_t *table, 
-                                      int table_size) 
-{
+                                      int table_size) {
     if (table == NULL) {
         table = cos_table_make(options->pool, table_size);
     }
     return table;
 }
 
-int is_enable_crc(const cos_request_options_t *options) 
-{
+int is_enable_crc(const cos_request_options_t *options) {
     return options->ctl->options->enable_crc;
 }
 
-int is_enable_md5(const cos_request_options_t *options) 
-{
+int is_enable_md5(const cos_request_options_t *options) {
     return options->ctl->options->enable_md5;
 }
 
-int has_crc_in_response(const cos_http_response_t *resp) 
-{
+int has_crc_in_response(const cos_http_response_t *resp) {
     if (NULL != apr_table_get(resp->headers, COS_HASH_CRC64_ECMA)) {
         return COS_TRUE;
     }
@@ -1839,8 +1598,7 @@ int has_crc_in_response(const cos_http_response_t *resp)
     return COS_FALSE;
 }
 
-int has_range_or_process_in_request(const cos_http_request_t *req) 
-{
+int has_range_or_process_in_request(const cos_http_request_t *req) {
     if (NULL != apr_table_get(req->headers, "Range") || 
         NULL != apr_table_get(req->query_params, COS_PROCESS)) {
         return COS_TRUE;
@@ -1849,8 +1607,7 @@ int has_range_or_process_in_request(const cos_http_request_t *req)
     return COS_FALSE;
 }
 
-static int check_crc(uint64_t crc, const apr_table_t *headers) 
-{
+static int check_crc(uint64_t crc, const apr_table_t *headers) {
     char * srv_crc = (char*)(apr_table_get(headers, COS_HASH_CRC64_ECMA));
     if (NULL != srv_crc && crc != cos_atoui64(srv_crc)) {
         return COSE_CRC_INCONSISTENT_ERROR;
@@ -1858,8 +1615,7 @@ static int check_crc(uint64_t crc, const apr_table_t *headers)
     return COSE_OK;
 }
 
-int cos_check_crc_consistent(uint64_t crc, const apr_table_t *resp_headers, cos_status_t *s) 
-{
+int cos_check_crc_consistent(uint64_t crc, const apr_table_t *resp_headers, cos_status_t *s) {
     int res = check_crc(crc, resp_headers);
     if (res != COSE_OK) {
         cos_inconsistent_error_status_set(s, res);
@@ -1867,8 +1623,7 @@ int cos_check_crc_consistent(uint64_t crc, const apr_table_t *resp_headers, cos_
     return res;
 }
 
-int cos_check_len_consistent(cos_list_t *buffer, const apr_table_t *resp_headers, cos_status_t *s)
-{
+int cos_check_len_consistent(cos_list_t *buffer, const apr_table_t *resp_headers, cos_status_t *s) {
     if (resp_headers != NULL && buffer != NULL) {
         int64_t len = cos_buf_list_len(buffer);
         char *content_length = (char*)(apr_table_get(resp_headers, COS_CONTENT_LENGTH));
@@ -1880,8 +1635,7 @@ int cos_check_len_consistent(cos_list_t *buffer, const apr_table_t *resp_headers
     return COSE_OK;
 }
 
-int cos_get_temporary_file_name(cos_pool_t *p, const cos_string_t *filename, cos_string_t *temp_file_name)
-{
+int cos_get_temporary_file_name(cos_pool_t *p, const cos_string_t *filename, cos_string_t *temp_file_name) {
     int len = filename->len + 1;
     char *temp_file_name_ptr = NULL;
 
@@ -1894,8 +1648,7 @@ int cos_get_temporary_file_name(cos_pool_t *p, const cos_string_t *filename, cos
     return len;
 }
 
-int cos_temp_file_rename(cos_status_t *s, const char *from_path, const char *to_path, apr_pool_t *pool)
-{
+int cos_temp_file_rename(cos_status_t *s, const char *from_path, const char *to_path, apr_pool_t *pool) {
     int res = -1;
 
     if (s != NULL) {
@@ -1911,8 +1664,7 @@ int cos_temp_file_rename(cos_status_t *s, const char *from_path, const char *to_
 
 int cos_add_content_md5_from_buffer(const cos_request_options_t *options,
                                     cos_list_t *buffer,
-                                    cos_table_t *headers)
-{
+                                    cos_table_t *headers) {
     char *b64_value = NULL;
     int b64_buf_len = (20 + 1) * 4 / 3;
     int b64_len;
@@ -1955,8 +1707,7 @@ int cos_add_content_md5_from_buffer(const cos_request_options_t *options,
 
 int cos_add_content_md5_from_file(const cos_request_options_t *options,
                                   const cos_string_t *filename,
-                                  cos_table_t *headers)
-{
+                                  cos_table_t *headers) {
     char *b64_value = NULL;
     int b64_buf_len = (20 + 1) * 4 / 3;
     int b64_len;
@@ -2025,8 +1776,7 @@ int cos_add_content_md5_from_file(const cos_request_options_t *options,
 
 int cos_add_content_md5_from_file_range(const cos_request_options_t *options,
                                   cos_upload_file_t *upload_file,
-                                  cos_table_t *headers)
-{
+                                  cos_table_t *headers) {
     char *b64_value = NULL;
     int b64_buf_len = (20 + 1) * 4 / 3;
     int b64_len;
@@ -2105,23 +1855,19 @@ int cos_add_content_md5_from_file_range(const cos_request_options_t *options,
     return 0;
 }
 
-void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable)
-{
+void cos_set_content_md5_enable(cos_http_controller_t *ctl, int enable) {
     ctl->options->enable_md5 = enable;
 }
 
-ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p)
-{
+ci_video_auditing_job_options_t* ci_video_auditing_job_options_create(cos_pool_t *p) {
     return (ci_video_auditing_job_options_t *)cos_pcalloc(p, sizeof(ci_video_auditing_job_options_t)); 
 }
 
-ci_media_buckets_request_t* ci_media_buckets_request_create(cos_pool_t *p)
-{
+ci_media_buckets_request_t* ci_media_buckets_request_create(cos_pool_t *p) {
     return (ci_media_buckets_request_t *)cos_pcalloc(p, sizeof(ci_media_buckets_request_t)); 
 }
 
-ci_get_snapshot_request_t* ci_snapshot_request_create(cos_pool_t *p)
-{
+ci_get_snapshot_request_t* ci_snapshot_request_create(cos_pool_t *p) {
     return (ci_get_snapshot_request_t *)cos_pcalloc(p, sizeof(ci_get_snapshot_request_t)); 
 }
 

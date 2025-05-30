@@ -37,7 +37,7 @@ cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack) {
         default:
             break;
     }
-    
+
     return item;
 }
 

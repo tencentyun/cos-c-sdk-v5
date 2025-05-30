@@ -1,5 +1,5 @@
-#ifndef LIBCOS_DEFINE_H
-#define LIBCOS_DEFINE_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_
 
 #include "cos_string.h"
 #include "cos_list.h"
@@ -363,7 +363,7 @@ typedef struct {
 
 typedef struct {
     cos_string_t type;
-    int32_t frag_duration; 
+    int32_t frag_duration;
     int32_t frag_count;
     cos_string_t play_list_name;
 }cos_live_channel_target_t;
@@ -793,4 +793,4 @@ typedef enum {
     COS_OBJECT_UNKNOWN_EXIST      = 2,   /*< unknown status, maybe the req of head has no auth or failed */
 } cos_object_exist_status_e;
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_

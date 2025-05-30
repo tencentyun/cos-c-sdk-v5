@@ -202,7 +202,7 @@ void cos_list_objects_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list
 void cos_list_objects_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list_object_content_t *content);
 void cos_list_objects_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
             cos_list_t *object_list);
-void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *root,     
+void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *root, 
             cos_list_object_common_prefix_t *common_prefix);
 void cos_list_objects_common_prefix_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
             cos_list_t *common_prefix_list);
@@ -215,7 +215,7 @@ int cos_list_objects_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *
 void cos_list_parts_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
             cos_list_t *part_list);
 void cos_list_parts_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list_part_content_t *content);
-int cos_list_parts_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *part_list, 
+int cos_list_parts_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *part_list,
             cos_string_t *part_number_marker, int *truncated);
 
 /**
@@ -251,13 +251,13 @@ int cos_versioning_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_versioning
 /**
   * @brief parse lifecycle rules from xml body
 **/
-void cos_lifecycle_rule_expire_parse(cos_pool_t *p, mxml_node_t *xml_node, 
+void cos_lifecycle_rule_expire_parse(cos_pool_t *p, mxml_node_t *xml_node,
     cos_lifecycle_rule_content_t *content);
-void cos_lifecycle_rule_transition_parse(cos_pool_t *p, mxml_node_t *xml_node, 
+void cos_lifecycle_rule_transition_parse(cos_pool_t *p, mxml_node_t *xml_node,
     cos_lifecycle_rule_content_t *content);
-void cos_lifecycle_rule_abort_parse(cos_pool_t *p, mxml_node_t *xml_node, 
+void cos_lifecycle_rule_abort_parse(cos_pool_t *p, mxml_node_t *xml_node,
     cos_lifecycle_rule_content_t *content);
-void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t *xml_node, 
+void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t *xml_node,
     cos_lifecycle_rule_content_t *content);
 void cos_lifecycle_rule_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *lifecycle_rule_list);
@@ -327,9 +327,9 @@ void cos_publish_urls_contents_parse(cos_pool_t *p, mxml_node_t *root, const cha
 	cos_list_t *publish_xml_list);
 void cos_play_urls_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
 	cos_list_t *play_xml_list);
-void cos_create_live_channel_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *publish_xml_path, 
+void cos_create_live_channel_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *publish_xml_path,
 	cos_list_t *publish_url_list, const char *play_xml_path, cos_list_t *play_url_list);
-int cos_create_live_channel_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *publish_url_list, 
+int cos_create_live_channel_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_list_t *publish_url_list,
 	cos_list_t *play_url_list);
 
 /**

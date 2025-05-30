@@ -10,8 +10,7 @@
 #include "cos_config.h"
 #include "cos_test_util.h"
 
-void test_object_setup(CuTest *tc)
-{
+void test_object_setup(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -37,8 +36,7 @@ void test_object_setup(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_object_cleanup(CuTest *tc)
-{
+void test_object_cleanup(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_string_t bucket;
@@ -67,8 +65,7 @@ void test_object_cleanup(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_put_object_from_buffer(CuTest *tc)
-{
+void test_put_object_from_buffer(CuTest *tc) {
     fprintf(stderr, "==========test_put_object_from_buffer==========\n");
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_put_object.ts";
@@ -113,8 +110,7 @@ void test_put_object_from_buffer(CuTest *tc)
     fprintf(stderr, "==========test_put_object_from_buffer==========\n");
 }
 
-void test_put_object_from_buffer2(CuTest *tc)
-{
+void test_put_object_from_buffer2(CuTest *tc) {
     fprintf(stderr, "==========test_put_object_from_buffer2==========\n");
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_put_object.ts";
@@ -157,8 +153,7 @@ void test_put_object_from_buffer2(CuTest *tc)
     fprintf(stderr, "==========test_put_object_from_buffer2==========\n");
 }
 
-void test_put_object_from_buffer_with_default_content_type(CuTest *tc)
-{
+void test_put_object_from_buffer_with_default_content_type(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "put_object_from_buffer_with_default_content_type";
     char *str = "test cos c sdk";
@@ -201,8 +196,7 @@ void test_put_object_from_buffer_with_default_content_type(CuTest *tc)
     printf("test_put_object_from_buffer_with_default_content_type ok\n");
 }
 
-void test_put_object_from_buffer_with_specified(CuTest *tc)
-{
+void test_put_object_from_buffer_with_specified(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "xxx/ddd";
     char *str = "test cos c sdk";
@@ -241,8 +235,7 @@ void test_put_object_from_buffer_with_specified(CuTest *tc)
     printf("test_put_object_from_buffer_with_specified ok\n");
 }
 
-void test_put_object_from_file(CuTest *tc)
-{
+void test_put_object_from_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "video_1.ts";
     char *filename = __FILE__;
@@ -284,8 +277,7 @@ void test_put_object_from_file(CuTest *tc)
     printf("test_put_object_from_file ok\n");
 }
 
-void test_put_object_with_large_length_header(CuTest *tc)
-{
+void test_put_object_with_large_length_header(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "video_2.ts";
     char *filename = __FILE__;
@@ -320,8 +312,7 @@ void test_put_object_with_large_length_header(CuTest *tc)
     printf("test_put_object_with_large_length_header_back_bound ok\n");
 }
 
-void test_put_object_from_file_with_content_type(CuTest *tc)
-{
+void test_put_object_from_file_with_content_type(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_put_object_from_file2.txt";
     char *filename = __FILE__;
@@ -428,8 +419,7 @@ void test_put_object_with_all_headers(CuTest *tc) {
     printf("test_put_object_with_all_headers ok\n");
 }
 
-void test_get_object_to_buffer(CuTest *tc)
-{
+void test_get_object_to_buffer(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object.ts";
@@ -483,8 +473,7 @@ void test_get_object_to_buffer(CuTest *tc)
     printf("test_get_object_to_buffer ok\n");
 }
 
-void test_get_object_to_buffer2(CuTest *tc)
-{
+void test_get_object_to_buffer2(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object.ts";
@@ -522,8 +511,7 @@ void test_get_object_to_buffer2(CuTest *tc)
     printf("test_get_object_to_buffer2 ok\n");
 }
 
-void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
-{
+void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc) {
     fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
@@ -560,8 +548,7 @@ void test_get_object_to_buffer_with_illega_getobject_key(CuTest *tc)
     printf("test_get_object_to_buffer_with_illega_getobject_key ok\n");
 }
 
-void test_get_object_to_buffer_with_range(CuTest *tc)
-{
+void test_get_object_to_buffer_with_range(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object.ts";
@@ -614,8 +601,7 @@ void test_get_object_to_buffer_with_range(CuTest *tc)
     printf("test_get_object_to_buffer_with_range ok\n");
 }
 
-void test_get_object_to_file(CuTest *tc)
-{
+void test_get_object_to_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object_from_file2.txt";
@@ -654,8 +640,7 @@ void test_get_object_to_file(CuTest *tc)
     printf("test_get_object_to_file ok\n");
 }
 
-void test_get_object_to_file2(CuTest *tc)
-{
+void test_get_object_to_file2(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object_from_file2.txt";
@@ -690,8 +675,7 @@ void test_get_object_to_file2(CuTest *tc)
     printf("test_get_object_to_file2 ok\n");
 }
 
-void test_get_object_to_file_with_illega_getobject_key(CuTest *tc)
-{
+void test_get_object_to_file_with_illega_getobject_key(CuTest *tc) {
     fprintf(stderr, "==========test_get_object_to_buffer_with_illega_getobject_key==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
@@ -787,8 +771,7 @@ void test_get_object_with_params(CuTest *tc) {
     printf("test_get_object_with_params ok\n");
 }
 
-void test_head_object(CuTest *tc)
-{
+void test_head_object(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -820,8 +803,7 @@ void test_head_object(CuTest *tc)
     printf("test_head_object ok\n");
 }
 
-void test_head_object_with_not_exist(CuTest *tc)
-{
+void test_head_object_with_not_exist(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -852,8 +834,7 @@ void test_head_object_with_not_exist(CuTest *tc)
     printf("test_head_object ok\n");
 }
 
-void test_delete_object(CuTest *tc)
-{
+void test_delete_object(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object";
@@ -879,8 +860,7 @@ void test_delete_object(CuTest *tc)
     printf("test_delete_object ok\n");
 }
 
-void test_delete_object2(CuTest *tc)
-{
+void test_delete_object2(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object";
@@ -907,8 +887,7 @@ void test_delete_object2(CuTest *tc)
     printf("test_delete_object2 ok\n");
 }
 
-void test_append_object_from_buffer(CuTest *tc)
-{
+void test_append_object_from_buffer(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_append_object";
     cos_string_t bucket;
@@ -958,8 +937,7 @@ void test_append_object_from_buffer(CuTest *tc)
     printf("test_append_object_from_buffer ok\n");
 }
 
-void test_append_object_from_buffer2(CuTest *tc)
-{
+void test_append_object_from_buffer2(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_append_object";
     cos_string_t bucket;
@@ -1008,8 +986,7 @@ void test_append_object_from_buffer2(CuTest *tc)
     printf("test_append_object_from_buffer2 ok\n");
 }
 
-void test_append_object_from_file(CuTest *tc)
-{
+void test_append_object_from_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_append_object_from_file";
     cos_string_t bucket;
@@ -1042,8 +1019,7 @@ void test_append_object_from_file(CuTest *tc)
     printf("test_append_object_from_file ok\n");
 }
 
-void test_append_object_from_file2(CuTest *tc)
-{
+void test_append_object_from_file2(CuTest *tc) {
     cos_pool_t *p = NULL;
     char *object_name = "cos_test_append_object_from_file";
     cos_string_t bucket;
@@ -1077,8 +1053,7 @@ void test_append_object_from_file2(CuTest *tc)
     printf("test_append_object_from_file2 ok\n");
 }
 
-void test_get_not_exist_object_to_file(CuTest *tc)
-{
+void test_get_not_exist_object_to_file(CuTest *tc) {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     char *object_name = "cos_test_put_object_from_file_not_exist_.txt";
@@ -1110,8 +1085,7 @@ void test_get_not_exist_object_to_file(CuTest *tc)
     printf("test_get_not_exist_object_to_file ok\n");
 }
 
-void test_object_acl(CuTest *tc)
-{
+void test_object_acl(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1147,8 +1121,7 @@ void test_object_acl(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_object_acl2(CuTest *tc)
-{
+void test_object_acl2(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1181,8 +1154,7 @@ void test_object_acl2(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_object_copy(CuTest *tc)
-{
+void test_object_copy(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1212,8 +1184,7 @@ void test_object_copy(CuTest *tc)
 }
 
 
-void test_object_copy2(CuTest *tc)
-{
+void test_object_copy2(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1244,8 +1215,7 @@ void test_object_copy2(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_object_bigcopy(CuTest *tc)
-{
+void test_object_bigcopy(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1284,8 +1254,7 @@ void test_object_bigcopy(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_presigned_url(CuTest *tc)
-{
+void test_presigned_url(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_request_options_t *options = NULL;
@@ -1311,8 +1280,7 @@ void test_presigned_url(CuTest *tc)
     
 }
 
-void test_presigned_safe_url(CuTest *tc)
-{
+void test_presigned_safe_url(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_request_options_t *options = NULL;
@@ -1376,8 +1344,7 @@ void test_presigned_url_with_params_headers(CuTest *tc) {
 
 }
 
-void test_check_object_exist(CuTest *tc)
-{
+void test_check_object_exist(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1410,8 +1377,7 @@ void test_check_object_exist(CuTest *tc)
     printf("test_check_object_exist ok\n");
 }
 
-void test_object_tagging(CuTest *tc)
-{
+void test_object_tagging(CuTest *tc) {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1480,8 +1446,7 @@ void test_object_tagging(CuTest *tc)
 }
 
 
-void test_object_tagging2(CuTest *tc)
-{
+void test_object_tagging2(CuTest *tc) {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1537,8 +1502,7 @@ void test_object_tagging2(CuTest *tc)
     printf("test_object_tagging2 ok\n");
 }
 
-void test_object_restore(CuTest *tc)
-{
+void test_object_restore(CuTest *tc) {
     {
 
         cos_pool_t *p = NULL;
@@ -1606,8 +1570,7 @@ void test_object_restore(CuTest *tc)
     printf("test_object_restore ok\n");
 }
 
-void test_ci_image_process(CuTest *tc)
-{
+void test_ci_image_process(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1651,8 +1614,7 @@ void test_ci_image_process(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_media_info(CuTest *tc)
-{
+void test_ci_media_process_media_info(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1682,8 +1644,7 @@ void test_ci_media_process_media_info(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_snapshot(CuTest *tc)
-{
+void test_ci_media_process_snapshot(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1740,8 +1701,7 @@ void test_ci_media_process_snapshot(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_snapshot2(CuTest *tc)
-{
+void test_ci_media_process_snapshot2(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1784,8 +1744,7 @@ void test_ci_media_process_snapshot2(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_media_bucket(CuTest *tc)
-{
+void test_ci_media_process_media_bucket(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1824,8 +1783,7 @@ void test_ci_media_process_media_bucket(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_video_auditing(CuTest *tc)
-{
+void test_ci_video_auditing(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1879,8 +1837,7 @@ void test_ci_video_auditing(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_video_auditing2(CuTest *tc)
-{
+void test_ci_video_auditing2(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -1929,8 +1886,7 @@ void test_ci_video_auditing2(CuTest *tc)
     cos_pool_destroy(p);
 }
 
-void test_ci_image_qrcode(CuTest *tc)
-{
+void test_ci_image_qrcode(CuTest *tc) {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1993,8 +1949,7 @@ void test_ci_image_qrcode(CuTest *tc)
     cos_pool_destroy(p); 
 }
 
-CuSuite *test_cos_object()
-{
+CuSuite *test_cos_object() {
     CuSuite* suite = CuSuiteNew();   
 
     SUITE_ADD_TEST(suite, test_object_setup);
