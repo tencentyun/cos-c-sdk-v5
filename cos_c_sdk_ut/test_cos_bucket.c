@@ -86,7 +86,7 @@ void test_delete_all_objects() {
     cos_status_t *s = NULL;
     cos_string_t prefix;
     char *prefix_str = "";
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);

@@ -135,7 +135,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define COS_VERSION    "5.0.24"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
-#define COS_HTTP_PREFIX   "http://"
+#define COS_HTTP_PREFIX   "http://"  // NOCA:HttpHardcoded(ignore)
 #define COS_HTTPS_PREFIX  "https://"
 #define COS_RTMP_PREFIX   "rtmp://"
 

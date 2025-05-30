@@ -543,7 +543,7 @@ typedef struct {
 } ci_qrcode_info_t;
 
 typedef struct {
-    cos_list_t qrcode_info;  
+    cos_list_t qrcode_info;
     cos_string_t key;
     cos_string_t location;
     cos_string_t format;

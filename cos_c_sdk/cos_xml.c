@@ -1515,31 +1515,31 @@ void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t * xml_node,
         cos_str_set(&content->id, id);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         prefix = apr_pstrdup(p, node_content);
         cos_str_set(&content->prefix, prefix);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Status", NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Status", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         status = apr_pstrdup(p, node_content);
         cos_str_set(&content->status, status);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Expiration", NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Expiration", NULL, NULL, MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_expire_parse(p, node, content);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Transition", NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Transition", NULL, NULL, MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_transition_parse(p, node, content);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "AbortIncompleteMultipartUpload", NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "AbortIncompleteMultipartUpload", NULL, NULL, MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_abort_parse(p, node, content);
     }

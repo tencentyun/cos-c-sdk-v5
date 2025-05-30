@@ -42,5 +42,5 @@ cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack) {
 }
 
 void cos_fstack_destory(cos_array_header_t *fstack) {
-    while (cos_fstack_pop(fstack) != NULL);
+    while (cos_fstack_pop(fstack) != NULL) {}
 }
