@@ -192,16 +192,16 @@ int check_bucket(cos_string_t* bucket) {
 }
 
 #ifdef MOCK_IS_SHOULD_RETRY
-int is_should_retry(const cos_status_t *s, const char *str){
+int is_should_retry(const cos_status_t *s, const char *str) {
     return get_test_retry_change_domin_config();
 }
-int is_should_retry_endpoint(const cos_status_t *s, const char *str){
+int is_should_retry_endpoint(const cos_status_t *s, const char *str) {
     return get_test_retry_change_domin_config();
 }
 #else
 int is_should_retry(const cos_status_t *s, const char *str) {
     if(s->code && s->error_code && is_default_domain(str) && get_retry_change_domin()) {
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))) {
             return 1;
         }
     }
@@ -209,7 +209,7 @@ int is_should_retry(const cos_status_t *s, const char *str) {
 }
 int is_should_retry_endpoint(const cos_status_t *s, const char *str) {
     if(s->code && s->error_code && is_default_endpoint(str) && get_retry_change_domin()) {
-        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))){
+        if((s->code == -996 && (!strcmp(s->error_code, "HttpIoError"))) || ((s->code/100 != 2) && (s->req_id == NULL || s->req_id == ""))) {
             return 1;
         }
     }
@@ -224,12 +224,10 @@ int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *
 
     cos_list_t *current = body->next;
     int target_len = strlen(target);
-    while (current != body)
-    {
+    while (current != body) {
         cos_buf_t *buf = (cos_buf_t *)current;
         uint8_t *p;
-        for (p = buf->start; p < buf->last - target_len +1 ; ++p)
-        {
+        for (p = buf->start; p < buf->last - target_len +1 ; ++p) {
             if (memcmp(p, target, target_len) == 0) {
                 return COS_TRUE;
             }
@@ -339,8 +337,7 @@ int is_default_endpoint(const char *str) {
 
     // 匹配 ([\w-]+)-([\w-]+)
     int flag = 0;
-    while (i < len && (isalnum(str[i]) || str[i] == '-'))
-    {
+    while (i < len && (isalnum(str[i]) || str[i] == '-')) {
         if(str[i] == '-') flag = 1;
         i++;
     }
@@ -381,8 +378,7 @@ int is_default_domain(const char *str) {
 
     // 匹配 ([\w-]+)-([\w-]+)
     int flag = 0;
-    while (i < len && (isalnum(str[i]) || str[i] == '-'))
-    {
+    while (i < len && (isalnum(str[i]) || str[i] == '-')) {
         if(str[i] == '-') flag = 1;
         i++;
     }
@@ -623,8 +619,7 @@ int cos_get_object_uri(const cos_request_options_t *options,
     req->resource = apr_psprintf(options->pool, "%.*s", 
                                  object->len, object->data);
     if (options->config->is_cname || 
-        is_valid_ip(raw_endpoint_str))
-    {
+        is_valid_ip(raw_endpoint_str)) {
         req->host = apr_psprintf(options->pool, "%.*s", 
                                 raw_endpoint.len, raw_endpoint.data);
     } else {
@@ -679,8 +674,7 @@ const char *cos_gen_object_url(const cos_request_options_t *options,
     raw_endpoint.data = options->config->endpoint.data + proto_len;
 
     if (options->config->is_cname || 
-            is_valid_ip(raw_endpoint_str))
-    {
+            is_valid_ip(raw_endpoint_str)) {
         host = apr_psprintf(options->pool, "%.*s", 
                 raw_endpoint.len, raw_endpoint.data);
     } else {
@@ -738,8 +732,7 @@ int cos_get_bucket_uri(const cos_request_options_t *options,
     req->resource = apr_psprintf(options->pool, "%s", "");
     
     if (options->config->is_cname || 
-        is_valid_ip(raw_endpoint_str))
-    {
+        is_valid_ip(raw_endpoint_str)) {
         req->host = apr_psprintf(options->pool, "%.*s", 
                                 raw_endpoint.len, raw_endpoint.data);
     } else {
@@ -1453,9 +1446,8 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
     }
     s = cos_send_request(options->ctl, req, resp);
 
-    if (retry && is_should_retry(s, req->host)){
-        if (apr_table_get(req->headers, "Host") != NULL)
-        {
+    if (retry && is_should_retry(s, req->host)) {
+        if (apr_table_get(req->headers, "Host") != NULL) {
             apr_table_unset(req->headers, "Host");
         }
         if (apr_table_get(req->headers, "Authorization") != NULL) {
@@ -1535,8 +1527,7 @@ char *get_content_type_by_suffix(const char *suffix) {
     cos_content_type_t *content_type;
 
     for (content_type = file_type; content_type->suffix; ++content_type) {
-        if (strcasecmp(content_type->suffix, suffix) == 0)
-        {
+        if (strcasecmp(content_type->suffix, suffix) == 0) {
             return content_type->type;
         }
     }

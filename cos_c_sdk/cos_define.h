@@ -446,7 +446,7 @@ typedef struct {
     cos_string_t condition_prefix;
     cos_string_t redirect_protocol;
     cos_string_t redirect_replace_key;
-    cos_string_t redirect_replace_key_prefix;	
+    cos_string_t redirect_replace_key_prefix;
 } cos_website_rule_content_t;
 
 typedef struct {

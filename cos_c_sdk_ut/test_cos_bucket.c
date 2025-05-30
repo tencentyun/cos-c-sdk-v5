@@ -9,16 +9,14 @@
 #include "cos_api.h"
 #include "cos_config.h"
 #include "cos_test_util.h"
-#include "cos_log.h"
-void log_status(cos_status_t *s)
-{
+
+void log_status(cos_status_t *s) {
     cos_warn_log("status->code: %d", s->code);
     if (s->error_code) cos_warn_log("status->error_code: %s", s->error_code);
     if (s->error_msg) cos_warn_log("status->error_msg: %s", s->error_msg);
     if (s->req_id) cos_warn_log("status->req_id: %s", s->req_id);
 }
-void test_bucket_setup(CuTest *tc)
-{
+void test_bucket_setup(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_setup==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -79,8 +77,7 @@ void test_bucket_setup(CuTest *tc)
     fprintf(stderr, "==========test_bucket_setup==========\n");
 }
 
-void test_delete_all_objects()
-{
+void test_delete_all_objects() {
     fprintf(stderr, "==========test_delete_all_objects==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -103,8 +100,7 @@ void test_delete_all_objects()
     fprintf(stderr, "==========test_delete_all_objects==========\n");
 
 }
-void test_bucket_delete(CuTest *tc)
-{
+void test_bucket_delete(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_delete==========\n");
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
@@ -150,8 +146,7 @@ void test_bucket_cleanup(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_cleanup==========\n");
 }
 
-void test_create_bucket(CuTest *tc)
-{
+void test_create_bucket(CuTest *tc) {
     fprintf(stderr, "==========test_create_bucket==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -174,8 +169,7 @@ void test_create_bucket(CuTest *tc)
     fprintf(stderr, "==========test_create_bucket==========\n");
 }
 
-void test_delete_bucket(CuTest *tc)
-{
+void test_delete_bucket(CuTest *tc) {
     fprintf(stderr, "==========test_delete_bucket==========\n");
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
@@ -206,8 +200,7 @@ void test_delete_bucket(CuTest *tc)
     fprintf(stderr, "==========test_delete_bucket==========\n");
 }
 
-void test_bucket_acl(CuTest *tc)
-{
+void test_bucket_acl(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -245,8 +238,7 @@ void test_bucket_acl(CuTest *tc)
     fprintf(stderr, "==========test_bucket_acl==========\n");
 }
 
-void test_bucket_cors(CuTest *tc)
-{
+void test_bucket_cors(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_cors==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -318,8 +310,7 @@ void test_bucket_cors(CuTest *tc)
 
 }
 
-void test_list_object(CuTest *tc)
-{
+void test_list_object(CuTest *tc) {
     fprintf(stderr, "==========test_list_object==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
@@ -351,7 +342,7 @@ void test_list_object(CuTest *tc)
         ++size;
         key = apr_psprintf(p, "%.*s", content->key.len, content->key.data);
     }
-    CuAssertIntEquals(tc, 1 ,size);
+    CuAssertIntEquals(tc, 1, size);
     CuAssertStrEquals(tc, "cos_test_object1", key);
     
     size = 0;
@@ -368,7 +359,7 @@ void test_list_object(CuTest *tc)
         ++size;
         key = apr_psprintf(p, "%.*s", content->key.len, content->key.data);
     }
-    CuAssertIntEquals(tc, 1 ,size);
+    CuAssertIntEquals(tc, 1, size);
     CuAssertStrEquals(tc, "cos_test_object2", key);
     CuAssertPtrNotNull(tc, resp_headers);
     cos_pool_destroy(p);
@@ -377,8 +368,7 @@ void test_list_object(CuTest *tc)
     fprintf(stderr, "==========test_list_object==========\n");
 }
 
-void test_list_object_with_delimiter(CuTest *tc)
-{
+void test_list_object_with_delimiter(CuTest *tc) {
     fprintf(stderr, "==========test_list_object_with_delimiter==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
@@ -423,8 +413,7 @@ void test_list_object_with_delimiter(CuTest *tc)
     fprintf(stderr, "==========test_list_object_with_delimiter==========\n");
 }
 
-void test_lifecycle(CuTest *tc)
-{
+void test_lifecycle(CuTest *tc) {
     fprintf(stderr, "==========test_lifecycle==========\n");
     cos_pool_t *p = NULL;
     cos_string_t bucket;
@@ -511,7 +500,7 @@ void test_lifecycle(CuTest *tc)
             days = rule_content->expire.days;
             CuAssertIntEquals(tc, 1, days);
         }
-        else if (size == 1){
+        else if (size == 1) {
             rule_id = apr_psprintf(p, "%.*s", rule_content->id.len, 
                     rule_content->id.data);
             CuAssertStrEquals(tc, "2", rule_id);
@@ -529,7 +518,7 @@ void test_lifecycle(CuTest *tc)
         }
         ++size;
     }
-    CuAssertIntEquals(tc, 2 ,size);
+    CuAssertIntEquals(tc, 2, size);
 
     //delete lifecycle
     resp_headers = NULL;
@@ -543,8 +532,7 @@ void test_lifecycle(CuTest *tc)
     fprintf(stderr, "==========test_lifecycle==========\n");
 }
 
-void test_delete_objects_quiet(CuTest *tc)
-{
+void test_delete_objects_quiet(CuTest *tc) {
     fprintf(stderr, "==========test_delete_objects_quiet==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -586,8 +574,7 @@ void test_delete_objects_quiet(CuTest *tc)
     fprintf(stderr, "==========test_delete_objects_quiet==========\n");
 }
 
-void test_delete_objects_not_quiet(CuTest *tc)
-{
+void test_delete_objects_not_quiet(CuTest *tc) {
     fprintf(stderr, "==========test_delete_objects_not_quiet==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -634,8 +621,7 @@ void test_delete_objects_not_quiet(CuTest *tc)
     fprintf(stderr, "==========test_delete_objects_not_quiet==========\n");
 }
 
-void test_delete_objects_by_prefix(CuTest *tc)
-{
+void test_delete_objects_by_prefix(CuTest *tc) {
     fprintf(stderr, "==========test_delete_objects_by_prefix==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -660,8 +646,7 @@ void test_delete_objects_by_prefix(CuTest *tc)
     fprintf(stderr, "==========test_delete_objects_by_prefix==========\n");
 }
 
-void test_put_bucket_acl(CuTest *tc)
-{
+void test_put_bucket_acl(CuTest *tc) {
     fprintf(stderr, "==========test_put_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -694,8 +679,7 @@ void test_put_bucket_acl(CuTest *tc)
     fprintf(stderr, "==========test_put_bucket_acl==========\n");
 }
 
-void test_get_bucket_acl(CuTest *tc)
-{
+void test_get_bucket_acl(CuTest *tc) {
     fprintf(stderr, "==========test_get_bucket_acl==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -723,8 +707,7 @@ void test_get_bucket_acl(CuTest *tc)
     fprintf(stderr, "==========test_get_bucket_acl==========\n");
 }
 
-void test_get_service(CuTest *tc)
-{
+void test_get_service(CuTest *tc) {
     fprintf(stderr, "==========test_get_service==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -750,8 +733,7 @@ void test_get_service(CuTest *tc)
     fprintf(stderr, "==========test_get_service==========\n");
 }
 
-void test_head_bucket(CuTest *tc)
-{
+void test_head_bucket(CuTest *tc) {
     fprintf(stderr, "==========test_head_bucket==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -776,8 +758,7 @@ void test_head_bucket(CuTest *tc)
     fprintf(stderr, "==========test_head_bucket==========\n");
 }
 
-void test_check_bucket_exist(CuTest *tc)
-{
+void test_check_bucket_exist(CuTest *tc) {
     fprintf(stderr, "==========test_check_bucket_exist==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -803,8 +784,7 @@ void test_check_bucket_exist(CuTest *tc)
     fprintf(stderr, "==========test_check_bucket_exist==========\n");
 }
 
-void test_check_bucket_exist_not_find(CuTest *tc)
-{
+void test_check_bucket_exist_not_find(CuTest *tc) {
     fprintf(stderr, "==========test_check_bucket_exist_not_find==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -830,8 +810,7 @@ void test_check_bucket_exist_not_find(CuTest *tc)
     fprintf(stderr, "==========test_check_bucket_exist_not_find==========\n");
 }
 
-void test_bucket_versioning(CuTest *tc)
-{
+void test_bucket_versioning(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_versioning==========\n");
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -874,8 +853,7 @@ void test_bucket_versioning(CuTest *tc)
     fprintf(stderr, "==========test_bucket_versioning==========\n");
 }
 
-void test_bucket_replication(CuTest *tc)
-{
+void test_bucket_replication(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_replication==========\n");
     cos_pool_t *p = NULL;
     int is_cname = 0;
@@ -965,8 +943,7 @@ void test_bucket_replication(CuTest *tc)
     fprintf(stderr, "==========test_bucket_replication==========\n");
 }
 
-void test_bucket_website(CuTest *tc)
-{
+void test_bucket_website(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_website==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1046,8 +1023,7 @@ void test_bucket_website(CuTest *tc)
     fprintf(stderr, "==========test_bucket_website==========\n");
 }
 
-void test_bucket_domain(CuTest *tc)
-{
+void test_bucket_domain(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_domain==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1102,8 +1078,7 @@ void test_bucket_domain(CuTest *tc)
     fprintf(stderr, "==========test_bucket_domain==========\n");
 }
 
-void test_bucket_logging(CuTest *tc)
-{
+void test_bucket_logging(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_logging==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1151,8 +1126,7 @@ void test_bucket_logging(CuTest *tc)
     fprintf(stderr, "==========test_bucket_logging==========\n");
 }
 
-void test_bucket_inventory(CuTest *tc) 
-{
+void test_bucket_inventory(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_inventory==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1276,8 +1250,7 @@ void test_bucket_inventory(CuTest *tc)
     fprintf(stderr, "==========test_bucket_inventory==========\n");
 }
 
-void test_bucket_tagging(CuTest *tc)
-{
+void test_bucket_tagging(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_tagging==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1340,8 +1313,7 @@ void test_bucket_tagging(CuTest *tc)
     fprintf(stderr, "==========test_bucket_tagging==========\n");
 }
 
-void test_bucket_referer(CuTest *tc)
-{
+void test_bucket_referer(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_referer==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1392,8 +1364,7 @@ void test_bucket_referer(CuTest *tc)
     fprintf(stderr, "==========test_bucket_referer==========\n");
 }
 
-void test_bucket_intelligenttiering(CuTest *tc)
-{
+void test_bucket_intelligenttiering(CuTest *tc) {
     fprintf(stderr, "==========test_bucket_intelligenttiering==========\n");
     cos_pool_t *pool = NULL;
     int is_cname = 0;
@@ -1440,8 +1411,7 @@ void test_bucket_intelligenttiering(CuTest *tc)
     fprintf(stderr, "==========test_bucket_intelligenttiering==========\n");
 }
 
-CuSuite *test_cos_bucket()
-{
+CuSuite *test_cos_bucket() {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_bucket_setup);

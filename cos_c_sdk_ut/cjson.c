@@ -243,7 +243,7 @@ static char *print_string_ptr(const char *str, printbuffer *p) {
         return out;
     }
 
-    for (ptr = str; *ptr; ptr++) flag |= ((*ptr>0 && *ptr < 32) || (*ptr == '\"') || (*ptr == '\\'))?1:0;
+    for (ptr = str; *ptr; ptr++) flag |= ((*ptr > 0 && *ptr < 32) || (*ptr == '\"') || (*ptr == '\\')) ? 1 : 0;
     if (!flag) {
         len = ptr-str;
         if (p) out = ensure(p, len+3);
@@ -688,7 +688,7 @@ void cJSON_Minify(char *json) {
         else if (*json == '\n') json++;
         else if (*json == '/' && json[1] == '/')  while (*json && *json != '\n') json++;    /* double-slash comments, to end of line. */
         else if (*json == '/' && json[1] == '*') {while (*json && !(*json == '*' && json[1] == '/')) json++; json += 2;}    /* multiline comments. */
-        else if (*json == '\"') {*into++ = *json++; while (*json && *json != '\"'){if (*json == '\\') *into++ = *json++; *into++ = *json++;}*into++ = *json++;} /* string literals, which are \" sensitive. */
+        else if (*json == '\"') {*into++ = *json++; while (*json && *json != '\"') {if (*json == '\\') *into++ = *json++; *into++ = *json++;}*into++ = *json++;} /* string literals, which are \" sensitive. */
         else *into++ = *json++;            /* All other characters. */
     }
     *into = 0;    /* and null-terminate. */

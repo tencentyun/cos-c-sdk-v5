@@ -484,7 +484,7 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
     const cos_array_header_t *tarr;
     const cos_table_entry_t *telts;
     cos_table_t *cb_headers_temp = NULL;
-    if ( headers != NULL){
+    if ( headers != NULL) {
         cb_headers_temp = cos_table_make(parent_pool, 1);
         tarr = cos_table_elts(headers);
         telts = (cos_table_entry_t*)tarr->elts;
@@ -591,7 +591,7 @@ cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *option
         }
     }
     //增加header复用逻辑
-    if (cb_headers_temp != NULL){
+    if (cb_headers_temp != NULL) {
         if (cb_headers == NULL) cb_headers = cos_table_make(subpool, 1);
         tarr = cos_table_elts(cb_headers_temp);
         telts = (cos_table_entry_t*)tarr->elts;
@@ -668,7 +668,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
     const cos_array_header_t *tarr;
     const cos_table_entry_t *telts;
     cos_table_t *cb_headers_temp = NULL;
-    if ( headers != NULL){
+    if ( headers != NULL) {
         cb_headers_temp = cos_table_make(parent_pool, 1);
         tarr = cos_table_elts(headers);
         telts = (cos_table_entry_t*)tarr->elts;
@@ -813,7 +813,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
         }
     }
     //增加header复用逻辑
-    if (cb_headers_temp != NULL){
+    if (cb_headers_temp != NULL) {
         if (cb_headers == NULL) cb_headers = cos_table_make(subpool, 1);
         tarr = cos_table_elts(cb_headers_temp);
         telts = (cos_table_entry_t*)tarr->elts;
@@ -873,7 +873,7 @@ cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
             part_size, &finfo, progress_callback, resp_headers, resp_body);
     }
 
-    if(is_should_retry_endpoint(s, options->config->endpoint.data)){
+    if(is_should_retry_endpoint(s, options->config->endpoint.data)) {
         int32_t thread_num = 0;
         int64_t part_size = 0;
         cos_string_t checkpoint_path;
@@ -1041,13 +1041,12 @@ cos_status_t *cos_upload_object_by_part_copy_mt
     s = cos_init_multipart_upload_no_retry(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
     char *host_dst = NULL;
     char *host_src = NULL;
-    if(is_should_retry_endpoint(s, src_endpoint->data) || is_should_retry_endpoint(s, options->config->endpoint.data)){
-        if (is_default_endpoint(options->config->endpoint.data))
-        {
+    if(is_should_retry_endpoint(s, src_endpoint->data) || is_should_retry_endpoint(s, options->config->endpoint.data)) {
+        if (is_default_endpoint(options->config->endpoint.data)) {
             host_dst = options->config->endpoint.data;
             change_endpoint_suffix(&options->config->endpoint);
         }
-        if (is_default_endpoint(src_endpoint->data)){
+        if (is_default_endpoint(src_endpoint->data)) {
             host_src = src_endpoint->data;
             change_endpoint_suffix(src_endpoint);
         }
@@ -1100,10 +1099,10 @@ cos_status_t *cos_upload_object_by_part_copy_mt
         s = cos_init_multipart_upload_no_retry(options, dest_bucket, dest_object, &upload_id, init_multipart_headers, &init_multipart_resp_headers);
     }
     if (!cos_status_is_ok(s)) {
-        if (host_dst != NULL){
+        if (host_dst != NULL) {
             clear_change_endpoint_suffix(&options->config->endpoint, host_dst);
         }
-        if (host_src != NULL){
+        if (host_src != NULL) {
             clear_change_endpoint_suffix(src_endpoint, host_src);
         }
         s = cos_status_dup(parent_pool, s);
@@ -1194,10 +1193,10 @@ cos_status_t *cos_upload_object_by_part_copy_mt
     s = cos_do_complete_multipart_upload(options, dest_bucket, dest_object, &upload_id, 
         &completed_part_list, cb_headers, NULL, NULL, NULL);
     s = cos_status_dup(parent_pool, s);
-    if (host_dst != NULL){
+    if (host_dst != NULL) {
         clear_change_endpoint_suffix(&options->config->endpoint, host_dst);
     }
-    if (host_src != NULL){
+    if (host_src != NULL) {
         clear_change_endpoint_suffix(src_endpoint, host_src);
     }
     cos_pool_destroy(subpool);
@@ -1661,7 +1660,7 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
     cos_status_t *s = NULL; 
     cos_string_t checkpoint_path;
 
-    if (!object_key_simplify_check(object->data)){
+    if (!object_key_simplify_check(object->data)) {
         s = cos_status_create(options->pool);
         cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
         return s;
@@ -1677,7 +1676,7 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
         s = cos_resumable_download_file_without_cp(options, bucket, object, filepath, headers, params, thread_num, part_size, progress_callback);
     }
 
-    if(is_should_retry_endpoint(s, options->config->endpoint.data)){
+    if(is_should_retry_endpoint(s, options->config->endpoint.data)) {
         int32_t thread_num = 0;
         int64_t part_size = 0;
         cos_status_t *s = NULL; 

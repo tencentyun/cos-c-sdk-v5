@@ -202,7 +202,7 @@ void cos_list_objects_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list
 void cos_list_objects_content_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list_object_content_t *content);
 void cos_list_objects_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
             cos_list_t *object_list);
-void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *root, 
+void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *root,
             cos_list_object_common_prefix_t *common_prefix);
 void cos_list_objects_common_prefix_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
             cos_list_t *common_prefix_list);

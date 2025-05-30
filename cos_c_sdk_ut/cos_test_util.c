@@ -112,7 +112,7 @@ void init_test_request_options(cos_request_options_t *options, int is_cname) {
 }
 
 cos_status_t * create_test_bucket(const cos_request_options_t *options,
-                                  const char *bucket_name, 
+                                  const char *bucket_name,
                                   cos_acl_e cos_acl) {
     cos_string_t bucket;
     cos_table_t *resp_headers;
@@ -124,10 +124,10 @@ cos_status_t * create_test_bucket(const cos_request_options_t *options,
     return s;
 }
 
-cos_status_t *create_test_object(const cos_request_options_t *options, 
-                                 const char *bucket_name, 
-                                 const char *object_name, 
-                                 const char *data, 
+cos_status_t *create_test_object(const cos_request_options_t *options,
+                                 const char *bucket_name,
+                                 const char *object_name,
+                                 const char *data,
                                  cos_table_t *headers) {
     cos_string_t bucket;
     cos_string_t object;
@@ -141,15 +141,15 @@ cos_status_t *create_test_object(const cos_request_options_t *options,
     content = cos_buf_pack(options->pool, data, strlen(data));
     cos_list_add_tail(&content->node, &buffer);
 
-    s = cos_put_object_from_buffer(options, &bucket, &object, 
+    s = cos_put_object_from_buffer(options, &bucket, &object,
                                    &buffer, headers, &resp_headers);
     return s;
 }
 
-cos_status_t *create_test_object_from_file(const cos_request_options_t *options, 
+cos_status_t *create_test_object_from_file(const cos_request_options_t *options,
                                           const char *bucket_name,
-                                          const char *object_name, 
-                                          const char *filename, 
+                                          const char *object_name,
+                                          const char *filename,
                                           cos_table_t *headers) {
     cos_string_t bucket;
     cos_string_t object;
@@ -160,13 +160,13 @@ cos_status_t *create_test_object_from_file(const cos_request_options_t *options,
     test_object_base();
     cos_str_set(&file, filename);
 
-    s = cos_put_object_from_file(options, &bucket, &object, &file, 
+    s = cos_put_object_from_file(options, &bucket, &object, &file,
                                  headers, &resp_headers);
     return s;
 }
 
-cos_status_t *delete_test_object(const cos_request_options_t *options, 
-                                 const char *bucket_name, 
+cos_status_t *delete_test_object(const cos_request_options_t *options,
+                                 const char *bucket_name,
                                  const char *object_name) {
     cos_string_t bucket;
     cos_string_t object;
@@ -178,9 +178,9 @@ cos_status_t *delete_test_object(const cos_request_options_t *options,
     return s;
 }
 
-cos_status_t *init_test_multipart_upload(const cos_request_options_t *options, 
-                                         const char *bucket_name, 
-                                         const char *object_name, 
+cos_status_t *init_test_multipart_upload(const cos_request_options_t *options,
+                                         const char *bucket_name,
+                                         const char *object_name,
                                          cos_string_t *upload_id) {
     cos_string_t bucket;
     cos_string_t object;
@@ -191,15 +191,15 @@ cos_status_t *init_test_multipart_upload(const cos_request_options_t *options,
     test_object_base();
     headers = cos_table_make(options->pool, 5);
 
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   upload_id, headers, &resp_headers);
 
     return s;
 }
 
-cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options, 
-                                          const char *bucket_name, 
-                                          const char *object_name, 
+cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options,
+                                          const char *bucket_name,
+                                          const char *object_name,
                                           cos_string_t *upload_id) {
     cos_string_t bucket;
     cos_string_t object;
@@ -207,7 +207,7 @@ cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options,
     cos_status_t *s;
 
     test_object_base();
-    s = cos_abort_multipart_upload(options, &bucket, &object, upload_id, 
+    s = cos_abort_multipart_upload(options, &bucket, &object, upload_id,
                                    &resp_headers);
 
     return s;
@@ -238,10 +238,10 @@ int abort_all_test_multipart_upload(const cos_request_options_t *options,
 }
 
 int64_t get_file_size(const char *file_path) {
-    int64_t filesize = -1; 
+    int64_t filesize = -1;
     struct stat statbuff;
 
-    if(stat(file_path, &statbuff) < 0){
+    if(stat(file_path, &statbuff) < 0) {
         return filesize;
     } else {
         filesize = statbuff.st_size;
@@ -271,7 +271,7 @@ char *decrypt(const char *encrypted_str, cos_pool_t *pool) {
 }
 
 void progress_callback(int64_t consumed_bytes, int64_t total_bytes) {
-    assert(total_bytes >= consumed_bytes);  
+    assert(total_bytes >= consumed_bytes);
 }
 
 void percentage(int64_t consumed_bytes, int64_t total_bytes) {

@@ -242,7 +242,7 @@ void cos_acl_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_acl_params_t 
     char *owner_id;
     char *owner_name;
 
-    node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         owner_id = apr_pstrdup(p, node_content);
@@ -399,7 +399,7 @@ void cos_list_objects_owner_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_list
     char *owner_id;
     char *owner_display_name;
 
-    node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         owner_id = apr_pstrdup(p, node_content);
@@ -551,7 +551,7 @@ int cos_upload_id_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_string_t *u
 }
 
 void cos_list_parts_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path, 
-    cos_list_t *part_list){
+    cos_list_t *part_list) {
     mxml_node_t *content_node;
     cos_list_part_content_t *content;
 
@@ -650,21 +650,21 @@ void cos_list_multipart_uploads_content_parse(cos_pool_t *p, mxml_node_t *xml_no
     const char *node_content;
     mxml_node_t *node;
 
-    node = mxmlFindElement(xml_node, xml_node, "Key",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Key", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         key = apr_pstrdup(p, node_content);
         cos_str_set(&content->key, key);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "UploadId",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "UploadId", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         upload_id = apr_pstrdup(p, node_content);
         cos_str_set(&content->upload_id, upload_id);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Initiated",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Initiated", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         initiated = apr_pstrdup(p, node_content);
@@ -1508,38 +1508,38 @@ void cos_lifecycle_rule_content_parse(cos_pool_t *p, mxml_node_t * xml_node,
     const char *node_content;
     mxml_node_t *node;
 
-    node = mxmlFindElement(xml_node, xml_node, "ID",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "ID", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         id = apr_pstrdup(p, node_content);
         cos_str_set(&content->id, id);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Prefix",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL,MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         prefix = apr_pstrdup(p, node_content);
         cos_str_set(&content->prefix, prefix);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Status",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Status", NULL, NULL,MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         status = apr_pstrdup(p, node_content);
         cos_str_set(&content->status, status);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Expiration",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Expiration", NULL, NULL,MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_expire_parse(p, node, content);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "Transition",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Transition", NULL, NULL,MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_transition_parse(p, node, content);
     }
 
-    node = mxmlFindElement(xml_node, xml_node, "AbortIncompleteMultipartUpload",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "AbortIncompleteMultipartUpload", NULL, NULL,MXML_DESCEND);
     if (NULL != node) {
         cos_lifecycle_rule_abort_parse(p, node, content);
     }
@@ -1925,7 +1925,7 @@ void cos_object_key_parse(cos_pool_t *p, mxml_node_t * xml_node,
     const char *node_content;
     mxml_node_t *node;
     
-    node = mxmlFindElement(xml_node, xml_node, "Key",NULL, NULL, MXML_DESCEND);
+    node = mxmlFindElement(xml_node, xml_node, "Key", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
         encoded_key = (char*)node_content;
@@ -2436,7 +2436,7 @@ static int ci_get_auditing_snapshot_parse(cos_pool_t *p, ci_auditing_job_result_
     cos_list_init(&res->jobs_detail.snapshot_info_list);
 
     while (pnode) {
-        ci_auditing_snapshot_result_t *snapshot = cos_pcalloc(p ,sizeof(ci_auditing_snapshot_result_t));
+        ci_auditing_snapshot_result_t *snapshot = cos_pcalloc(p, sizeof(ci_auditing_snapshot_result_t));
         if (snapshot == NULL) {
             ret = COSE_OUT_MEMORY;
             break;
