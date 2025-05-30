@@ -46,18 +46,18 @@ void log_status(cos_status_t* s) {
     if (s->req_id)
         cos_warn_log("status->req_id: %s", s->req_id);
 }
-void head_bucket_demo(){
+void head_bucket_demo() {
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_acl_e cos_acl = COS_ACL_PRIVATE;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-    cos_str_set(&bucket, bucket_name);  
+    cos_str_set(&bucket, bucket_name);
     options->ctl = cos_http_controller_create(options->pool, 0);
     s = cos_head_bucket(options, &bucket, &resp_headers);
     log_status(s);
@@ -65,7 +65,7 @@ void head_bucket_demo(){
     cos_pool_destroy(p);
 }
 
-void bucket_is_exist_demo(){
+void bucket_is_exist_demo() {
     cos_pool_t *pool = NULL;
     cos_status_t *status = NULL;
     cos_request_options_t *options = NULL;
@@ -81,7 +81,7 @@ void bucket_is_exist_demo(){
     init_test_request_options(options, is_cname);
 
     cos_str_set(&bucket, bucket_name);
-    
+
     // 检查桶是否存在
     status = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
     if (bucket_exist == COS_BUCKET_NON_EXIST) {

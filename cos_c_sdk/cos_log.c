@@ -8,28 +8,23 @@ cos_log_level_e   cos_log_level = COS_LOG_WARN;
 extern apr_file_t *cos_stderr_file;
 
 
-void cos_log_set_print(cos_log_print_pt p)
-{
+void cos_log_set_print(cos_log_print_pt p) {
     cos_log_print = p;
 }
 
-void cos_log_set_format(cos_log_format_pt p)
-{
+void cos_log_set_format(cos_log_format_pt p) {
     cos_log_format = p;
 }
 
-void cos_log_set_level(cos_log_level_e level)
-{   
+void cos_log_set_level(cos_log_level_e level) {
     cos_log_level = level;
 }
 
-void cos_log_set_output(apr_file_t *output)
-{
+void cos_log_set_output(apr_file_t *output) {
     cos_stderr_file = output;
 }
 
-void cos_log_print_default(const char *message, int len)
-{
+void cos_log_print_default(const char *message, int len) {
     if (cos_stderr_file == NULL) {
         fprintf(stderr, "%s", message);
     } else {
@@ -42,8 +37,7 @@ void cos_log_format_default(int level,
                             const char *file,
                             int line,
                             const char *function,
-                            const char *fmt, ...)
-{
+                            const char *fmt, ...) {
     int len;
     apr_time_t t;
     int s;

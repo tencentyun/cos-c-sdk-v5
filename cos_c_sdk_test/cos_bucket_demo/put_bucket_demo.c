@@ -47,15 +47,14 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void put_bucket_demo()
-{
+void put_bucket_demo() {
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_acl_e cos_acl = COS_ACL_PRIVATE;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -64,10 +63,6 @@ void put_bucket_demo()
     //create test bucket
     s = cos_create_bucket(options, &bucket, cos_acl, &resp_headers);
     log_status(s);
-
-    
-    
-    
     cos_pool_destroy(p);    
 }
 

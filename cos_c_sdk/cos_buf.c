@@ -2,8 +2,7 @@
 #include "cos_log.h"
 #include <apr_file_io.h>
 
-cos_buf_t *cos_create_buf(cos_pool_t *p, int size)
-{
+cos_buf_t *cos_create_buf(cos_pool_t *p, int size) {
     cos_buf_t* b;
 
     b = cos_palloc(p, sizeof(cos_buf_t) + size);
@@ -20,8 +19,7 @@ cos_buf_t *cos_create_buf(cos_pool_t *p, int size)
     return b;
 }
 
-cos_buf_t *cos_buf_pack(cos_pool_t *p, const void *data, int size)
-{
+cos_buf_t *cos_buf_pack(cos_pool_t *p, const void *data, int size) {
     cos_buf_t* b;
 
     b = cos_palloc(p, sizeof(cos_buf_t));
@@ -38,8 +36,7 @@ cos_buf_t *cos_buf_pack(cos_pool_t *p, const void *data, int size)
     return b;
 }
 
-int64_t cos_buf_list_len(cos_list_t *list)
-{
+int64_t cos_buf_list_len(cos_list_t *list) {
     cos_buf_t *b;
     int64_t len = 0;
 
@@ -50,8 +47,7 @@ int64_t cos_buf_list_len(cos_list_t *list)
     return len;
 }
 
-char *cos_buf_list_content(cos_pool_t *p, cos_list_t *list)
-{
+char *cos_buf_list_content(cos_pool_t *p, cos_list_t *list) {
     int64_t body_len;
     char *buf;
     int64_t pos = 0;
@@ -69,13 +65,11 @@ char *cos_buf_list_content(cos_pool_t *p, cos_list_t *list)
     return buf;
 }
 
-cos_file_buf_t *cos_create_file_buf(cos_pool_t *p)
-{
+cos_file_buf_t *cos_create_file_buf(cos_pool_t *p) {
     return (cos_file_buf_t*)cos_pcalloc(p, sizeof(cos_file_buf_t));
 }
 
-int cos_open_file_for_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
-{
+int cos_open_file_for_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb) {
     int s;
     char buf[256];
     apr_finfo_t finfo;
@@ -98,21 +92,19 @@ int cos_open_file_for_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
     return COSE_OK;
 }
 
-int cos_open_file_for_all_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
-{
+int cos_open_file_for_all_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb) {
     return cos_open_file_for_read(p, path, fb);
 }
 
-int cos_open_file_for_range_read(cos_pool_t *p, const char *path, 
-    int64_t file_pos, int64_t file_last, cos_file_buf_t *fb)
-{
+int cos_open_file_for_range_read(cos_pool_t *p, const char *path,
+    int64_t file_pos, int64_t file_last, cos_file_buf_t *fb) {
     int s;
 
     s = cos_open_file_for_read(p, path, fb);
     if (s == COSE_OK) {
         if (file_pos > fb->file_pos) {
             if (file_pos > fb->file_last) {
-                cos_warn_log("read range beyond file size, read start:%" APR_INT64_T_FMT ", file size:%" APR_INT64_T_FMT "\n", 
+                cos_warn_log("read range beyond file size, read start:%" APR_INT64_T_FMT ", file size:%" APR_INT64_T_FMT "\n",
                     file_pos, fb->file_last);
                 file_pos = fb->file_last;
             }
@@ -127,8 +119,7 @@ int cos_open_file_for_range_read(cos_pool_t *p, const char *path,
     return s;
 }
 
-int cos_open_file_for_write(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
-{
+int cos_open_file_for_write(cos_pool_t *p, const char *path, cos_file_buf_t *fb) {
     int s;
     char buf[256];
 
@@ -143,8 +134,7 @@ int cos_open_file_for_write(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
     return COSE_OK;
 }
 
-int cos_open_file_for_write_notrunc(cos_pool_t *p, const char *path, cos_file_buf_t *fb)
-{
+int cos_open_file_for_write_notrunc(cos_pool_t *p, const char *path, cos_file_buf_t *fb) {
     int s;
     char buf[256];
 
@@ -159,8 +149,7 @@ int cos_open_file_for_write_notrunc(cos_pool_t *p, const char *path, cos_file_bu
     return COSE_OK;
 }
 
-int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_pos, int64_t file_last, cos_file_buf_t *fb)
-{
+int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_pos, int64_t file_last, cos_file_buf_t *fb) {
     int s;
     char buf[256];
 
@@ -179,8 +168,7 @@ int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_
 }
 
 
-void cos_buf_append_string(cos_pool_t *p, cos_buf_t *b, const char *str, int len)
-{
+void cos_buf_append_string(cos_pool_t *p, cos_buf_t *b, const char *str, int len) {
     int size;
     int nsize;
     int remain;

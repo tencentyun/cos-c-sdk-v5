@@ -4,17 +4,15 @@
 #include <stdio.h>
 #include "cjson_utils.h"
 
-static int cJSONUtils_strcasecmp(const char *s1,const char *s2)
-{
-    if (!s1) return (s1==s2)?0:1;if (!s2) return 1;
+static int cJSONUtils_strcasecmp(const char *s1, const char *s2) {
+    if (!s1) return (s1 == s2) ? 0 : 1; if (!s2) return 1;
     for(; tolower(*s1) == tolower(*s2); ++s1, ++s2)    if(*s1 == 0)    return 0;
     return tolower(*(const unsigned char *)s1) - tolower(*(const unsigned char *)s2);
 }
 
 /* JSON Pointer implementation: */
-static int cJSONUtils_Pstrcasecmp(const char *a,const char *e)
-{
-    if (!a || !e) return (a==e)?0:1;
+static int cJSONUtils_Pstrcasecmp(const char *a, const char *e) {
+    if (!a || !e) return (a == e)?0:1;
     for (;*a && *e && *e!='/';a++,e++) {
         if (*e=='~') {if (!(e[1]=='0' && *a=='~') && !(e[1]=='1' && *a=='/')) return 1;  else e++;}
         else if (tolower(*a)!=tolower(*e)) return 1;
@@ -25,8 +23,7 @@ static int cJSONUtils_Pstrcasecmp(const char *a,const char *e)
 
 static int cJSONUtils_PointerEncodedstrlen(const char *s)    {int l=0;for (;*s;s++,l++) if (*s=='~' || *s=='/') l++;return l;}
 
-static void cJSONUtils_PointerEncodedstrcpy(char *d,const char *s)
-{
+static void cJSONUtils_PointerEncodedstrcpy(char *d, const char *s) {
     for (;*s;s++)
     {
         if (*s=='/') {*d++='~';*d++='1';}
@@ -36,8 +33,7 @@ static void cJSONUtils_PointerEncodedstrcpy(char *d,const char *s)
     *d=0;
 }
 
-char *cJSONUtils_FindPointerFromObjectTo(cJSON *object,cJSON *target)
-{
+char *cJSONUtils_FindPointerFromObjectTo(cJSON *object, cJSON *target) {
     int type=object->type,c=0;cJSON *obj=0;
 
     if (object==target) return strdup("");
@@ -69,8 +65,7 @@ char *cJSONUtils_FindPointerFromObjectTo(cJSON *object,cJSON *target)
     return 0;
 }
 
-cJSON *cJSONUtils_GetPointer(cJSON *object,const char *pointer)
-{
+cJSON *cJSONUtils_GetPointer(cJSON *object, const char *pointer) {
     while (*pointer++=='/' && object)
     {
         if (object->type==cJSON_Array)
@@ -90,15 +85,13 @@ cJSON *cJSONUtils_GetPointer(cJSON *object,const char *pointer)
 }
 
 /* JSON Patch implementation. */
-static void cJSONUtils_InplaceDecodePointerString(char *string)
-{
+static void cJSONUtils_InplaceDecodePointerString(char *string) {
     char *s2=string;
     for (;*string;s2++,string++) *s2=(*string!='~')?(*string):((*(++string)=='0')?'~':'/');
     *s2=0;
 }
 
-static cJSON *cJSONUtils_PatchDetach(cJSON *object,const char *path)
-{
+static cJSON *cJSONUtils_PatchDetach(cJSON *object, const char *path) {
     char *parentptr=0,*childptr=0;cJSON *parent=0,*ret=0;
 
     parentptr=strdup(path);    childptr=strrchr(parentptr,'/');    if (childptr) *childptr++=0;
@@ -112,8 +105,7 @@ static cJSON *cJSONUtils_PatchDetach(cJSON *object,const char *path)
     return ret;
 }
 
-static int cJSONUtils_Compare(cJSON *a,cJSON *b)
-{
+static int cJSONUtils_Compare(cJSON *a, cJSON *b) {
     if (a->type!=b->type)    return -1;    /* mismatched type. */
     switch (a->type)
     {
@@ -139,8 +131,7 @@ static int cJSONUtils_Compare(cJSON *a,cJSON *b)
     return 0;
 }
 
-static int cJSONUtils_ApplyPatch(cJSON *object,cJSON *patch)
-{
+static int cJSONUtils_ApplyPatch(cJSON *object, cJSON *patch) {
     cJSON *op=0,*path=0,*value=0,*parent=0;int opcode=0;char *parentptr=0,*childptr=0;
 
     op=cJSON_GetObjectItem(patch,"op");
@@ -206,8 +197,7 @@ static int cJSONUtils_ApplyPatch(cJSON *object,cJSON *patch)
 }
 
 
-int cJSONUtils_ApplyPatches(cJSON *object,cJSON *patches)
-{
+int cJSONUtils_ApplyPatches(cJSON *object, cJSON *patches) {
     int err;
     if (patches->type!=cJSON_Array) return 1;    /* malformed patches. */
     if (patches) patches=patches->child;
@@ -219,8 +209,7 @@ int cJSONUtils_ApplyPatches(cJSON *object,cJSON *patches)
     return 0;
 }
 
-static void cJSONUtils_GeneratePatch(cJSON *patches,const char *op,const char *path,const char *suffix,cJSON *val)
-{
+static void cJSONUtils_GeneratePatch(cJSON *patches, const char *op, const char *path, const char *suffix, cJSON *val) {
     cJSON *patch=cJSON_CreateObject();
     cJSON_AddItemToObject(patch,"op",cJSON_CreateString(op));
     if (suffix)
@@ -235,10 +224,9 @@ static void cJSONUtils_GeneratePatch(cJSON *patches,const char *op,const char *p
     cJSON_AddItemToArray(patches,patch);
 }
 
-void cJSONUtils_AddPatchToArray(cJSON *array,const char *op,const char *path,cJSON *val)    {cJSONUtils_GeneratePatch(array,op,path,0,val);}
+void cJSONUtils_AddPatchToArray(cJSON *array, const char *op, const char *path, cJSON *val)    {cJSONUtils_GeneratePatch(array,op,path,0,val);}
 
-static void cJSONUtils_CompareToPatch(cJSON *patches,const char *path,cJSON *from,cJSON *to)
-{
+static void cJSONUtils_CompareToPatch(cJSON *patches, const char *path, cJSON *from, cJSON *to) {
     if (from->type!=to->type)    {cJSONUtils_GeneratePatch(patches,"replace",path,0,to);    return;    }
     
     switch (from->type)
@@ -295,16 +283,14 @@ static void cJSONUtils_CompareToPatch(cJSON *patches,const char *path,cJSON *fro
 }
 
 
-cJSON* cJSONUtils_GeneratePatches(cJSON *from,cJSON *to)
-{
+cJSON* cJSONUtils_GeneratePatches(cJSON *from, cJSON *to) {
     cJSON *patches=cJSON_CreateArray();    
     cJSONUtils_CompareToPatch(patches,"",from,to);
     return patches;
 }
 
 
-static cJSON *cJSONUtils_SortList(cJSON *list)
-{
+static cJSON *cJSONUtils_SortList(cJSON *list) {
     cJSON *first=list,*second=list,*ptr=list;
 
     if (!list || !list->next) return list;    /* One entry is sorted already. */
@@ -343,8 +329,7 @@ static cJSON *cJSONUtils_SortList(cJSON *list)
 
 void cJSONUtils_SortObject(cJSON *object)    {object->child=cJSONUtils_SortList(object->child);}
 
-cJSON* cJSONUtils_MergePatch(cJSON *target, cJSON *patch)
-{
+cJSON* cJSONUtils_MergePatch(cJSON *target, cJSON *patch) {
     if (!patch || patch->type != cJSON_Object) {cJSON_Delete(target);return cJSON_Duplicate(patch,1);}
     if (!target || target->type != cJSON_Object) {cJSON_Delete(target);target=cJSON_CreateObject();}
 
@@ -362,8 +347,7 @@ cJSON* cJSONUtils_MergePatch(cJSON *target, cJSON *patch)
     return target;
 }
 
-cJSON *cJSONUtils_GenerateMergePatch(cJSON *from,cJSON *to)
-{
+cJSON *cJSONUtils_GenerateMergePatch(cJSON *from, cJSON *to) {
     cJSON *patch=0;
     if (!to) return cJSON_CreateNull();
     if (to->type!=cJSON_Object || !from || from->type!=cJSON_Object) return cJSON_Duplicate(to,1);

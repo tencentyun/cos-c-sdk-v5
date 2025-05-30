@@ -193,7 +193,7 @@ int cos_read_http_body_file(cos_http_request_t *req, char *buffer, int len) {
     char buf[256];
     apr_size_t nbytes = len;
     apr_size_t bytes_left;
-    
+
     if (req->file_buf == NULL || req->file_buf->file == NULL) {
         cos_error_log("request body arg invalid file_buf NULL.");
         return COSE_INVALID_ARGUMENT;
@@ -234,11 +234,11 @@ int cos_write_http_body_file(cos_http_response_t *resp, const char *buffer, int 
     int s;
     char buf[256];
     apr_size_t nbytes = len;
-    
+
     if (resp->file_buf == NULL) {
         resp->file_buf = cos_create_file_buf(resp->pool);
     }
-    
+
     if (resp->file_buf->file == NULL) {
         if (resp->file_path == NULL) {
             cos_error_log("resp body file arg NULL.");
@@ -255,7 +255,7 @@ int cos_write_http_body_file(cos_http_response_t *resp, const char *buffer, int 
         cos_error_log("apr_file_write fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
         return COSE_FILE_WRITE_ERROR;
     }
-    
+
     resp->file_buf->file_last += nbytes;
     resp->body_len += nbytes;
 
@@ -266,18 +266,18 @@ int cos_write_http_body_file_part(cos_http_response_t *resp, const char *buffer,
     int s;
     char buf[256];
     apr_size_t nbytes = len;
-    
+
     if (resp->file_buf == NULL) {
         cos_error_log("file_buf is NULL.");
         return COSE_INVALID_ARGUMENT;
     }
-    
+
     assert(resp->file_buf->file != NULL);
     if ((s = apr_file_write(resp->file_buf->file, buffer, &nbytes)) != APR_SUCCESS) {
         cos_error_log("apr_file_write fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
         return COSE_FILE_WRITE_ERROR;
     }
-    
+
     resp->file_buf->file_last += nbytes;
     resp->body_len += nbytes;
 
@@ -293,8 +293,7 @@ int cos_http_io_initialize(const char *user_agent_info, int flags) {
     cos_http_transport_options_t *trans_options;
 
     if ((ecode = curl_global_init(CURL_GLOBAL_ALL &
-           ~((flags & COS_INIT_WINSOCK) ? 0: CURL_GLOBAL_WIN32))) != CURLE_OK) 
-    {
+           ~((flags & COS_INIT_WINSOCK) ? 0: CURL_GLOBAL_WIN32))) != CURLE_OK) {
         cos_error_log("curl_global_init failure, code:%d %s.\n", ecode, curl_easy_strerror(ecode));
         return COSE_INTERNAL_ERROR;
     }
@@ -324,7 +323,7 @@ int cos_http_io_initialize(const char *user_agent_info, int flags) {
         return COSE_INTERNAL_ERROR;
     }
 
-    apr_snprintf(cos_user_agent, sizeof(cos_user_agent)-1, "%s(Compatible %s)", 
+    apr_snprintf(cos_user_agent, sizeof(cos_user_agent)-1, "%s(Compatible %s)",
                  COS_VER, user_agent_info);
 
     req_options = cos_http_request_options_create(cos_global_pool);
