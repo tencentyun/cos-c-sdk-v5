@@ -697,8 +697,7 @@ void cos_get_hex_from_digest(unsigned char hexdigest[40], unsigned char digest[2
     int j = 0;
     int i = 0;
 
-    for(; i < 20; i++)
-    {
+    for(; i < 20; i++) {
         hexdigest[j++] = hex_digits[(digest[i] >> 4) & 0x0f];
         hexdigest[j++] = hex_digits[digest[i] & 0x0f];
     }

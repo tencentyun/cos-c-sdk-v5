@@ -699,7 +699,7 @@ void test_upload_part_copy(CuTest *tc) {
     s = cos_get_object_to_file(options, &dest_bucket, &dest_object, headers,
                                query_params, &download_file, &resp_headers);
     CuAssertIntEquals(tc, 200, s->code);
-    CuAssertIntEquals(tc, get_file_size(local_filename), get_file_size(download_filename));   
+    CuAssertIntEquals(tc, get_file_size(local_filename), get_file_size(download_filename));
     CuAssertPtrNotNull(tc, resp_headers);
 
     remove(download_filename);

@@ -341,7 +341,7 @@ void abort_multipart_upload_demo() {
                                    &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Abort multipart upload succeeded, upload_id::%.*s\n", 
+        printf("Abort multipart upload succeeded, upload_id::%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Abort multipart upload failed\n");

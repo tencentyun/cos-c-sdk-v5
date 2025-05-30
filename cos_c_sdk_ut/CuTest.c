@@ -153,8 +153,7 @@ void CuTestRun(CuTest* tc) {
     tc->jumpBuf = &buf;
     if (tc->setup)
         tc->testBaton = tc->setup(tc);
-    if (setjmp(buf) == 0)
-    {
+    if (setjmp(buf) == 0) {
         tc->ran = 1;
         (tc->function)(tc);
     }
@@ -179,8 +178,7 @@ void CuFail_Line(CuTest* tc, const char* file, int line, const char* message2, c
     CuString string;
 
     CuStringInit(&string);
-    if (message2 != NULL)
-    {
+    if (message2 != NULL) {
         CuStringAppend(&string, message2);
         CuStringAppend(&string, ": ");
     }
@@ -200,14 +198,12 @@ void CuAssertStrnEquals_LineMsg(CuTest* tc, const char* file, int line, const ch
     if ((explen == 0) ||
         (expected == NULL && actual == NULL) ||
         (expected != NULL && actual != NULL &&
-         strncmp(expected, actual, explen) == 0))
-    {
+         strncmp(expected, actual, explen) == 0)) {
         return;
     }
 
     CuStringInit(&string);
-    if (message != NULL)
-    {
+    if (message != NULL) {
         CuStringAppend(&string, message);
         CuStringAppend(&string, ": ");
     }
@@ -224,14 +220,12 @@ void CuAssertStrEquals_LineMsg(CuTest* tc, const char* file, int line, const cha
     CuString string;
     if ((expected == NULL && actual == NULL) ||
         (expected != NULL && actual != NULL &&
-         strcmp(expected, actual) == 0))
-    {
+         strcmp(expected, actual) == 0)) {
         return;
     }
 
     CuStringInit(&string);
-    if (message != NULL)
-    {
+    if (message != NULL) {
         CuStringAppend(&string, message);
         CuStringAppend(&string, ": ");
     }
@@ -290,8 +284,7 @@ void CuSuiteFree(CuSuite *testSuite) {
 
 void CuSuiteFreeDeep(CuSuite *testSuite) {
     int i;
-    for (i = 0 ; i < testSuite->count ; ++i)
-    {
+    for (i = 0 ; i < testSuite->count ; ++i) {
         CuTest* testCase = testSuite->list[i];
         CuTestFree(testCase);
     }
@@ -313,8 +306,7 @@ void CuSuiteAdd(CuSuite* testSuite, CuTest *testCase) {
 
 void CuSuiteAddSuite(CuSuite* testSuite, CuSuite* testSuite2) {
     int i;
-    for (i = 0 ; i < testSuite2->count ; ++i)
-    {
+    for (i = 0 ; i < testSuite2->count ; ++i) {
         CuTest* testCase = testSuite2->list[i];
         CuSuiteAdd(testSuite, testCase);
     }
@@ -322,8 +314,7 @@ void CuSuiteAddSuite(CuSuite* testSuite, CuSuite* testSuite2) {
 
 void CuSuiteRun(CuSuite* testSuite) {
     int i;
-    for (i = 0 ; i < testSuite->count ; ++i)
-    {
+    for (i = 0 ; i < testSuite->count ; ++i) {
         CuTest* testCase = testSuite->list[i];
         CuTestRun(testCase);
         if (testCase->failed) { testSuite->failCount += 1; }
@@ -332,8 +323,7 @@ void CuSuiteRun(CuSuite* testSuite) {
 
 void CuSuiteSummary(CuSuite* testSuite, CuString* summary) {
     int i;
-    for (i = 0 ; i < testSuite->count ; ++i)
-    {
+    for (i = 0 ; i < testSuite->count ; ++i) {
         CuTest* testCase = testSuite->list[i];
         CuStringAppend(summary, testCase->failed ? "F" : ".");
     }
@@ -344,24 +334,20 @@ void CuSuiteDetails(CuSuite* testSuite, CuString* details) {
     int i;
     int failCount = 0;
 
-    if (testSuite->failCount == 0)
-    {
+    if (testSuite->failCount == 0) {
         int passCount = testSuite->count - testSuite->failCount;
         const char* testWord = passCount == 1 ? "test" : "tests";
         CuStringAppendFormat(details, "OK (%d %s)\n", passCount, testWord);
     }
-    else
-    {
+    else {
         if (testSuite->failCount == 1)
             CuStringAppend(details, "There was 1 failure:\n");
         else
             CuStringAppendFormat(details, "There were %d failures:\n", testSuite->failCount);
 
-        for (i = 0 ; i < testSuite->count ; ++i)
-        {
+        for (i = 0 ; i < testSuite->count ; ++i) {
             CuTest* testCase = testSuite->list[i];
-            if (testCase->failed)
-            {
+            if (testCase->failed) {
                 failCount++;
                 CuStringAppendFormat(details, "%d) %s: %s\n",
                     failCount, testCase->name, testCase->message);
