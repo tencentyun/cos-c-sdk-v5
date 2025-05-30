@@ -223,12 +223,12 @@ int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_str
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
 
 static int is_sign_header(const char *header) {
-    return (apr_table_get(g_sign_header_table, header) != NULL) || 
+    return (apr_table_get(g_sign_header_table, header) != NULL) ||
             (strstr(header, X_COS_HEADER) == header) ||
             (strstr(header, X_CI_HEADER) == header);
 }
@@ -259,7 +259,7 @@ int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *q
 
     tarr = cos_table_elts(table);
     telts = (cos_table_entry_t*)tarr->elts;
-    
+
     for (pos = 0; pos < tarr->nelts; ++pos) {
         if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
             cos_error_log("table params args too big, key:%s.", telts[pos].key);
@@ -292,7 +292,7 @@ int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *q
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
 
@@ -318,7 +318,7 @@ int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_
 
     tarr = cos_table_elts(table);
     telts = (cos_table_entry_t*)tarr->elts;
-    
+
     for (pos = 0; pos < tarr->nelts; ++pos) {
         if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
             cos_error_log("table params args too big, key:%s.", telts[pos].key);
@@ -340,45 +340,9 @@ int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
-
-#if 0
-void cos_gnome_sort(const char **headers, int size)
-{
-    const char *tmp;
-    int i = 0, last_highest = 0;
-
-    while (i < size) {
-        if ((i == 0) || apr_strnatcasecmp(headers[i-1], headers[i]) < 0) {
-            i = ++last_highest;
-        } else {
-            tmp = headers[i];
-            headers[i] = headers[i - 1];
-            headers[--i] = tmp;
-        }
-    }
-}
-
-const char* cos_http_method_to_string(http_method_e method)
-{
-    switch (method) {
-        case HTTP_GET:
-            return "GET";
-        case HTTP_HEAD:
-            return "HEAD";
-        case HTTP_PUT:
-            return "PUT";
-        case HTTP_POST:
-            return "POST";
-        case HTTP_DELETE:
-            return "DELETE";
-        default:
-            return "UNKNOWN";
-    }
-}
-#endif
 
 const char* cos_http_method_to_string_lower(http_method_e method) {
     switch (method) {
@@ -399,7 +363,7 @@ const char* cos_http_method_to_string_lower(http_method_e method) {
 
 
 int cos_base64_encode(const unsigned char *in, int inLen, char *out) {
-    static const char *ENC = 
+    static const char *ENC =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     char *original_out = out;
@@ -448,7 +412,7 @@ void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
     int i;
     unsigned char digest[APR_SHA1_DIGESTSIZE];
     apr_sha1_ctx_t context;
-    
+
     if (key_len > 64) {
         key_len = 64;
     }
@@ -501,30 +465,30 @@ unsigned char* cos_md5(cos_pool_t* pool, const char *in, apr_size_t in_len) {
 
 int cos_url_decode(const char *in, char *out) {
     static const char tbl[256] = {
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-         0, 1, 2, 3, 4, 5, 6, 7,  8, 9,-1,-1,-1,-1,-1,-1,
-        -1,10,11,12,13,14,15,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,10,11,12,13,14,15,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+         0, 1, 2, 3, 4, 5, 6, 7,  8, 9, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
     char c, v1, v2;
 
     if(in != NULL) {
         while((c=*in++) != '\0') {
             if(c == '%') {
-                if(!(v1=*in++) || (v1=tbl[(unsigned char)v1])<0 || 
-                   !(v2=*in++) || (v2=tbl[(unsigned char)v2])<0) {
+                if(!(v1 = *in++) || (v1 = tbl[(unsigned char)v1]) < 0 ||
+                   !(v2 = *in++) || (v2 = tbl[(unsigned char)v2]) < 0) {
                     *out = '\0';
                     return -1;
                 }
@@ -672,7 +636,7 @@ uint64_t cos_strtoull(const char *nptr, char **endptr, int base) {
     if (c == '-') {
         neg = 1;
         c = *s++;
-    } else { 
+    } else {
         neg = 0;
         if (c == '+')
             c = *s++;
@@ -732,7 +696,7 @@ void cos_get_hex_from_digest(unsigned char hexdigest[40], unsigned char digest[2
                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     int j = 0;
     int i = 0;
-    
+
     for(; i < 20; i++)
     {
         hexdigest[j++] = hex_digits[(digest[i] >> 4) & 0x0f];
@@ -752,7 +716,7 @@ void cos_get_hmac_sha1_hexdigest(unsigned char hexdigest[40], const unsigned cha
 void cos_get_sha1_hexdigest(unsigned char hexdigest[40], const unsigned char *message, int message_len) {
     unsigned char digest[20];
     apr_sha1_ctx_t context;
-    
+
     apr_sha1_init(&context);
     apr_sha1_update(&context, (const char *)message, (unsigned int)message_len);
     apr_sha1_final(digest, &context);

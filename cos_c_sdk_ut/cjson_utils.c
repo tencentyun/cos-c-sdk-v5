@@ -33,7 +33,7 @@ static void cJSONUtils_PointerEncodedstrcpy(char *d, const char *s) {
 }
 
 char *cJSONUtils_FindPointerFromObjectTo(cJSON *object, cJSON *target) {
-    int type=object->type, c = 0; cJSON *obj = 0;
+    int type = object->type, c = 0; cJSON *obj = 0;
 
     if (object == target) return strdup("");
 
@@ -41,8 +41,8 @@ char *cJSONUtils_FindPointerFromObjectTo(cJSON *object, cJSON *target) {
         char *found = cJSONUtils_FindPointerFromObjectTo(obj, target);
         if (found) {
             if (type == cJSON_Array) {
-                char *ret=(char*)malloc(strlen(found)+23);
-                sprintf(ret,"/%d%s", c, found);
+                char *ret = (char*)malloc(strlen(found)+23);
+                sprintf(ret, "/%d%s", c, found);
                 free(found);
                 return ret;
             }
@@ -122,7 +122,7 @@ static int cJSONUtils_Compare(cJSON *a, cJSON *b) {
 }
 
 static int cJSONUtils_ApplyPatch(cJSON *object, cJSON *patch) {
-    cJSON *op = 0, *path = 0, *value = 0, *parent =0;
+    cJSON *op = 0, *path = 0, *value = 0, *parent = 0;
     int opcode = 0; char *parentptr = 0, *childptr = 0;
 
     op = cJSON_GetObjectItem(patch, "op");
@@ -160,8 +160,8 @@ static int cJSONUtils_ApplyPatch(cJSON *object, cJSON *patch) {
 
     /* Now, just add "value" to "path". */
 
-    parentptr = strdup(path->valuestring);    childptr=strrchr(parentptr, '/');    if (childptr) *childptr++=0;
-    parent=cJSONUtils_GetPointer(object, parentptr);
+    parentptr = strdup(path->valuestring);    childptr = strrchr(parentptr, '/');    if (childptr) *childptr++ = 0;
+    parent = cJSONUtils_GetPointer(object, parentptr);
     cJSONUtils_InplaceDecodePointerString(childptr);
 
     /* add, remove, replace, move, copy, test. */
@@ -213,12 +213,12 @@ static void cJSONUtils_CompareToPatch(cJSON *patches, const char *path, cJSON *f
     if (from->type != to->type)    {cJSONUtils_GeneratePatch(patches, "replace", path, 0, to);    return;    }
 
     switch (from->type) {
-    case cJSON_Number:    
+    case cJSON_Number:
         if (from->valueint != to->valueint || from->valuedouble != to->valuedouble)
             cJSONUtils_GeneratePatch(patches, "replace", path, 0, to);
         return;
-  
-    case cJSON_String:    
+
+    case cJSON_String:
         if (strcmp(from->valuestring, to->valuestring) != 0)
             cJSONUtils_GeneratePatch(patches, "replace", path, 0, to);
         return;
@@ -280,8 +280,8 @@ static cJSON *cJSONUtils_SortList(cJSON *list) {
     while (ptr) {second=second->next; ptr=ptr->next; if (ptr) ptr=ptr->next;}    /* Walk two pointers to find the middle. */
     if (second && second->prev) second->prev->next=0;    /* Split the lists */
 
-    first=cJSONUtils_SortList(first);    /* Recursively sort the sub-lists. */
-    second=cJSONUtils_SortList(second);
+    first = cJSONUtils_SortList(first);    /* Recursively sort the sub-lists. */
+    second = cJSONUtils_SortList(second);
     list = ptr = 0;
 
     while (first && second)    /* Merge the sub-lists */ {
@@ -312,7 +312,7 @@ cJSON* cJSONUtils_MergePatch(cJSON *target, cJSON *patch) {
     while (patch) {
         if (patch->type == cJSON_NULL) cJSON_DeleteItemFromObject(target, patch->string);
         else {
-            cJSON *replaceme=cJSON_DetachItemFromObject(target, patch->string);
+            cJSON *replaceme = cJSON_DetachItemFromObject(target, patch->string);
             cJSON_AddItemToObject(target, patch->string, cJSONUtils_MergePatch(replaceme, patch));
         }
         patch = patch->next;

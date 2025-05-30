@@ -1,5 +1,5 @@
-#ifndef LIBCOS_SYS_UTIL_H
-#define LIBCOS_SYS_UTIL_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_SYS_UTIL_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_SYS_UTIL_H_
 
 #include "cos_buf.h"
 #include "cos_string.h"
@@ -118,4 +118,4 @@ void cos_deinit_sign_header_table();
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_SYS_UTIL_H_

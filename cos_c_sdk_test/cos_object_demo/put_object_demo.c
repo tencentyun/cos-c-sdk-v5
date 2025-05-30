@@ -193,8 +193,7 @@ void resumable_put_object_demo() {
     cos_pool_destroy(p);
 }
 
-void multipart_upload_file_demo()
-{
+void multipart_upload_file_demo() {
     char object_name[] = "big_file2.txt";  // 对象名称
     char file_path[] = "big_file.txt";    // 本地文件路径
 
@@ -223,13 +222,13 @@ void multipart_upload_file_demo()
     complete_headers = cos_table_make(p, 1);
     cos_str_set(&bucket, bucket_name);
     cos_str_set(&object, object_name);
-    
+
     //init mulitipart
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+        printf("Init multipart upload succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Init multipart upload failed\n");
@@ -267,16 +266,16 @@ void multipart_upload_file_demo()
     params = cos_create_list_upload_part_params(p);
     params->max_ret = 1000;
     cos_list_init(&complete_part_list);
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              params, &resp_headers);
 
     if (cos_status_is_ok(s)) {
         printf("List multipart succeeded\n");
         cos_list_for_each_entry(cos_list_part_content_t, part_content, &params->part_list, node) {
             printf("part_number = %s, size = %s, last_modified = %s, etag = %s\n",
-                   part_content->part_number.data, 
-                   part_content->size.data, 
-                   part_content->last_modified.data, 
+                   part_content->part_number.data,
+                   part_content->size.data,
+                   part_content->last_modified.data,
                    part_content->etag.data);
         }
     } else {
@@ -297,7 +296,7 @@ void multipart_upload_file_demo()
             &complete_part_list, complete_headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
+        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Complete multipart upload from file failed\n");
@@ -306,8 +305,7 @@ void multipart_upload_file_demo()
     cos_pool_destroy(p);
 }
 
-void abort_multipart_upload_demo()
-{
+void abort_multipart_upload_demo() {
     char object_name[] = "big_file2.txt";  // 对象名称
 
     cos_pool_t *p = NULL;
@@ -327,27 +325,27 @@ void abort_multipart_upload_demo()
     cos_str_set(&bucket, bucket_name);
     cos_str_set(&object, object_name);
 
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+        printf("Init multipart upload succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
-        printf("Init multipart upload failed\n"); 
+        printf("Init multipart upload failed\n");
         cos_pool_destroy(p);
         return;
     }
-    
-    s = cos_abort_multipart_upload(options, &bucket, &object, &upload_id, 
+
+    s = cos_abort_multipart_upload(options, &bucket, &object, &upload_id,
                                    &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
         printf("Abort multipart upload succeeded, upload_id::%.*s\n", 
                upload_id.len, upload_id.data);
     } else {
-        printf("Abort multipart upload failed\n"); 
-    }    
+        printf("Abort multipart upload failed\n");
+    }
 
     cos_pool_destroy(p);
 }
