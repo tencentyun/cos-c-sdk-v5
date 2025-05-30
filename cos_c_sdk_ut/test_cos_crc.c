@@ -165,7 +165,7 @@ void test_crc_negative(CuTest *tc) {
     cos_delete_object(options, &bucket, &object, NULL);
 
     /* append object */
-    s = cos_do_append_object_from_file(options, &bucket, &object, position, 1, 
+    s = cos_do_append_object_from_file(options, &bucket, &object, position, 1,
         &filename, NULL, NULL, NULL, NULL, NULL);
     CuAssertIntEquals(tc, 200, s->code);
 
