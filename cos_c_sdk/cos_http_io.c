@@ -356,7 +356,7 @@ void cos_http_io_deinitialize() {
     }
 
     cos_deinit_sign_header_table();
-    
+
     apr_terminate();
 }
 
@@ -367,7 +367,7 @@ int cos_http_send_request(cos_http_controller_t *ctl, cos_http_request_t *req, c
     t->req = req;
     t->resp = resp;
     t->controller = (cos_http_controller_ex_t *)ctl;
-    
+
     return cos_http_transport_perform(t);
 }
 

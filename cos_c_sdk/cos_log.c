@@ -49,12 +49,12 @@ void cos_log_format_default(int level,
     if ((s = apr_time_exp_lt(&tm, t)) != APR_SUCCESS) {
         return;
     }
-    
+
     len = apr_snprintf(buffer, 4090, "[%04d-%02d-%02d %02d:%02d:%02d.%03d] %" APR_INT64_T_FMT " %s:%d ",
                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
                    tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_usec/1000,
                    (int64_t)apr_os_thread_current(), file, line);
-    
+
     va_start(args, fmt);
     len += vsnprintf(buffer + len, 4090 - len, fmt, args);
     va_end(args);

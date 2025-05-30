@@ -74,7 +74,7 @@ void test_crc_disable_crc(CuTest *tc) {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
-   
+
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, object_name);
     cos_list_init(&resp_body);
@@ -84,7 +84,7 @@ void test_crc_disable_crc(CuTest *tc) {
     cos_list_add_tail(&content->node, &buffer);
 
     options->ctl->options->enable_crc = COS_FALSE;
-    
+
     /* test put object */
     s = cos_put_object_from_buffer(options, &bucket, &object, &buffer, NULL, NULL);
     CuAssertIntEquals(tc, 200, s->code);

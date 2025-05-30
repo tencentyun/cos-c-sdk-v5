@@ -63,7 +63,7 @@ void put_bucket_demo() {
     //create test bucket
     s = cos_create_bucket(options, &bucket, cos_acl, &resp_headers);
     log_status(s);
-    cos_pool_destroy(p);    
+    cos_pool_destroy(p);
 }
 
 int main() {
