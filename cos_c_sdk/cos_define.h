@@ -1,5 +1,5 @@
-#ifndef LIBCOS_DEFINE_H
-#define LIBCOS_DEFINE_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_
 
 #include "cos_string.h"
 #include "cos_list.h"
@@ -363,7 +363,7 @@ typedef struct {
 
 typedef struct {
     cos_string_t type;
-    int32_t frag_duration; 
+    int32_t frag_duration;
     int32_t frag_count;
     cos_string_t play_list_name;
 }cos_live_channel_target_t;
@@ -446,7 +446,7 @@ typedef struct {
     cos_string_t condition_prefix;
     cos_string_t redirect_protocol;
     cos_string_t redirect_replace_key;
-    cos_string_t redirect_replace_key_prefix;	
+    cos_string_t redirect_replace_key_prefix;
 } cos_website_rule_content_t;
 
 typedef struct {
@@ -543,7 +543,7 @@ typedef struct {
 } ci_qrcode_info_t;
 
 typedef struct {
-    cos_list_t qrcode_info;  
+    cos_list_t qrcode_info;
     cos_string_t key;
     cos_string_t location;
     cos_string_t format;
@@ -619,7 +619,7 @@ typedef struct {
     cos_string_t url;
     int snapshot_time;
     cos_string_t text;
-    
+
     ci_auditing_snapshot_info_t porn_info;
     ci_auditing_snapshot_info_t terrorism_info;
     ci_auditing_snapshot_info_t politics_info;
@@ -793,4 +793,4 @@ typedef enum {
     COS_OBJECT_UNKNOWN_EXIST      = 2,   /*< unknown status, maybe the req of head has no auth or failed */
 } cos_object_exist_status_e;
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_DEFINE_H_

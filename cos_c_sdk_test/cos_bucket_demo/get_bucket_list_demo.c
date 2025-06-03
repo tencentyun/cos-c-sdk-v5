@@ -46,8 +46,7 @@ void log_status(cos_status_t* s) {
     if (s->req_id)
         cos_warn_log("status->req_id: %s", s->req_id);
 }
-void get_bucket_list_demo()
-{
+void get_bucket_list_demo() {
     cos_pool_t *pool = NULL;
     cos_status_t *status = NULL;
     cos_request_options_t *options = NULL;

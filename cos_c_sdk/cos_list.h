@@ -1,5 +1,5 @@
-#ifndef LIBCOS_LIST_H
-#define LIBCOS_LIST_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_LIST_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_LIST_H_
 
 #include <apr_general.h>
 
@@ -17,8 +17,7 @@ struct cos_list_s {
         (ptr)->prev = (ptr);                    \
     } while (0)
 
-static APR_INLINE void __cos_list_add(cos_list_t *list, cos_list_t *prev, cos_list_t *next)
-{
+static APR_INLINE void __cos_list_add(cos_list_t *list, cos_list_t *prev, cos_list_t *next) {
     next->prev = list;
     list->next = next;
     list->prev = prev;
@@ -26,33 +25,28 @@ static APR_INLINE void __cos_list_add(cos_list_t *list, cos_list_t *prev, cos_li
 }
 
 // list head to add it before
-static APR_INLINE void cos_list_add_tail(cos_list_t *list, cos_list_t *head)
-{
+static APR_INLINE void cos_list_add_tail(cos_list_t *list, cos_list_t *head) {
     __cos_list_add(list, head->prev, head);
 }
 
-static APR_INLINE void __cos_list_del(cos_list_t *prev, cos_list_t *next)
-{
+static APR_INLINE void __cos_list_del(cos_list_t *prev, cos_list_t *next) {
     next->prev = prev;
     prev->next = next;
 }
 
 // deletes entry from list
-static APR_INLINE void cos_list_del(cos_list_t *entry)
-{
+static APR_INLINE void cos_list_del(cos_list_t *entry) {
     __cos_list_del(entry->prev, entry->next);
     cos_list_init(entry);
 }
 
 // tests whether a list is empty
-static APR_INLINE int cos_list_empty(const cos_list_t *head)
-{
+static APR_INLINE int cos_list_empty(const cos_list_t *head) {
     return (head->next == head);
 }
 
 // move list to new_list
-static APR_INLINE void cos_list_movelist(cos_list_t *list, cos_list_t *new_list)
-{
+static APR_INLINE void cos_list_movelist(cos_list_t *list, cos_list_t *new_list) {
     if (!cos_list_empty(list)) {
         new_list->prev = list->prev;
         new_list->next = list->next;
@@ -98,4 +92,4 @@ static APR_INLINE void cos_list_movelist(cos_list_t *list, cos_list_t *new_list)
          &pos->member != (head);                                        \
          pos = n, n = cos_list_entry(n->member.prev, postp, member))
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_LIST_H_

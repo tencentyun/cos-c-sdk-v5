@@ -1,5 +1,5 @@
-#ifndef COS_TEST_CONFIG_H
-#define COS_TEST_CONFIG_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_UT_COS_CONFIG_H_
+#define COS_C_SDK_V5_COS_C_SDK_UT_COS_CONFIG_H_
 
 #include "cos_define.h"
 
@@ -16,4 +16,4 @@ extern char* TEST_CI_ENDPOINT;
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_UT_COS_CONFIG_H_

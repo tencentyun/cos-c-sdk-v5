@@ -1,5 +1,5 @@
-#ifndef LIB_COS_AUTH_H
-#define LIB_COS_AUTH_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_AUTH_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_AUTH_H_
 
 #include "cos_sys_util.h"
 #include "cos_string.h"
@@ -11,21 +11,21 @@ COS_CPP_START
 /**
   * @brief  sign cos headers 
 **/
-void cos_sign_headers(cos_pool_t *p, 
-                      const cos_string_t *signstr, 
+void cos_sign_headers(cos_pool_t *p,
+                      const cos_string_t *signstr,
                       const cos_string_t *access_key_id,
-                      const cos_string_t *access_key_secret, 
+                      const cos_string_t *access_key_secret,
                       cos_table_t *headers);
 
 /**
   * @brief  get string to signature
 **/
-int cos_get_string_to_sign(cos_pool_t *p, 
+int cos_get_string_to_sign(cos_pool_t *p,
                            http_method_e method,
                            const cos_string_t *secret_id,
                            const cos_string_t *secret_key,
                            const cos_string_t *canon_res,
-                           const cos_table_t *headers, 
+                           const cos_table_t *headers,
                            const cos_table_t *params,
                            const int64_t expire,
                            cos_string_t *signstr);
@@ -33,7 +33,7 @@ int cos_get_string_to_sign(cos_pool_t *p,
 /**
   * @brief  get signed cos request headers
 **/
-int cos_get_signed_headers(cos_pool_t *p, const cos_string_t *access_key_id, 
+int cos_get_signed_headers(cos_pool_t *p, const cos_string_t *access_key_id,
                            const cos_string_t *access_key_secret,
                            const cos_string_t* canon_res, cos_http_request_t *req);
 
@@ -76,4 +76,4 @@ int cos_get_rtmp_signed_url(const cos_request_options_t *options, cos_http_reque
 
 COS_CPP_END
 
-#endif
+#endif  // COS_C_SDK_V5_COS_C_SDK_COS_AUTH_H_

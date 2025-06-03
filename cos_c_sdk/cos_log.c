@@ -8,28 +8,23 @@ cos_log_level_e   cos_log_level = COS_LOG_WARN;
 extern apr_file_t *cos_stderr_file;
 
 
-void cos_log_set_print(cos_log_print_pt p)
-{
+void cos_log_set_print(cos_log_print_pt p) {
     cos_log_print = p;
 }
 
-void cos_log_set_format(cos_log_format_pt p)
-{
+void cos_log_set_format(cos_log_format_pt p) {
     cos_log_format = p;
 }
 
-void cos_log_set_level(cos_log_level_e level)
-{   
+void cos_log_set_level(cos_log_level_e level) {
     cos_log_level = level;
 }
 
-void cos_log_set_output(apr_file_t *output)
-{
+void cos_log_set_output(apr_file_t *output) {
     cos_stderr_file = output;
 }
 
-void cos_log_print_default(const char *message, int len)
-{
+void cos_log_print_default(const char *message, int len) {
     if (cos_stderr_file == NULL) {
         fprintf(stderr, "%s", message);
     } else {
@@ -42,8 +37,7 @@ void cos_log_format_default(int level,
                             const char *file,
                             int line,
                             const char *function,
-                            const char *fmt, ...)
-{
+                            const char *fmt, ...) {
     int len;
     apr_time_t t;
     int s;
@@ -55,12 +49,12 @@ void cos_log_format_default(int level,
     if ((s = apr_time_exp_lt(&tm, t)) != APR_SUCCESS) {
         return;
     }
-    
+
     len = apr_snprintf(buffer, 4090, "[%04d-%02d-%02d %02d:%02d:%02d.%03d] %" APR_INT64_T_FMT " %s:%d ",
                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
                    tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_usec/1000,
                    (int64_t)apr_os_thread_current(), file, line);
-    
+
     va_start(args, fmt);
     len += vsnprintf(buffer + len, 4090 - len, fmt, args);
     va_end(args);

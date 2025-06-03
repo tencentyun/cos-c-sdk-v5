@@ -18,13 +18,11 @@ const char COS_LACK_OF_CONTENT_LEN_ERROR_CODE[] = "LackOfContentLength";
 const char COS_SERVER_ERROR_CODE[] = "ServerError";
 
 
-cos_status_t *cos_status_create(cos_pool_t *p)
-{
+cos_status_t *cos_status_create(cos_pool_t *p) {
     return (cos_status_t *)cos_pcalloc(p, sizeof(cos_status_t));
 }
 
-cos_status_t *cos_status_dup(cos_pool_t *p, cos_status_t *src)
-{
+cos_status_t *cos_status_dup(cos_pool_t *p, cos_status_t *src) {
     cos_status_t *dst = cos_status_create(p);
     dst->code = src->code;
     dst->error_code = apr_pstrdup(p, src->error_code);
@@ -46,7 +44,7 @@ int cos_should_retry(cos_status_t *s) {
 
     if (s->error_code != NULL) {
         cos_error_code = atoi(s->error_code);
-        if (cos_error_code == COSE_CONNECTION_FAILED || cos_error_code == COSE_REQUEST_TIMEOUT || 
+        if (cos_error_code == COSE_CONNECTION_FAILED || cos_error_code == COSE_REQUEST_TIMEOUT ||
             cos_error_code == COSE_FAILED_CONNECT || cos_error_code == COSE_SERVICE_ERROR) {
             return COS_TRUE;
         }
@@ -55,8 +53,7 @@ int cos_should_retry(cos_status_t *s) {
     return COS_FALSE;
 }
 
-cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, cos_status_t *s)
-{
+cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, cos_status_t *s) {
     int res;
     mxml_node_t *root, *node;
     mxml_node_t *code_node, *message_node;
@@ -81,7 +78,7 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
         return s;
     }
 
-    node = mxmlFindElement(root, root, "Error",NULL, NULL,MXML_DESCEND);
+    node = mxmlFindElement(root, root, "Error", NULL, NULL, MXML_DESCEND);
     if (NULL == node) {
         char *xml_content = cos_buf_list_content(p, bc);
         cos_error_log("Xml format invalid, root node name is not Error.\n");
@@ -91,13 +88,13 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
         return s;
     }
 
-    code_node = mxmlFindElement(node, root, "Code",NULL, NULL,MXML_DESCEND);
+    code_node = mxmlFindElement(node, root, "Code", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(code_node);
     if (node_content != NULL) {
         s->error_code = apr_pstrdup(p, node_content);
     }
 
-    message_node = mxmlFindElement(node, root, "Message",NULL, NULL,MXML_DESCEND);
+    message_node = mxmlFindElement(node, root, "Message", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(message_node);
     if (node_content != NULL) {
         s->error_msg = apr_pstrdup(p, node_content);

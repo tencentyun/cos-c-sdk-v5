@@ -1,12 +1,10 @@
 #include "cos_fstack.h"
 
-cos_array_header_t *cos_fstack_create(cos_pool_t *p, int size)
-{
+cos_array_header_t *cos_fstack_create(cos_pool_t *p, int size) {
     return apr_array_make(p, size, sizeof(cos_fstack_item_t));
 }
 
-void cos_fstack_push(cos_array_header_t *fstack, void *data, cos_func_u func, int order)
-{
+void cos_fstack_push(cos_array_header_t *fstack, void *data, cos_func_u func, int order) {
     cos_fstack_item_t *item;
 
     item = (cos_fstack_item_t*)apr_array_push(fstack);
@@ -15,10 +13,9 @@ void cos_fstack_push(cos_array_header_t *fstack, void *data, cos_func_u func, in
     item->order = order;
 }
 
-cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack)
-{
-    cos_fstack_item_t *item;    
-    
+cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack) {
+    cos_fstack_item_t *item;
+
     item = (cos_fstack_item_t*)apr_array_pop(fstack);
     if (item == NULL) {
         return NULL;
@@ -40,11 +37,10 @@ cos_fstack_item_t *cos_fstack_pop(cos_array_header_t *fstack)
         default:
             break;
     }
-    
+
     return item;
 }
 
-void cos_fstack_destory(cos_array_header_t *fstack)
-{
-    while (cos_fstack_pop(fstack) != NULL);
+void cos_fstack_destory(cos_array_header_t *fstack) {
+    while (cos_fstack_pop(fstack) != NULL) {}
 }

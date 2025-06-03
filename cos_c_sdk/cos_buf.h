@@ -1,5 +1,5 @@
-#ifndef LIBCOS_BUF_H
-#define LIBCOS_BUF_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_BUF_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_BUF_H_
 
 #include "cos_sys_define.h"
 #include "cos_list.h"
@@ -43,8 +43,8 @@ int cos_open_file_for_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb);
 
 int cos_open_file_for_all_read(cos_pool_t *p, const char *path, cos_file_buf_t *fb);
 
-int cos_open_file_for_range_read(cos_pool_t *p, const char *path, 
-                                 int64_t file_pos, int64_t file_last, 
+int cos_open_file_for_range_read(cos_pool_t *p, const char *path,
+                                 int64_t file_pos, int64_t file_last,
                                  cos_file_buf_t *fb);
 
 /**
@@ -60,5 +60,5 @@ int cos_open_file_for_range_write(cos_pool_t *p, const char *path, int64_t file_
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_BUF_H_
 

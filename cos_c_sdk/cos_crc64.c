@@ -53,8 +53,7 @@ static uint64_t crc64_little_table[8][256];
 static uint64_t crc64_big_table[8][256];
 
 /* Fill in the CRC-64 constants table. */
-static void crc64_init(uint64_t table[][256])
-{
+static void crc64_init(uint64_t table[][256]) {
     unsigned n, k;
     uint64_t crc;
 
@@ -78,14 +77,12 @@ static void crc64_init(uint64_t table[][256])
 
 /* This function is called once to initialize the CRC-64 table for use on a
    little-endian architecture. */
-static void crc64_little_init(void)
-{
+static void crc64_little_init(void) {
     crc64_init(crc64_little_table);
 }
 
 /* Reverse the bytes in a 64-bit word. */
-static APR_INLINE uint64_t rev8(uint64_t a)
-{
+static APR_INLINE uint64_t rev8(uint64_t a) {
     uint64_t m;
 
     m = UINT64_C(0xff00ff00ff00ff);
@@ -97,8 +94,7 @@ static APR_INLINE uint64_t rev8(uint64_t a)
 
 /* This function is called once to initialize the CRC-64 table for use on a
    big-endian architecture. */
-static void crc64_big_init(void)
-{
+static void crc64_big_init(void) {
     unsigned k, n;
 
     crc64_init(crc64_big_table);
@@ -133,8 +129,7 @@ static void crc64_big_init(void)
 #endif
 
 /* Calculate a CRC-64 eight bytes at a time on a little-endian architecture. */
-static APR_INLINE uint64_t crc64_little(uint64_t crc, void *buf, size_t len)
-{
+static APR_INLINE uint64_t crc64_little(uint64_t crc, void *buf, size_t len) {
     unsigned char *next = buf;
 
     ONCE(crc64_little_init);
@@ -164,8 +159,7 @@ static APR_INLINE uint64_t crc64_little(uint64_t crc, void *buf, size_t len)
 }
 
 /* Calculate a CRC-64 eight bytes at a time on a big-endian architecture. */
-static APR_INLINE uint64_t crc64_big(uint64_t crc, void *buf, size_t len)
-{
+static APR_INLINE uint64_t crc64_big(uint64_t crc, void *buf, size_t len) {
     unsigned char *next = buf;
 
     ONCE(crc64_big_init);
@@ -200,22 +194,20 @@ static APR_INLINE uint64_t crc64_big(uint64_t crc, void *buf, size_t len)
    at compile time if it can, and get rid of the unused code and table.  If the
    endianess can be changed at run time, then this code will handle that as
    well, initializing and using two tables, if called upon to do so. */
-uint64_t cos_crc64(uint64_t crc, void *buf, size_t len)
-{
+uint64_t cos_crc64(uint64_t crc, void *buf, size_t len) {
     uint64_t n = 1;
 
     return *(char *)&n ? crc64_little(crc, buf, len) :
                          crc64_big(crc, buf, len);
 }
 
-uint64_t cos_crc64_big(uint64_t crc, void *buf, size_t len){
+uint64_t cos_crc64_big(uint64_t crc, void *buf, size_t len) {
     return crc64_big(crc, buf, len);
 }
 
 #define GF2_DIM 64      /* dimension of GF(2) vectors (length of CRC) */
 
-static uint64_t gf2_matrix_times(uint64_t *mat, uint64_t vec)
-{
+static uint64_t gf2_matrix_times(uint64_t *mat, uint64_t vec) {
     uint64_t sum;
 
     sum = 0;
@@ -228,8 +220,7 @@ static uint64_t gf2_matrix_times(uint64_t *mat, uint64_t vec)
     return sum;
 }
 
-static void gf2_matrix_square(uint64_t *square, uint64_t *mat)
-{
+static void gf2_matrix_square(uint64_t *square, uint64_t *mat) {
     unsigned n;
 
     for (n = 0; n < GF2_DIM; n++)
@@ -239,8 +230,7 @@ static void gf2_matrix_square(uint64_t *square, uint64_t *mat)
 /* Return the CRC-64 of two sequential blocks, where crc1 is the CRC-64 of the
    first block, crc2 is the CRC-64 of the second block, and len2 is the length
    of the second block. */
-uint64_t cos_crc64_combine(uint64_t crc1, uint64_t crc2, uintmax_t len2)
-{
+uint64_t cos_crc64_combine(uint64_t crc1, uint64_t crc2, uintmax_t len2) {
     unsigned n;
     uint64_t row;
     uint64_t even[GF2_DIM];     /* even-power-of-two zeros operator */

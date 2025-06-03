@@ -1,5 +1,5 @@
-#ifndef LIBCOS_API_H
-#define LIBCOS_API_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_API_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_API_H_
 
 #include "cos_sys_util.h"
 #include "cos_string.h"
@@ -990,10 +990,10 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
  * @param[in]   req                 the cos http request
  * @return  signed url, non-NULL success, NULL failure
  */
-char *cos_gen_signed_url(const cos_request_options_t *options, 
+char *cos_gen_signed_url(const cos_request_options_t *options,
                          const cos_string_t *bucket,
-                         const cos_string_t *object, 
-                         int64_t expires, 
+                         const cos_string_t *object,
+                         int64_t expires,
                          cos_http_request_t *req);
 
 /*
@@ -1006,8 +1006,8 @@ char *cos_gen_signed_url(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_object_from_buffer_by_url(const cos_request_options_t *options,
-                                                const cos_string_t *signed_url, 
-                                                cos_list_t *buffer, 
+                                                const cos_string_t *signed_url,
+                                                cos_list_t *buffer,
                                                 cos_table_t *headers,
                                                 cos_table_t **resp_headers);
 
@@ -1021,8 +1021,8 @@ cos_status_t *cos_put_object_from_buffer_by_url(const cos_request_options_t *opt
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_put_object_from_file_by_url(const cos_request_options_t *options,
-                                              const cos_string_t *signed_url, 
-                                              cos_string_t *filename, 
+                                              const cos_string_t *signed_url,
+                                              cos_string_t *filename,
                                               cos_table_t *headers,
                                               cos_table_t **resp_headers);
 
@@ -1037,7 +1037,7 @@ cos_status_t *cos_put_object_from_file_by_url(const cos_request_options_t *optio
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_get_object_to_buffer_by_url(const cos_request_options_t *options,
-                                              const cos_string_t *signed_url, 
+                                              const cos_string_t *signed_url,
                                               cos_table_t *headers,
                                               cos_table_t *params,
                                               cos_list_t *buffer,
@@ -1055,7 +1055,7 @@ cos_status_t *cos_get_object_to_buffer_by_url(const cos_request_options_t *optio
  */
 cos_status_t *cos_get_object_to_file_by_url(const cos_request_options_t *options,
                                             const cos_string_t *signed_url,
-                                            cos_table_t *headers, 
+                                            cos_table_t *headers,
                                             cos_table_t *params,
                                             cos_string_t *filename,
                                             cos_table_t **resp_headers);
@@ -1069,8 +1069,8 @@ cos_status_t *cos_get_object_to_file_by_url(const cos_request_options_t *options
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_head_object_by_url(const cos_request_options_t *options,
-                                     const cos_string_t *signed_url, 
-                                     cos_table_t *headers, 
+                                     const cos_string_t *signed_url,
+                                     cos_table_t *headers,
                                      cos_table_t **resp_headers);
 #endif
 
@@ -1084,15 +1084,15 @@ cos_status_t *cos_head_object_by_url(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options, 
-                                        const cos_string_t *bucket, 
-                                        const cos_string_t *object, 
+cos_status_t *cos_init_multipart_upload(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        const cos_string_t *object,
                                         cos_string_t *upload_id,
                                         cos_table_t *headers,
                                         cos_table_t **resp_headers);
-cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *options, 
-                                        const cos_string_t *bucket, 
-                                        const cos_string_t *object, 
+cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        const cos_string_t *object,
                                         cos_string_t *upload_id,
                                         cos_table_t *headers,
                                         cos_table_t **resp_headers);
@@ -1108,12 +1108,12 @@ cos_status_t *cos_init_multipart_upload_no_retry(const cos_request_options_t *op
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_upload_part_from_buffer(const cos_request_options_t *options, 
-                                          const cos_string_t *bucket, 
-                                          const cos_string_t *object, 
-                                          const cos_string_t *upload_id, 
-                                          int part_num, 
-                                          cos_list_t *buffer, 
+cos_status_t *cos_upload_part_from_buffer(const cos_request_options_t *options,
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *object,
+                                          const cos_string_t *upload_id,
+                                          int part_num,
+                                          cos_list_t *buffer,
                                           cos_table_t **resp_headers);
 
 /*
@@ -1131,14 +1131,14 @@ cos_status_t *cos_upload_part_from_buffer(const cos_request_options_t *options,
  * @param[out]  resp_body           cos server response body
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *options, 
-                                             const cos_string_t *bucket, 
-                                             const cos_string_t *object, 
+cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *options,
+                                             const cos_string_t *bucket,
+                                             const cos_string_t *object,
                                              const cos_string_t *upload_id,
-                                             int part_num, 
-                                             cos_list_t *buffer, 
+                                             int part_num,
+                                             cos_list_t *buffer,
                                              cos_progress_callback progress_callback,
-                                             cos_table_t *headers, 
+                                             cos_table_t *headers,
                                              cos_table_t *params,
                                              cos_table_t **resp_headers,
                                              cos_list_t *resp_body);
@@ -1155,10 +1155,10 @@ cos_status_t *cos_do_upload_part_from_buffer(const cos_request_options_t *option
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_upload_part_from_file(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
-                                        const cos_string_t *upload_id, 
-                                        int part_num, 
+                                        const cos_string_t *upload_id,
+                                        int part_num,
                                         cos_upload_file_t *upload_file,
                                         cos_table_t **resp_headers);
 
@@ -1178,24 +1178,24 @@ cos_status_t *cos_upload_part_from_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_upload_part_from_file(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const cos_string_t *object,
-                                           const cos_string_t *upload_id, 
-                                           int part_num, 
+                                           const cos_string_t *upload_id,
+                                           int part_num,
                                            cos_upload_file_t *upload_file,
                                            cos_progress_callback progress_callback,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t *params,
                                            cos_table_t **resp_headers,
                                            cos_list_t *resp_body);
 cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const cos_string_t *object,
-                                           const cos_string_t *upload_id, 
-                                           int part_num, 
+                                           const cos_string_t *upload_id,
+                                           int part_num,
                                            cos_upload_file_t *upload_file,
                                            cos_progress_callback progress_callback,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t *params,
                                            cos_table_t **resp_headers,
                                            cos_list_t *resp_body);
@@ -1208,10 +1208,10 @@ cos_status_t *cos_do_upload_part_from_file_no_retry(const cos_request_options_t 
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_abort_multipart_upload(const cos_request_options_t *options, 
-                                         const cos_string_t *bucket, 
-                                         const cos_string_t *object, 
-                                         cos_string_t *upload_id, 
+cos_status_t *cos_abort_multipart_upload(const cos_request_options_t *options,
+                                         const cos_string_t *bucket,
+                                         const cos_string_t *object,
+                                         cos_string_t *upload_id,
                                          cos_table_t **resp_headers);
 
 
@@ -1226,11 +1226,11 @@ cos_status_t *cos_abort_multipart_upload(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_complete_multipart_upload(const cos_request_options_t *options, 
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object, 
-                                            const cos_string_t *upload_id, 
-                                            cos_list_t *part_list, 
+cos_status_t *cos_complete_multipart_upload(const cos_request_options_t *options,
+                                            const cos_string_t *bucket,
+                                            const cos_string_t *object,
+                                            const cos_string_t *upload_id,
+                                            cos_list_t *part_list,
                                             cos_table_t *headers,
                                             cos_table_t **resp_headers);
 
@@ -1247,11 +1247,11 @@ cos_status_t *cos_complete_multipart_upload(const cos_request_options_t *options
  * @param[out]  resp_body           cos server response body
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *options, 
-                                               const cos_string_t *bucket, 
-                                               const cos_string_t *object, 
-                                               const cos_string_t *upload_id, 
-                                               cos_list_t *part_list, 
+cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *options,
+                                               const cos_string_t *bucket,
+                                               const cos_string_t *object,
+                                               const cos_string_t *upload_id,
+                                               cos_list_t *part_list,
                                                cos_table_t *headers,
                                                cos_table_t *params,
                                                cos_table_t **resp_headers,
@@ -1270,11 +1270,11 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_list_upload_part(const cos_request_options_t *options, 
-                                   const cos_string_t *bucket, 
-                                   const cos_string_t *object, 
-                                   const cos_string_t *upload_id, 
-                                   cos_list_upload_part_params_t *params, 
+cos_status_t *cos_list_upload_part(const cos_request_options_t *options,
+                                   const cos_string_t *bucket,
+                                   const cos_string_t *object,
+                                   const cos_string_t *upload_id,
+                                   cos_list_upload_part_params_t *params,
                                    cos_table_t **resp_headers);
 
 /*
@@ -1286,9 +1286,9 @@ cos_status_t *cos_list_upload_part(const cos_request_options_t *options,
  * @param[out]  resp_headers        cos server response headers
  * @return  cos_status_t, code is 2xx success, other failure
  */
-cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options, 
-                                        const cos_string_t *bucket, 
-                                        cos_list_multipart_upload_params_t *params, 
+cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options,
+                                        const cos_string_t *bucket,
+                                        cos_list_multipart_upload_params_t *params,
                                         cos_table_t **resp_headers);
 
 
@@ -1301,8 +1301,8 @@ cos_status_t *cos_list_multipart_upload(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
-                                   cos_upload_part_copy_params_t *params, 
-                                   cos_table_t *headers, 
+                                   cos_upload_part_copy_params_t *params,
+                                   cos_table_t *headers,
                                    cos_table_t **resp_headers);
 
 
@@ -1318,10 +1318,10 @@ cos_status_t *cos_upload_part_copy(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_upload_file(cos_request_options_t *options,
-                              const cos_string_t *bucket, 
-                              const cos_string_t *object, 
+                              const cos_string_t *bucket,
+                              const cos_string_t *object,
                               cos_string_t *upload_id,
-                              cos_string_t *filename, 
+                              cos_string_t *filename,
                               int64_t part_size,
                               cos_table_t *headers);
 
@@ -1337,8 +1337,8 @@ cos_status_t *cos_upload_file(cos_request_options_t *options,
 cos_status_t *cos_upload_object_by_part_copy
 (
         cos_request_options_t *options,
-        const cos_string_t *copy_source, 
-        const cos_string_t *dest_bucket, 
+        const cos_string_t *copy_source,
+        const cos_string_t *dest_bucket,
         const cos_string_t *dest_object,
         int64_t part_size
 );
@@ -1353,7 +1353,7 @@ cos_status_t *cos_upload_object_by_part_copy
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_download_part_to_file(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
                                         cos_upload_file_t *download_file,
                                         cos_table_t **resp_headers);
@@ -1371,11 +1371,11 @@ cos_status_t *cos_download_part_to_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const cos_string_t *object,
                                            cos_upload_file_t *download_file,
                                            cos_progress_callback progress_callback,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t *params,
                                            cos_table_t **resp_headers);
 
@@ -1392,12 +1392,12 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
-                                        cos_string_t *bucket, 
-                                        cos_string_t *object, 
-                                        cos_string_t *filepath,                           
+                                        cos_string_t *bucket,
+                                        cos_string_t *object,
+                                        cos_string_t *filepath,
                                         cos_table_t *headers,
                                         cos_table_t *params,
-                                        cos_resumable_clt_params_t *clt_params, 
+                                        cos_resumable_clt_params_t *clt_params,
                                         cos_progress_callback progress_callback,
                                         cos_table_t **resp_headers,
                                         cos_list_t *resp_body);
@@ -1631,7 +1631,7 @@ char *cos_gen_rtmp_signed_url(const cos_request_options_t *options,
  * @return  defined in enum cos_error_code_e
  */
 int cos_gen_presigned_url(const cos_request_options_t *options,
-                          const cos_string_t *bucket, 
+                          const cos_string_t *bucket,
                           const cos_string_t *object,
                           const int64_t expire,
                           http_method_e method,
@@ -1651,7 +1651,7 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
  * @return  defined in enum cos_error_code_e
  */
 int cos_gen_presigned_url_safe(const cos_request_options_t *options,
-                          const cos_string_t *bucket, 
+                          const cos_string_t *bucket,
                           const cos_string_t *object,
                           const int64_t expire,
                           http_method_e method,
@@ -1685,7 +1685,7 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
                                 const cos_string_t *object,
                                 int cover,
                                 cos_table_t *headers,
-                                cos_table_t *query_params, 
+                                cos_table_t *query_params,
                                 cos_table_t **resp_headers,
                                 ci_qrcode_result_t **results);
 
@@ -1700,9 +1700,9 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const ci_video_auditing_job_options_t *job_options,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t **resp_headers,
                                            ci_video_auditing_job_result_t **job_result);
 
@@ -1717,9 +1717,9 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
-                                  const cos_string_t *bucket, 
+                                  const cos_string_t *bucket,
                                   const cos_string_t *job_id,
-                                  cos_table_t *headers, 
+                                  cos_table_t *headers,
                                   cos_table_t **resp_headers,
                                   ci_auditing_job_result_t **job_result);
 
@@ -1734,7 +1734,7 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
  */
 cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
                                         const ci_media_buckets_request_t *media_request,
-                                        cos_table_t *headers, 
+                                        cos_table_t *headers,
                                         cos_table_t **resp_headers,
                                         ci_media_buckets_result_t **media_result);
 
@@ -1750,11 +1750,11 @@ cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
                                         const ci_get_snapshot_request_t *snapshot_request,
-                                        cos_table_t *headers, 
-                                        cos_list_t *buffer, 
+                                        cos_table_t *headers,
+                                        cos_list_t *buffer,
                                         cos_table_t **resp_headers);
 
 /*
@@ -1769,11 +1769,11 @@ cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
-                                      const cos_string_t *bucket, 
+                                      const cos_string_t *bucket,
                                       const cos_string_t *object,
                                       const ci_get_snapshot_request_t *snapshot_request,
-                                      cos_table_t *headers, 
-                                      cos_string_t *filename, 
+                                      cos_table_t *headers,
+                                      cos_string_t *filename,
                                       cos_table_t **resp_headers);
 
 /*
@@ -1787,12 +1787,12 @@ cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_media_info(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
+                                const cos_string_t *bucket,
                                 const cos_string_t *object,
-                                cos_table_t *headers, 
+                                cos_table_t *headers,
                                 cos_table_t **resp_headers,
                                 ci_media_info_result_t **media_result);
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_API_H_

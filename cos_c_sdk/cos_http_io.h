@@ -1,5 +1,5 @@
-#ifndef LIBCOS_HTTP_IO_H
-#define LIBCOS_HTTP_IO_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_HTTP_IO_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_HTTP_IO_H_
 
 #include "cos_transport.h"
 #include "cos_define.h"
@@ -10,8 +10,7 @@ COS_CPP_START
 cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner);
 
 /* http io error message*/
-static APR_INLINE const char *cos_http_controller_get_reason(cos_http_controller_t *ctl)
-{
+static APR_INLINE const char *cos_http_controller_get_reason(cos_http_controller_t *ctl) {
     cos_http_controller_ex_t *ctle = (cos_http_controller_ex_t *)ctl;
     return ctle->reason;
 }
@@ -55,5 +54,5 @@ extern cos_http_transport_perform_pt cos_http_transport_perform;
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_HTTP_IO_H_
 

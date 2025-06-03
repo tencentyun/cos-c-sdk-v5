@@ -11,37 +11,32 @@
 static cos_string_t video_auditing_uri = cos_string("video/auditing");
 
 
-static inline ci_video_auditing_job_result_t *ci_create_video_auditing_job_result(cos_pool_t *p)
-{
+static inline ci_video_auditing_job_result_t *ci_create_video_auditing_job_result(cos_pool_t *p) {
     ci_video_auditing_job_result_t *res = (ci_video_auditing_job_result_t *)cos_pcalloc(p, sizeof(ci_video_auditing_job_result_t));
     return res;
 }
 
-static inline ci_auditing_job_result_t *ci_create_get_auditing_job_result(cos_pool_t *p)
-{
+static inline ci_auditing_job_result_t *ci_create_get_auditing_job_result(cos_pool_t *p) {
     ci_auditing_job_result_t *res = (ci_auditing_job_result_t *)cos_pcalloc(p, sizeof(ci_auditing_job_result_t));
     return res;
 }
 
-static inline ci_media_buckets_result_t *ci_create_media_buckets_result(cos_pool_t *p)
-{
+static inline ci_media_buckets_result_t *ci_create_media_buckets_result(cos_pool_t *p) {
     ci_media_buckets_result_t *res = (ci_media_buckets_result_t *)cos_pcalloc(p, sizeof(ci_media_buckets_result_t));
     return res;
 }
 
-static inline ci_media_info_result_t *ci_create_media_info_result(cos_pool_t *p)
-{
+static inline ci_media_info_result_t *ci_create_media_info_result(cos_pool_t *p) {
     ci_media_info_result_t *res = (ci_media_info_result_t *)cos_pcalloc(p, sizeof(ci_media_info_result_t));
     return res;
 }
 
 cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const ci_video_auditing_job_options_t *job_options,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t **resp_headers,
-                                           ci_video_auditing_job_result_t **job_result)
-{
+                                           ci_video_auditing_job_result_t **job_result) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
@@ -59,10 +54,10 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
         *job_result = NULL;
         return s;
     }
-    
+
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
     build_video_auditing_job_body(options->pool, job_options, &body);
-    cos_write_request_body_from_buffer(&body, req);
+    cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
     s = cos_process_request(options, req, resp, 0);
     cos_fill_read_response_header(resp, resp_headers);
@@ -85,12 +80,11 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
 }
 
 cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
-                                  const cos_string_t *bucket, 
+                                  const cos_string_t *bucket,
                                   const cos_string_t *job_id,
-                                  cos_table_t *headers, 
+                                  cos_table_t *headers,
                                   cos_table_t **resp_headers,
-                                  ci_auditing_job_result_t **job_result)
-{
+                                  ci_auditing_job_result_t **job_result) {
     int res;
     cos_string_t uri;
     cos_status_t *s = NULL;
@@ -131,8 +125,7 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
     return s;
 }
 
-static cos_table_t* build_media_bucket_query_params(cos_pool_t *p, const ci_media_buckets_request_t *media_request)
-{
+static cos_table_t* build_media_bucket_query_params(cos_pool_t *p, const ci_media_buckets_request_t *media_request) {
     char *value = NULL;
     cos_table_t *query_params = NULL;
 
@@ -165,10 +158,9 @@ static cos_table_t* build_media_bucket_query_params(cos_pool_t *p, const ci_medi
 
 cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
                                         const ci_media_buckets_request_t *media_request,
-                                        cos_table_t *headers, 
+                                        cos_table_t *headers,
                                         cos_table_t **resp_headers,
-                                        ci_media_buckets_result_t **media_result)
-{
+                                        ci_media_buckets_result_t **media_result) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
@@ -204,8 +196,7 @@ cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
     return s;
 }
 
-static cos_table_t* build_snapshot_query_params(cos_pool_t *p, const ci_get_snapshot_request_t *snapshot_request)
-{
+static cos_table_t* build_snapshot_query_params(cos_pool_t *p, const ci_get_snapshot_request_t *snapshot_request) {
     char *value;
     cos_table_t *query_params = cos_table_make(p, 1);
     apr_table_add(query_params, "ci-process", "snapshot");
@@ -232,13 +223,12 @@ static cos_table_t* build_snapshot_query_params(cos_pool_t *p, const ci_get_snap
 }
 
 cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
                                         const ci_get_snapshot_request_t *snapshot_request,
-                                        cos_table_t *headers, 
-                                        cos_list_t *buffer, 
-                                        cos_table_t **resp_headers)
-{
+                                        cos_table_t *headers,
+                                        cos_list_t *buffer,
+                                        cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -248,7 +238,7 @@ cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
     headers = cos_table_create_if_null(options, headers, 0);
     query_params = build_snapshot_query_params(options->pool, snapshot_request);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -262,13 +252,12 @@ cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
 }
 
 cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
-                                      const cos_string_t *bucket, 
+                                      const cos_string_t *bucket,
                                       const cos_string_t *object,
                                       const ci_get_snapshot_request_t *snapshot_request,
-                                      cos_table_t *headers, 
-                                      cos_string_t *filename, 
-                                      cos_table_t **resp_headers)
-{
+                                      cos_table_t *headers,
+                                      cos_string_t *filename,
+                                      cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -282,7 +271,7 @@ cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
 
     cos_get_temporary_file_name(options->pool, filename, &tmp_filename);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -303,8 +292,7 @@ cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
     return s;
 }
 
-static cos_table_t* build_media_info_query_params(cos_pool_t *p)
-{
+static cos_table_t* build_media_info_query_params(cos_pool_t *p) {
     cos_table_t *query_params = cos_table_make(p, 1);
     apr_table_add(query_params, "ci-process", "videoinfo");
 
@@ -312,12 +300,11 @@ static cos_table_t* build_media_info_query_params(cos_pool_t *p)
 }
 
 cos_status_t *ci_get_media_info(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
+                                const cos_string_t *bucket,
                                 const cos_string_t *object,
-                                cos_table_t *headers, 
+                                cos_table_t *headers,
                                 cos_table_t **resp_headers,
-                                ci_media_info_result_t **media_result)
-{
+                                ci_media_info_result_t **media_result) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
@@ -328,7 +315,7 @@ cos_status_t *ci_get_media_info(const cos_request_options_t *options,
     headers = cos_table_create_if_null(options, headers, 0);
     query_params = build_media_info_query_params(options->pool);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;

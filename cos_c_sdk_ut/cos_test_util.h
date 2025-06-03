@@ -1,5 +1,5 @@
-#ifndef COS_TEST_UTIL_H
-#define COS_TEST_UTIL_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_UT_COS_TEST_UTIL_H_
+#define COS_C_SDK_V5_COS_C_SDK_UT_COS_TEST_UTIL_H_
 
 #include "CuTest.h"
 #include "cos_http_io.h"
@@ -32,7 +32,7 @@ void init_test_request_options(cos_request_options_t *options, int is_cname);
 cos_status_t * create_test_bucket(const cos_request_options_t *options,
     const char *bucket_name, cos_acl_e cos_acl);
 
-cos_status_t *create_test_object(const cos_request_options_t *options, const char *bucket_name, 
+cos_status_t *create_test_object(const cos_request_options_t *options, const char *bucket_name,
     const char *object_name, const char *data, cos_table_t *headers);
 
 cos_status_t *create_test_object_from_file(const cos_request_options_t *options, const char *bucket_name,
@@ -41,7 +41,7 @@ cos_status_t *create_test_object_from_file(const cos_request_options_t *options,
 cos_status_t *delete_test_object(const cos_request_options_t *options,
     const char *bucket_name, const char *object_name);
 
-cos_status_t *init_test_multipart_upload(const cos_request_options_t *options, const char *bucket_name, 
+cos_status_t *init_test_multipart_upload(const cos_request_options_t *options, const char *bucket_name,
     const char *object_name, cos_string_t *upload_id);
 
 cos_status_t *abort_test_multipart_upload(const cos_request_options_t *options, const char *bucket_name,
@@ -56,4 +56,4 @@ void progress_callback(int64_t consumed_bytes, int64_t total_bytes);
 
 COS_CPP_END
 
-#endif
+#endif  //   COS_C_SDK_V5_COS_C_SDK_UT_COS_TEST_UTIL_H_

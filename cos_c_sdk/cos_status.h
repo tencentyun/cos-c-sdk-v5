@@ -1,5 +1,5 @@
-#ifndef LIBCOS_STATUS_H
-#define LIBCOS_STATUS_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_STATUS_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_STATUS_H_
 
 #include "cos_sys_define.h"
 #include "cos_list.h"
@@ -15,13 +15,11 @@ struct cos_status_s {
     char *req_id;   // can't modify
 };
 
-static APR_INLINE int cos_status_is_ok(cos_status_t *s)
-{
+static APR_INLINE int cos_status_is_ok(cos_status_t *s) {
     return s->code > 0 && s->code / 100 == 2;
 }
 
-static APR_INLINE int cos_http_is_ok(int st)
-{
+static APR_INLINE int cos_http_is_ok(int st) {
     return st / 100 == 2;
 }
 
@@ -58,4 +56,4 @@ extern const char COS_SERVER_ERROR_CODE[];
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_STATUS_H_

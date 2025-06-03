@@ -1,5 +1,5 @@
-#ifndef LIBCOS_SYS_DEFINE_H
-#define LIBCOS_SYS_DEFINE_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_SYS_DEFINE_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_SYS_DEFINE_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -132,10 +132,10 @@ typedef apr_array_header_t cos_array_header_t;
 #define CR     (char) 13
 #define CRLF   "\x0d\x0a"
 
-#define COS_VERSION    "5.0.23"
+#define COS_VERSION    "5.0.24"
 #define COS_VER        "cos-sdk-c/" COS_VERSION
 
-#define COS_HTTP_PREFIX   "http://"
+#define COS_HTTP_PREFIX   "http://"  // NOCA:HttpHardcoded(ignore)
 #define COS_HTTPS_PREFIX  "https://"
 #define COS_RTMP_PREFIX   "rtmp://"
 
@@ -144,4 +144,4 @@ typedef apr_array_header_t cos_array_header_t;
 #define COS_FALSE     0
 #define COS_TRUE      1
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_SYS_DEFINE_H_
