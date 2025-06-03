@@ -48,8 +48,7 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void get_object_to_file_demo()
-{
+void get_object_to_file_demo() {
     char object_name[] = "test.txt";  // 对象名称
     char file_path[] = "test.txt";    // 本地文件路径
 
@@ -79,10 +78,9 @@ void get_object_to_file_demo()
     {
         int i = 0;
         apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
-        for ( ; i < pp->nelts; i++)
-        {
+        for ( ; i < pp->nelts; i++) {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key,ele->val);
+            printf("%s: %s\n", ele->key, ele->val);
         }
     }
 

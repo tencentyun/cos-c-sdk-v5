@@ -8,26 +8,24 @@
 #include "cos_api.h"
 
 cos_status_t *cos_put_object_from_buffer(const cos_request_options_t *options,
-                                         const cos_string_t *bucket, 
-                                         const cos_string_t *object, 
+                                         const cos_string_t *bucket,
+                                         const cos_string_t *object,
                                          cos_list_t *buffer,
-                                         cos_table_t *headers, 
-                                         cos_table_t **resp_headers)
-{
-    return cos_do_put_object_from_buffer(options, bucket, object, buffer, 
+                                         cos_table_t *headers,
+                                         cos_table_t **resp_headers) {
+    return cos_do_put_object_from_buffer(options, bucket, object, buffer,
                                          headers, NULL, NULL, resp_headers, NULL);
 }
 
 cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object, 
+                                            const cos_string_t *bucket,
+                                            const cos_string_t *object,
                                             cos_list_t *buffer,
-                                            cos_table_t *headers, 
+                                            cos_table_t *headers,
                                             cos_table_t *params,
                                             cos_progress_callback progress_callback,
                                             cos_table_t **resp_headers,
-                                            cos_list_t *resp_body)
-{
+                                            cos_list_t *resp_body) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -41,8 +39,8 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
     query_params = cos_table_create_if_null(options, params, 0);
 
     cos_add_content_md5_from_buffer(options, buffer, headers);
-    
-    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, 
+
+    if (!cos_init_object_request(options, bucket, object, HTTP_PUT,
                             &req, query_params, headers, progress_callback, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -61,26 +59,24 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
 }
 
 cos_status_t *cos_put_object_from_file(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       const cos_string_t *object, 
+                                       const cos_string_t *bucket,
+                                       const cos_string_t *object,
                                        const cos_string_t *filename,
-                                       cos_table_t *headers, 
-                                       cos_table_t **resp_headers)
-{
-    return cos_do_put_object_from_file(options, bucket, object, filename, 
+                                       cos_table_t *headers,
+                                       cos_table_t **resp_headers) {
+    return cos_do_put_object_from_file(options, bucket, object, filename,
                                        headers, NULL, NULL, resp_headers, NULL);
 }
 
 cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
-                                          const cos_string_t *object, 
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *object,
                                           const cos_string_t *filename,
-                                          cos_table_t *headers, 
+                                          cos_table_t *headers,
                                           cos_table_t *params,
                                           cos_progress_callback progress_callback,
                                           cos_table_t **resp_headers,
-                                          cos_list_t *resp_body)
-{
+                                          cos_list_t *resp_body) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -98,7 +94,7 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
 
     cos_add_content_md5_from_file(options, filename, headers);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req,
                             query_params, headers, progress_callback, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -121,29 +117,27 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
     return s;
 }
 
-cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options, 
-                                       const cos_string_t *bucket, 
+cos_status_t *cos_get_object_to_buffer(const cos_request_options_t *options,
+                                       const cos_string_t *bucket,
                                        const cos_string_t *object,
-                                       cos_table_t *headers, 
+                                       cos_table_t *headers,
                                        cos_table_t *params,
-                                       cos_list_t *buffer, 
-                                       cos_table_t **resp_headers)
-{
-    return cos_do_get_object_to_buffer(options, bucket, object, headers, 
+                                       cos_list_t *buffer,
+                                       cos_table_t **resp_headers) {
+    return cos_do_get_object_to_buffer(options, bucket, object, headers,
                                        params, buffer, NULL, resp_headers);
 }
 
-cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options, 
-                                          const cos_string_t *bucket, 
+cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
+                                          const cos_string_t *bucket,
                                           const cos_string_t *object,
-                                          cos_table_t *headers, 
+                                          cos_table_t *headers,
                                           cos_table_t *params,
                                           cos_list_t *buffer,
-                                          cos_progress_callback progress_callback, 
-                                          cos_table_t **resp_headers)
-{
+                                          cos_progress_callback progress_callback,
+                                          cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
-    if (!object_key_simplify_check(object->data)){
+    if (!object_key_simplify_check(object->data)) {
         s = cos_status_create(options->pool);
         cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
         return s;
@@ -155,7 +149,7 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
     headers = cos_table_create_if_null(options, headers, 0);
     params = cos_table_create_if_null(options, params, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, params, headers, progress_callback, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -165,7 +159,7 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
     cos_fill_read_response_body(resp, buffer);
     cos_fill_read_response_header(resp, resp_headers);
 
-    if (is_enable_crc(options) && has_crc_in_response(resp) &&  
+    if (is_enable_crc(options) && has_crc_in_response(resp) &&
         !has_range_or_process_in_request(req)) {
         cos_check_crc_consistent(resp->crc64, resp->headers, s);
     } else if (is_enable_crc(options)) {
@@ -176,28 +170,26 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
 }
 
 cos_status_t *cos_get_object_to_file(const cos_request_options_t *options,
-                                     const cos_string_t *bucket, 
+                                     const cos_string_t *bucket,
                                      const cos_string_t *object,
-                                     cos_table_t *headers, 
+                                     cos_table_t *headers,
                                      cos_table_t *params,
-                                     cos_string_t *filename, 
-                                     cos_table_t **resp_headers)
-{
-    return cos_do_get_object_to_file(options, bucket, object, headers, 
+                                     cos_string_t *filename,
+                                     cos_table_t **resp_headers) {
+    return cos_do_get_object_to_file(options, bucket, object, headers,
                                      params, filename, NULL, resp_headers);
 }
 
 cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
-                                        cos_table_t *headers, 
+                                        cos_table_t *headers,
                                         cos_table_t *params,
-                                        cos_string_t *filename, 
+                                        cos_string_t *filename,
                                         cos_progress_callback progress_callback,
-                                        cos_table_t **resp_headers)
-{
+                                        cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
-    if (!object_key_simplify_check(object->data)){
+    if (!object_key_simplify_check(object->data)) {
         s = cos_status_create(options->pool);
         cos_status_set(s, COSE_INVALID_ARGUMENT, COS_CLIENT_ERROR_CODE, "The Getobject Key is illegal");
         return s;
@@ -213,7 +205,7 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
 
     cos_get_temporary_file_name(options->pool, filename, &tmp_filename);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, params, headers, progress_callback, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -229,7 +221,7 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
-    if (is_enable_crc(options) && has_crc_in_response(resp) && 
+    if (is_enable_crc(options) && has_crc_in_response(resp) &&
         !has_range_or_process_in_request(req)) {
             cos_check_crc_consistent(resp->crc64, resp->headers, s);
     }
@@ -239,23 +231,22 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
     return s;
 }
 
-cos_status_t *cos_head_object(const cos_request_options_t *options, 
-                              const cos_string_t *bucket, 
+cos_status_t *cos_head_object(const cos_request_options_t *options,
+                              const cos_string_t *bucket,
                               const cos_string_t *object,
-                              cos_table_t *headers, 
-                              cos_table_t **resp_headers)
-{
+                              cos_table_t *headers,
+                              cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     cos_table_t *query_params = NULL;
     char *error_msg = NULL;
 
-    headers = cos_table_create_if_null(options, headers, 0);    
+    headers = cos_table_create_if_null(options, headers, 0);
 
     query_params = cos_table_create_if_null(options, query_params, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_HEAD, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_HEAD,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -263,21 +254,19 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
 
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
-    if(s != NULL && s->code == 404)
-    {
+    if(s != NULL && s->code == 404) {
         s->error_code = "NosuchKey";
     }
 
     return s;
 }
 
-cos_status_t *cos_check_object_exist(const cos_request_options_t *options, 
-                                     const cos_string_t *bucket, 
+cos_status_t *cos_check_object_exist(const cos_request_options_t *options,
+                                     const cos_string_t *bucket,
                                      const cos_string_t *object,
-                                     cos_table_t *headers, 
+                                     cos_table_t *headers,
                                      cos_object_exist_status_e *object_exist,
-                                     cos_table_t **resp_headers)
-{
+                                     cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
 
     s = cos_head_object(options, bucket, object, headers, resp_headers);
@@ -293,19 +282,17 @@ cos_status_t *cos_check_object_exist(const cos_request_options_t *options,
 }
 
 cos_status_t *cos_delete_object(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
-                                const cos_string_t *object, 
-                                cos_table_t **resp_headers)
-{
+                                const cos_string_t *bucket,
+                                const cos_string_t *object,
+                                cos_table_t **resp_headers) {
     return cos_do_delete_object(options, bucket, object, NULL, resp_headers);
 }
 
 cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
+                                const cos_string_t *bucket,
                                 const cos_string_t *object,
-                                cos_table_t *headers, 
-                                cos_table_t **resp_headers)
-{
+                                cos_table_t *headers,
+                                cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -322,7 +309,7 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
     pHeaders = cos_table_create_if_null(options, headers, 0);
     query_params = cos_table_create_if_null(options, query_params, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_DELETE, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_DELETE,
                             &req, query_params, pHeaders, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -337,19 +324,18 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
 
 
 cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
-                                            const cos_string_t *object, 
+                                            const cos_string_t *bucket,
+                                            const cos_string_t *object,
                                             int64_t position,
-                                            cos_list_t *buffer, 
-                                            cos_table_t *headers, 
-                                            cos_table_t **resp_headers)
-{
+                                            cos_list_t *buffer,
+                                            cos_table_t *headers,
+                                            cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     cos_table_t *query_params = NULL;
     char *error_msg = NULL;
-    
+
     /* init query_params */
     query_params = cos_table_create_if_null(options, query_params, 2);
     apr_table_add(query_params, COS_APPEND, "");
@@ -360,7 +346,7 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
     set_content_type(NULL, object->data, headers);
     apr_table_add(headers, COS_EXPECT, "");
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_POST, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -374,23 +360,22 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
 }
 
 cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *options,
-                                               const cos_string_t *bucket, 
-                                               const cos_string_t *object, 
+                                               const cos_string_t *bucket,
+                                               const cos_string_t *object,
                                                int64_t position,
                                                uint64_t init_crc,
-                                               cos_list_t *buffer, 
+                                               cos_list_t *buffer,
                                                cos_table_t *headers,
                                                cos_table_t *params,
                                                cos_progress_callback progress_callback,
                                                cos_table_t **resp_headers,
-                                               cos_list_t *resp_body)
-{
+                                               cos_list_t *resp_body) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     cos_table_t *query_params = NULL;
     char *error_msg = NULL;
-    
+
     /* init query_params */
     query_params = cos_table_create_if_null(options, params, 2);
     apr_table_add(query_params, COS_APPEND, "");
@@ -401,7 +386,7 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
     set_content_type(NULL, object->data, headers);
     apr_table_add(headers, COS_EXPECT, "");
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_POST, &req, query_params, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST, &req, query_params,
                             headers, progress_callback, init_crc, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -420,13 +405,12 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
 }
 
 cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
-                                          const cos_string_t *bucket, 
-                                          const cos_string_t *object, 
+                                          const cos_string_t *bucket,
+                                          const cos_string_t *object,
                                           int64_t position,
-                                          const cos_string_t *append_file, 
-                                          cos_table_t *headers, 
-                                          cos_table_t **resp_headers)
-{
+                                          const cos_string_t *append_file,
+                                          cos_table_t *headers,
+                                          cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -438,13 +422,13 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 2);
     apr_table_add(query_params, COS_APPEND, "");
     cos_table_add_int64(query_params, COS_POSITION, position);
-    
+
     /* init headers */
     headers = cos_table_create_if_null(options, headers, 2);
     set_content_type(append_file->data, object->data, headers);
     apr_table_add(headers, COS_EXPECT, "");
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_POST, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -464,17 +448,16 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
 }
 
 cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *options,
-                                             const cos_string_t *bucket, 
-                                             const cos_string_t *object, 
+                                             const cos_string_t *bucket,
+                                             const cos_string_t *object,
                                              int64_t position,
                                              uint64_t init_crc,
-                                             const cos_string_t *append_file, 
-                                             cos_table_t *headers, 
+                                             const cos_string_t *append_file,
+                                             cos_table_t *headers,
                                              cos_table_t *params,
                                              cos_progress_callback progress_callback,
                                              cos_table_t **resp_headers,
-                                             cos_list_t *resp_body)
-{
+                                             cos_list_t *resp_body) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -486,13 +469,13 @@ cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *option
     query_params = cos_table_create_if_null(options, params, 2);
     apr_table_add(query_params, COS_APPEND, "");
     cos_table_add_int64(query_params, COS_POSITION, position);
-    
+
     /* init headers */
     headers = cos_table_create_if_null(options, headers, 2);
     set_content_type(append_file->data, object->data, headers);
     apr_table_add(headers, COS_EXPECT, "");
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_POST,  &req, query_params, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST,  &req, query_params,
                             headers, progress_callback, init_crc, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -516,15 +499,14 @@ cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *option
     return s;
 }
 
-cos_status_t *cos_put_object_acl(const cos_request_options_t *options, 
+cos_status_t *cos_put_object_acl(const cos_request_options_t *options,
                                  const cos_string_t *bucket,
-                                 const cos_string_t *object, 
+                                 const cos_string_t *object,
                                  cos_acl_e cos_acl,
                                  const cos_string_t *grant_read,
                                  const cos_string_t *grant_write,
                                  const cos_string_t *grant_full_ctrl,
-                                 cos_table_t **resp_headers)
-{
+                                 cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -551,7 +533,7 @@ cos_status_t *cos_put_object_acl(const cos_request_options_t *options,
         apr_table_add(headers, COS_GRANT_FULL_CONTROL, grant_full_ctrl->data);
     }
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req,
                             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -560,15 +542,14 @@ cos_status_t *cos_put_object_acl(const cos_request_options_t *options,
     s = cos_process_request(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
 
-    return s;    
+    return s;
 }
 
-cos_status_t *cos_get_object_acl(const cos_request_options_t *options, 
+cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
                                  const cos_string_t *bucket,
                                  const cos_string_t *object,
-                                 cos_acl_params_t *acl_param, 
-                                 cos_table_t **resp_headers)
-{
+                                 cos_acl_params_t *acl_param,
+                                 cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     int res;
     cos_http_request_t *req = NULL;
@@ -580,9 +561,9 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 1);
     apr_table_add(query_params, COS_ACL, "");
 
-    headers = cos_table_create_if_null(options, headers, 0);    
+    headers = cos_table_create_if_null(options, headers, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, &req, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET, &req,
                             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -602,12 +583,11 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
                               const cos_string_t *src_bucket,
                               const cos_string_t *src_object,
                               const cos_string_t *src_endpoint,
-                              const cos_string_t *dest_bucket, 
+                              const cos_string_t *dest_bucket,
                               const cos_string_t *dest_object,
                               cos_table_t *headers,
                               cos_copy_object_params_t *copy_object_param,
-                              cos_table_t **resp_headers)
-{
+                              cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     int res;
     cos_http_request_t *req = NULL;
@@ -622,14 +602,14 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 0);
 
     /* init headers */
-    copy_source = apr_psprintf(options->pool, "%.*s.%.*s/%.*s", 
+    copy_source = apr_psprintf(options->pool, "%.*s.%.*s/%.*s",
                                src_bucket->len, src_bucket->data,
                                src_endpoint->len, src_endpoint->data,
                                src_object->len, src_object->data);
     apr_table_add(headers, COS_CANNONICALIZED_HEADER_COPY_SOURCE, copy_source);
     set_content_type(NULL, dest_object->data, headers);
 
-    if (!cos_init_object_request(options, dest_bucket, dest_object, HTTP_PUT, 
+    if (!cos_init_object_request(options, dest_bucket, dest_object, HTTP_PUT,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -648,65 +628,16 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
     return s;
 }
 
-#if 0
-cos_status_t *cos_copy_obj
-(
-    cos_request_options_t *options,
-    const cos_string_t *copy_source, 
-    const cos_string_t *dest_bucket, 
-    const cos_string_t *dest_object
-)
-{
-    cos_pool_t *subpool = NULL;
-    cos_pool_t *parent_pool = NULL;
-    cos_status_t *s = NULL;
-    cos_status_t *ret = NULL;
-    int64_t total_size = 0;
-
-    parent_pool = options->pool;
-    cos_pool_create(&subpool, options->pool);
-    options->pool = subpool;
-
-    //get object size
-    cos_table_t *head_resp_headers = NULL;
-    s = cos_head_object(options, dest_bucket, dest_object, NULL, &head_resp_headers);
-    if (!cos_status_is_ok(s)) {
-        ret = cos_status_dup(parent_pool, s);
-        cos_pool_destroy(subpool);
-        options->pool = parent_pool;
-        return ret;
-    }
-    total_size = atol((char*)apr_table_get(head_resp_headers, COS_CONTENT_LENGTH));
-
-    //use part copy if the object is larger than 5G
-    if (total_size > (int64_t)5*1024*1024*1024) {
-        s = cos_upload_object_by_part_copy(options, copy_source, dest_bucket, dest_object, (int64_t)5*1024*1024*1024);
-    }
-    //use object copy if the object is no larger than 5G
-    else {
-        cos_copy_object_params_t *params = NULL;
-        params = cos_create_copy_object_params(options->pool);
-        s = cos_copy_object(options, copy_source, dest_bucket, dest_object, NULL, params, NULL);
-    }
-
-    ret = cos_status_dup(parent_pool, s);
-    cos_pool_destroy(subpool);
-    options->pool = parent_pool;
-    return ret;
-}
-#endif
-
 cos_status_t *copy
 (
     cos_request_options_t *options,
     const cos_string_t *src_bucket,
     const cos_string_t *src_object,
     const cos_string_t *src_endpoint,
-    const cos_string_t *dest_bucket, 
+    const cos_string_t *dest_bucket,
     const cos_string_t *dest_object,
     int32_t thread_num
-)
-{
+) {
     cos_pool_t *subpool = NULL;
     cos_pool_t *parent_pool = NULL;
     cos_status_t *s = NULL;
@@ -766,13 +697,12 @@ cos_status_t *copy
 }
 
 cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
-                                            const cos_string_t *bucket, 
+                                            const cos_string_t *bucket,
                                             const cos_string_t *object,
                                             cos_object_restore_params_t *restore_params,
                                             cos_table_t *headers,
                                             cos_table_t *params,
-                                            cos_table_t **resp_headers)
-{
+                                            cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -791,7 +721,7 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
 
     headers = cos_table_create_if_null(options, headers, 1);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_POST, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_POST,
                             &req, query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -817,10 +747,9 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
     return s;
 }
 
-static void cos_add_version_id_params(cos_pool_t *p, 
-                                     const cos_string_t *version_id, 
-                                     cos_table_t *query_params)
-{
+static void cos_add_version_id_params(cos_pool_t *p,
+                                     const cos_string_t *version_id,
+                                     cos_table_t *query_params) {
     char *version = NULL;
 
     if (version_id && version_id->len > 0 && version_id->data != NULL) {
@@ -835,8 +764,7 @@ cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
                                     const cos_string_t *version_id,
                                     cos_table_t *headers,
                                     cos_tagging_params_t *tagging_params,
-                                    cos_table_t **resp_headers)
-{
+                                    cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -857,7 +785,7 @@ cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
 
     headers = cos_table_create_if_null(options, headers, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_PUT, &req,
             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -889,8 +817,7 @@ cos_status_t *cos_get_object_tagging(const cos_request_options_t *options,
                                     const cos_string_t *version_id,
                                     cos_table_t *headers,
                                     cos_tagging_params_t *tagging_params,
-                                    cos_table_t **resp_headers)
-{
+                                    cos_table_t **resp_headers) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
@@ -924,8 +851,7 @@ cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
                                        const cos_string_t *object,
                                        const cos_string_t *version_id,
                                        cos_table_t *headers,
-                                       cos_table_t **resp_headers)
-{
+                                       cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
@@ -935,10 +861,10 @@ cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
     query_params = cos_table_create_if_null(options, query_params, 1);
     apr_table_add(query_params, COS_TAGGING, "");
     cos_add_version_id_params(options->pool, version_id, query_params);
-    
+
     headers = cos_table_create_if_null(options, headers, 0);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_DELETE, &req, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_DELETE, &req,
             query_params, headers, NULL, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -951,12 +877,11 @@ cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
 }
 
 int cos_gen_sign_string(const cos_request_options_t *options,
-                        const cos_string_t *bucket, 
+                        const cos_string_t *bucket,
                         const cos_string_t *object,
-                        const int64_t expire, 
+                        const int64_t expire,
                         cos_http_request_t *req,
-                        cos_string_t *signstr)
-{
+                        cos_string_t *signstr) {
     char canon_buf[COS_MAX_URI_LEN];
     cos_string_t canon_res;
     int res;
@@ -971,22 +896,21 @@ int cos_gen_sign_string(const cos_request_options_t *options,
     canon_res.data = canon_buf;
     canon_res.len = apr_snprintf(canon_buf, sizeof(canon_buf), "/%s", req->resource);
 
-    res = cos_get_string_to_sign(options->pool, req->method, &options->config->access_key_id, &options->config->access_key_secret, &canon_res, 
+    res = cos_get_string_to_sign(options->pool, req->method, &options->config->access_key_id, &options->config->access_key_secret, &canon_res,
                                  req->headers, req->query_params, expire, signstr);
-    
+
     if (res != COSE_OK) return res;
-    
+
     return COSE_OK;
 }
 
 int cos_gen_presigned_url(const cos_request_options_t *options,
-                          const cos_string_t *bucket, 
+                          const cos_string_t *bucket,
                           const cos_string_t *object,
                           const int64_t expire,
                           http_method_e method,
-                          cos_string_t *presigned_url)
-{
-    if (object == NULL || object->len == 0){
+                          cos_string_t *presigned_url) {
+    if (object == NULL || object->len == 0) {
         cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
         return COSE_UNKNOWN_ERROR;
     }
@@ -1007,7 +931,7 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
     param[0] = '\0';
     cos_str_null(&signstr);
 
-    if (!cos_init_object_request(options, bucket, object, method, 
+    if (!cos_init_object_request(options, bucket, object, method,
                             &req, cos_table_make(options->pool, 1), cos_table_make(options->pool, 1), NULL, 0, &resp, &error_msg)) return COSE_INVALID_ARGUMENT;
     if (req->host) {
         apr_table_set(req->headers, COS_HOST, req->host);
@@ -1048,20 +972,19 @@ int cos_gen_presigned_url(const cos_request_options_t *options,
                        param);
     cos_str_set(presigned_url, url);
 
-    return COSE_OK;    
+    return COSE_OK;
 }
 
 int cos_gen_presigned_url_safe(const cos_request_options_t *options,
-                          const cos_string_t *bucket, 
+                          const cos_string_t *bucket,
                           const cos_string_t *object,
                           const int64_t expire,
                           http_method_e method,
                           cos_table_t *headers,
                           cos_table_t *params,
                           int sign_host,
-                          cos_string_t *presigned_url)
-{
-    if (object == NULL || object->len == 0){
+                          cos_string_t *presigned_url) {
+    if (object == NULL || object->len == 0) {
         cos_str_set(presigned_url, "ObjectName does not support empty, please check!");
         return COSE_UNKNOWN_ERROR;
     }
@@ -1086,7 +1009,7 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
     params = cos_table_create_if_null(options, params, 1);
     headers = cos_table_create_if_null(options, headers, 1);
 
-    if (!cos_init_object_request(options, bucket, object, method, 
+    if (!cos_init_object_request(options, bucket, object, method,
                             &req, params, headers, NULL, 0, &resp, &error_msg)) {
         return COSE_INVALID_ARGUMENT;
     }
@@ -1136,7 +1059,7 @@ int cos_gen_presigned_url_safe(const cos_request_options_t *options,
                        param);
     cos_str_set(presigned_url, url);
 
-    return COSE_OK;    
+    return COSE_OK;
 }
 
 // 云上数据处理 https://cloud.tencent.com/document/product/460/18147
@@ -1145,8 +1068,7 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
                                 const cos_string_t *object,
                                 cos_table_t *headers,
                                 cos_table_t **resp_headers,
-                                ci_operation_result_t **results)
-{
+                                ci_operation_result_t **results) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
@@ -1186,20 +1108,19 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
 // 图片持久化处理-上传时处理 https://cloud.tencent.com/document/product/460/18147
 // 二维码识别-上传时识别 https://cloud.tencent.com/document/product/460/37513
 cos_status_t *ci_put_object_from_file(const cos_request_options_t *options,
-                                       const cos_string_t *bucket, 
-                                       const cos_string_t *object, 
+                                       const cos_string_t *bucket,
+                                       const cos_string_t *object,
                                        const cos_string_t *filename,
-                                       cos_table_t *headers, 
+                                       cos_table_t *headers,
                                        cos_table_t **resp_headers,
-                                       ci_operation_result_t **results)
-{
+                                       ci_operation_result_t **results) {
     int res;
     cos_status_t *s = NULL;
     cos_list_t resp_body;
 
     cos_list_init(&resp_body);
     s = cos_do_put_object_from_file(options, bucket, object, filename, headers, NULL, NULL, resp_headers, &resp_body);
-    
+
     if (!cos_status_is_ok(s)) return s;
     *results = ci_create_operation_result(options->pool);
     res = ci_get_operation_result_parse_from_body(options->pool, &resp_body, *results);
@@ -1213,17 +1134,16 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
                                 const cos_string_t *object,
                                 int cover,
                                 cos_table_t *headers,
-                                cos_table_t *query_params, 
+                                cos_table_t *query_params,
                                 cos_table_t **resp_headers,
-                                ci_qrcode_result_t **results)
-{
+                                ci_qrcode_result_t **results) {
     int res;
     cos_status_t *s = NULL;
     cos_http_request_t *req = NULL;
     cos_http_response_t *resp = NULL;
     char cover_str[16] = {0};
     char *error_msg = NULL;
-    
+
     snprintf(cover_str, 16, "%d", cover);
     query_params = cos_table_create_if_null(options, query_params, 2);
     apr_table_add(query_params, "ci-process", "QRcode");
@@ -1244,186 +1164,3 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
     if (res != COSE_OK) cos_xml_error_status_set(s, res);
     return s;
 }
-
-#if 0
-char *cos_gen_signed_url(const cos_request_options_t *options,
-                         const cos_string_t *bucket, 
-                         const cos_string_t *object,
-                         int64_t expires, 
-                         cos_http_request_t *req)
-{
-    cos_string_t signed_url;
-    char *expires_str = NULL;
-    cos_string_t expires_time;
-    int res = COSE_OK;
-
-    expires_str = apr_psprintf(options->pool, "%" APR_INT64_T_FMT, expires);
-    cos_str_set(&expires_time, expires_str);
-    cos_get_object_uri(options, bucket, object, req);
-    res = cos_get_signed_url(options, req, &expires_time, &signed_url);
-    if (res != COSE_OK) {
-        return NULL;
-    }
-    return signed_url.data;
-}
-
-cos_status_t *cos_put_object_from_buffer_by_url(const cos_request_options_t *options,
-                                                const cos_string_t *signed_url, 
-                                                cos_list_t *buffer, 
-                                                cos_table_t *headers,
-                                                cos_table_t **resp_headers)
-{
-    cos_status_t *s = NULL;
-    cos_http_request_t *req = NULL;
-    cos_http_response_t *resp = NULL;
-    cos_table_t *query_params = NULL;
-
-    /* init query_params */
-    headers = cos_table_create_if_null(options, headers, 0);
-    query_params = cos_table_create_if_null(options, query_params, 0);
-
-    cos_init_signed_url_request(options, signed_url, HTTP_PUT, 
-                                &req, query_params, headers, &resp);
-
-    cos_write_request_body_from_buffer(buffer, req);
-
-    s = cos_process_signed_request(options, req, resp);
-    cos_fill_read_response_header(resp, resp_headers);
-
-    if (is_enable_crc(options) && has_crc_in_response(resp)) {
-        cos_check_crc_consistent(req->crc64, resp->headers, s);
-    }
-
-    return s;
-}
-
-cos_status_t *cos_put_object_from_file_by_url(const cos_request_options_t *options,
-                                              const cos_string_t *signed_url, 
-                                              cos_string_t *filename, 
-                                              cos_table_t *headers,
-                                              cos_table_t **resp_headers)
-{
-    cos_status_t *s = NULL;
-    cos_http_request_t *req = NULL;
-    cos_http_response_t *resp = NULL;
-    cos_table_t *query_params = NULL;
-    int res = COSE_OK;
-
-    s = cos_status_create(options->pool);
-
-    headers = cos_table_create_if_null(options, headers, 0);
-    query_params = cos_table_create_if_null(options, query_params, 0);
-
-    cos_init_signed_url_request(options, signed_url, HTTP_PUT, 
-                                &req, query_params, headers, &resp);
-    res = cos_write_request_body_from_file(options->pool, filename, req);
-    if (res != COSE_OK) {
-        cos_file_error_status_set(s, res);
-        return s;
-    }
-
-    s = cos_process_signed_request(options, req, resp);
-    cos_fill_read_response_header(resp, resp_headers);
-
-    if (is_enable_crc(options) && has_crc_in_response(resp)) {
-        cos_check_crc_consistent(req->crc64, resp->headers, s);
-    }
-
-    return s;
-}
-
-cos_status_t *cos_get_object_to_buffer_by_url(const cos_request_options_t *options,
-                                              const cos_string_t *signed_url, 
-                                              cos_table_t *headers,
-                                              cos_table_t *params,
-                                              cos_list_t *buffer,
-                                              cos_table_t **resp_headers)
-{
-    cos_status_t *s = NULL;
-    cos_http_request_t *req = NULL;
-    cos_http_response_t *resp = NULL;
-
-    headers = cos_table_create_if_null(options, headers, 0);
-    params = cos_table_create_if_null(options, params, 0);
-    
-    cos_init_signed_url_request(options, signed_url, HTTP_GET, 
-                                &req, params, headers, &resp);
-
-    s = cos_process_signed_request(options, req, resp);
-    cos_fill_read_response_body(resp, buffer);
-    cos_fill_read_response_header(resp, resp_headers);
-
-    if (is_enable_crc(options) && has_crc_in_response(resp) &&  
-        !has_range_or_process_in_request(req)) {
-            cos_check_crc_consistent(resp->crc64, resp->headers, s);
-    }
-
-    return s;
-}
-
-cos_status_t *cos_get_object_to_file_by_url(const cos_request_options_t *options,
-                                            const cos_string_t *signed_url, 
-                                            cos_table_t *headers, 
-                                            cos_table_t *params,
-                                            cos_string_t *filename,
-                                            cos_table_t **resp_headers)
-{
-    cos_status_t *s = NULL;
-    cos_http_request_t *req = NULL;
-    cos_http_response_t *resp = NULL;
-    int res = COSE_OK;
-    cos_string_t tmp_filename;
-
-    s = cos_status_create(options->pool);
-
-    headers = cos_table_create_if_null(options, headers, 0);
-    params = cos_table_create_if_null(options, params, 0);
-
-    cos_get_temporary_file_name(options->pool, filename, &tmp_filename);
- 
-    cos_init_signed_url_request(options, signed_url, HTTP_GET, 
-                                &req, params, headers, &resp);
-
-    res = cos_init_read_response_body_to_file(options->pool, filename, resp);
-    if (res != COSE_OK) {
-        cos_file_error_status_set(s, res);
-        return s;
-    }
-
-    s = cos_process_signed_request(options, req, resp);
-    cos_fill_read_response_header(resp, resp_headers);
-
-    if (is_enable_crc(options) && has_crc_in_response(resp) && 
-        !has_range_or_process_in_request(req)) {
-            cos_check_crc_consistent(resp->crc64, resp->headers, s);
-    }
-
-    cos_temp_file_rename(s, tmp_filename.data, filename->data, options->pool);
-
-    return s;
-}
-
-
-cos_status_t *cos_head_object_by_url(const cos_request_options_t *options,
-                                     const cos_string_t *signed_url, 
-                                     cos_table_t *headers, 
-                                     cos_table_t **resp_headers)
-{
-    cos_status_t *s = NULL;
-    cos_http_request_t *req = NULL;
-    cos_http_response_t *resp = NULL;
-    cos_table_t *query_params = NULL;
-
-    headers = cos_table_create_if_null(options, headers, 0);
-    query_params = cos_table_create_if_null(options, query_params, 0);
-    
-    cos_init_signed_url_request(options, signed_url, HTTP_HEAD, 
-                                &req, query_params, headers, &resp);
-
-    s = cos_process_signed_request(options, req, resp);
-    cos_fill_read_response_header(resp, resp_headers);
-
-    return s;
-}
-#endif
-

@@ -1,5 +1,5 @@
-#ifndef LIBCOS_CRC_H
-#define LIBCOS_CRC_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_CRC64_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_CRC64_H_
 
 #include "cos_sys_define.h"
 
@@ -12,4 +12,4 @@ uint64_t cos_crc64_big(uint64_t crc, void *buf, size_t len);
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_CRC64_H_

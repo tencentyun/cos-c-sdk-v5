@@ -48,7 +48,7 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void copy_demo(){
+void copy_demo() {
     char object_name[] = "test_dst.txt";      // 目标对象名称
     char* src_bucket_name = bucket_name;     // 复制源 bucket 名称
     char src_object_name[] = "test_src.txt";  // 复制源对象名称
@@ -78,7 +78,7 @@ void copy_demo(){
     cos_str_set(&src_bucket, src_bucket_name);
     cos_str_set(&src_endpoint, src_endpoint_str);
     cos_str_set(&src_object, src_object_name);
-    
+
 
     s = copy(options, &src_bucket, &src_object, &src_endpoint, &bucket, &object, thread_nums);
     log_status(s);
@@ -136,11 +136,10 @@ void copy_object_demo() {
     cos_pool_destroy(p);
 }
 
-void part_copy_demo()
-{
+void part_copy_demo() {
     char object_name[] = "test_dst.txt";      // 目标对象名称
     char *src_object_path = "examplebucket-12500000000.cos.ap-guangzhou.myqcloud.com/big_file.txt";  // 复制源对象
-    
+
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -179,7 +178,7 @@ void part_copy_demo()
     //init mulitipart
     cos_str_set(&object, object_name);
     cos_str_set(&bucket, bucket_name);
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, NULL, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
@@ -242,13 +241,13 @@ void part_copy_demo()
         cos_str_set(&complete_content->etag, upload_part_copy_params2->rsp_content->etag.data);
         cos_list_add_tail(&complete_content->node, &complete_part_list);
     }
-     
+
     //complete multipart
     headers = cos_table_make(p, 0);
-    s = cos_complete_multipart_upload(options, &bucket, &object, 
+    s = cos_complete_multipart_upload(options, &bucket, &object,
             &upload_id, &complete_part_list, headers, &complete_resp_headers);
     log_status(s);
-    
+
     cos_pool_destroy(p);
     if (cos_status_is_ok(s)) {
         printf("multi object copy succeeded\n");

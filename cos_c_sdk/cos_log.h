@@ -1,5 +1,5 @@
-#ifndef LIBCOS_LOG_H
-#define LIBCOS_LOG_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_LOG_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_LOG_H_
 
 #include "cos_sys_define.h"
 
@@ -30,30 +30,30 @@ typedef enum {
 } cos_log_level_e;
 
 #ifdef WIN32
-#define cos_fatal_log(format, ...) if(cos_log_level>=COS_LOG_FATAL) \
+#define cos_fatal_log(format, ...) if(cos_log_level >= COS_LOG_FATAL) \
         cos_log_format(COS_LOG_FATAL, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
-#define cos_error_log(format, ...) if(cos_log_level>=COS_LOG_ERROR) \
+#define cos_error_log(format, ...) if(cos_log_level >= COS_LOG_ERROR) \
         cos_log_format(COS_LOG_ERROR, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
-#define cos_warn_log(format, ...) if(cos_log_level>=COS_LOG_WARN)   \
+#define cos_warn_log(format, ...) if(cos_log_level >= COS_LOG_WARN)   \
         cos_log_format(COS_LOG_WARN, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
-#define cos_info_log(format, ...) if(cos_log_level>=COS_LOG_INFO)   \
+#define cos_info_log(format, ...) if(cos_log_level >= COS_LOG_INFO)   \
         cos_log_format(COS_LOG_INFO, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
-#define cos_debug_log(format, ...) if(cos_log_level>=COS_LOG_DEBUG) \
+#define cos_debug_log(format, ...) if(cos_log_level >= COS_LOG_DEBUG) \
         cos_log_format(COS_LOG_DEBUG, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
-#define cos_trace_log(format, ...) if(cos_log_level>=COS_LOG_TRACE) \
+#define cos_trace_log(format, ...) if(cos_log_level >= COS_LOG_TRACE) \
         cos_log_format(COS_LOG_TRACE, __FILE__, __LINE__, __FUNCTION__, format, ##__VA_ARGS__)
 #else
-#define cos_fatal_log(format, args...) if(cos_log_level>=COS_LOG_FATAL) \
+#define cos_fatal_log(format, args...) if(cos_log_level >= COS_LOG_FATAL) \
         cos_log_format(COS_LOG_FATAL, __FILE__, __LINE__, __FUNCTION__, format, ## args)
-#define cos_error_log(format, args...) if(cos_log_level>=COS_LOG_ERROR) \
+#define cos_error_log(format, args...) if(cos_log_level >= COS_LOG_ERROR) \
         cos_log_format(COS_LOG_ERROR, __FILE__, __LINE__, __FUNCTION__, format, ## args)
-#define cos_warn_log(format, args...) if(cos_log_level>=COS_LOG_WARN)   \
+#define cos_warn_log(format, args...) if(cos_log_level >= COS_LOG_WARN)   \
         cos_log_format(COS_LOG_WARN, __FILE__, __LINE__, __FUNCTION__, format, ## args)
-#define cos_info_log(format, args...) if(cos_log_level>=COS_LOG_INFO)   \
+#define cos_info_log(format, args...) if(cos_log_level >= COS_LOG_INFO)   \
         cos_log_format(COS_LOG_INFO, __FILE__, __LINE__, __FUNCTION__, format, ## args)
-#define cos_debug_log(format, args...) if(cos_log_level>=COS_LOG_DEBUG) \
+#define cos_debug_log(format, args...) if(cos_log_level >= COS_LOG_DEBUG) \
         cos_log_format(COS_LOG_DEBUG, __FILE__, __LINE__, __FUNCTION__, format, ## args)
-#define cos_trace_log(format, args...) if(cos_log_level>=COS_LOG_TRACE) \
+#define cos_trace_log(format, args...) if(cos_log_level >= COS_LOG_TRACE) \
         cos_log_format(COS_LOG_TRACE, __FILE__, __LINE__, __FUNCTION__, format, ## args)
 #endif
 
@@ -76,4 +76,4 @@ extern cos_log_format_pt cos_log_format;
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_LOG_H_

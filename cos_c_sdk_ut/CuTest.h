@@ -33,8 +33,8 @@
  *       CuSuiteFreeDeep()
  *    0) reformatted the whitespace (doh!)
  */
-#ifndef CU_TEST_H
-#define CU_TEST_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_UT_CUTEST_H_
+#define COS_C_SDK_V5_COS_C_SDK_UT_CUTEST_H_
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -57,8 +57,7 @@ char* CuStrCopy(const char* old);
 #define STRING_MAX        256
 #define STRING_INC        256
 
-typedef struct
-{
+typedef struct {
     int length;
     int size;
     char* buffer;
@@ -82,8 +81,7 @@ typedef void (*TestFunction)(CuTest *);
 
 typedef void *(*TestCallback)(void *baton);
 
-struct CuTest
-{
+struct CuTest {
     char* name;
     TestFunction function;
     int failed;
@@ -126,28 +124,27 @@ void CuAssertPtrEquals_LineMsg(CuTest* tc,
 #define CuAssert(tc, ms, cond)                CuAssert_Line((tc), __FILE__, __LINE__, (ms), (cond))
 #define CuAssertTrue(tc, cond)                CuAssert_Line((tc), __FILE__, __LINE__, "assert failed", (cond))
 
-#define CuAssertStrEquals(tc,ex,ac)           CuAssertStrEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(ac))
-#define CuAssertStrEquals_Msg(tc,ms,ex,ac)    CuAssertStrEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac))
-#define CuAssertStrnEquals(tc,ex,exlen,ac)        CuAssertStrnEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(exlen),(ac))
-#define CuAssertStrnEquals_Msg(tc,ms,ex,exlen,ac) CuAssertStrnEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(exlen),(ac))
-#define CuAssertIntEquals(tc,ex,ac)           CuAssertIntEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(ac))
-#define CuAssertIntEquals_Msg(tc,ms,ex,ac)    CuAssertIntEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac))
-#define CuAssertDblEquals(tc,ex,ac,dl)        CuAssertDblEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(ac),(dl))
-#define CuAssertDblEquals_Msg(tc,ms,ex,ac,dl) CuAssertDblEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac),(dl))
-#define CuAssertPtrEquals(tc,ex,ac)           CuAssertPtrEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(ac))
-#define CuAssertPtrEquals_Msg(tc,ms,ex,ac)    CuAssertPtrEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac))
+#define CuAssertStrEquals(tc, ex, ac)           CuAssertStrEquals_LineMsg((tc), __FILE__, __LINE__, NULL, (ex), (ac))
+#define CuAssertStrEquals_Msg(tc, ms, ex, ac)    CuAssertStrEquals_LineMsg((tc), __FILE__, __LINE__, (ms), (ex), (ac))
+#define CuAssertStrnEquals(tc, ex, exlen, ac)        CuAssertStrnEquals_LineMsg((tc), __FILE__, __LINE__, NULL, (ex), (exlen), (ac))
+#define CuAssertStrnEquals_Msg(tc, ms, ex, exlen, ac) CuAssertStrnEquals_LineMsg((tc), __FILE__, __LINE__, (ms), (ex), (exlen), (ac))
+#define CuAssertIntEquals(tc, ex, ac)           CuAssertIntEquals_LineMsg((tc), __FILE__, __LINE__, NULL, (ex), (ac))
+#define CuAssertIntEquals_Msg(tc, ms, ex, ac)    CuAssertIntEquals_LineMsg((tc), __FILE__, __LINE__, (ms), (ex), (ac))
+#define CuAssertDblEquals(tc, ex, ac, dl)        CuAssertDblEquals_LineMsg((tc), __FILE__, __LINE__, NULL, (ex), (ac), (dl))
+#define CuAssertDblEquals_Msg(tc, ms, ex, ac, dl) CuAssertDblEquals_LineMsg((tc), __FILE__, __LINE__, (ms), (ex), (ac), (dl))
+#define CuAssertPtrEquals(tc, ex, ac)           CuAssertPtrEquals_LineMsg((tc), __FILE__, __LINE__, NULL, (ex), (ac))
+#define CuAssertPtrEquals_Msg(tc, ms, ex, ac)    CuAssertPtrEquals_LineMsg((tc), __FILE__, __LINE__, (ms), (ex), (ac))
 
-#define CuAssertPtrNotNull(tc,p)        CuAssert_Line((tc),__FILE__,__LINE__,"null pointer unexpected",(p != NULL))
-#define CuAssertPtrNotNullMsg(tc,msg,p) CuAssert_Line((tc),__FILE__,__LINE__,(msg),(p != NULL))
+#define CuAssertPtrNotNull(tc, p)        CuAssert_Line((tc), __FILE__, __LINE__, "null pointer unexpected", (p != NULL))
+#define CuAssertPtrNotNullMsg(tc, msg, p) CuAssert_Line((tc), __FILE__, __LINE__, (msg), (p != NULL))
 
 /* CuSuite */
 
 #define MAX_TEST_CASES    1024
 
-#define SUITE_ADD_TEST(SUITE,TEST)    CuSuiteAdd(SUITE, CuTestNew(#TEST, TEST))
+#define SUITE_ADD_TEST(SUITE, TEST)    CuSuiteAdd(SUITE, CuTestNew(#TEST, TEST))
 
-typedef struct
-{
+typedef struct {
     int count;
     CuTest* list[MAX_TEST_CASES];
     int failCount;
@@ -171,4 +168,4 @@ void CuSuiteDetails(CuSuite* testSuite, CuString* details);
 void CuSuiteSetSetupTeardownCallbacks(CuSuite* testSuite, TestCallback setup,
                                       TestCallback teardown);
 
-#endif /* CU_TEST_H */
+#endif  //  COS_C_SDK_V5_COS_C_SDK_UT_CUTEST_H_

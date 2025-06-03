@@ -1,5 +1,5 @@
-#ifndef LIBCOS_FSTACK_H
-#define LIBCOS_FSTACK_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_FSTACK_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_FSTACK_H_
 
 #include "cos_sys_define.h"
 
@@ -34,4 +34,4 @@ void cos_fstack_push(cos_array_header_t *fstack, void *data, cos_func_u func, in
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_FSTACK_H_

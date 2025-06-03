@@ -48,8 +48,7 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void delete_object_demo()
-{
+void delete_object_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
@@ -62,15 +61,15 @@ void delete_object_demo()
 
     //创建内存池
     cos_pool_create(&p, NULL);
-    
+
     //初始化请求选项
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, bucket_name);
-    
+
     //设置对象
     cos_str_set(&object, object_name);
-    
+
     s = cos_delete_object(options, &bucket, &object, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
@@ -82,8 +81,7 @@ void delete_object_demo()
     //销毁内存池
     cos_pool_destroy(p);
 }
-void delete_objects_demo()
-{
+void delete_objects_demo() {
     char object_name1[] = "test1.txt";  // 对象名称
     char object_name2[] = "test2.txt";  // 对象名称
 
@@ -115,7 +113,7 @@ void delete_objects_demo()
     s = cos_delete_objects(options, &bucket, &object_list, is_quiet,
         &resp_headers, &deleted_object_list);
     log_status(s);
-    
+
     cos_pool_destroy(p);
 
     if (cos_status_is_ok(s)) {

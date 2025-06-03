@@ -1,5 +1,5 @@
-#ifndef LIBCOS_UTILITY_H
-#define LIBCOS_UTILITY_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_UTILITY_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_UTILITY_H_
 
 #include "cos_string.h"
 #include "cos_transport.h"
@@ -461,4 +461,4 @@ ci_get_snapshot_request_t *ci_snapshot_request_create(cos_pool_t *p);
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_UTILITY_H_

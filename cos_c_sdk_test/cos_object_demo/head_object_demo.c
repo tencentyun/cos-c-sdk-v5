@@ -38,8 +38,7 @@ void init_test_request_options(cos_request_options_t* options, int is_cname) {
     options->ctl = cos_http_controller_create(options->pool, 0);
 }
 
-void print_headers(cos_table_t *headers)
-{
+void print_headers(cos_table_t *headers) {
     const cos_array_header_t *tarr;
     const cos_table_entry_t *telts;
     int i = 0;
@@ -71,8 +70,7 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void head_object_demo()
-{
+void head_object_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;
@@ -101,12 +99,11 @@ void head_object_demo()
     }
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
 
-void object_exist_demo()
-{
+void object_exist_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_status_t *s = NULL;

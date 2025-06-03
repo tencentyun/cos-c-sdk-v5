@@ -48,8 +48,7 @@ void log_status(cos_status_t* s) {
         cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void restore_object_demo()
-{
+void restore_object_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_string_t bucket;

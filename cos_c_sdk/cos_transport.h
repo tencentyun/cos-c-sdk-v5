@@ -1,5 +1,5 @@
-#ifndef LIBCOS_TRANSPORT_H
-#define LIBCOS_TRANSPORT_H
+#ifndef COS_C_SDK_V5_COS_C_SDK_COS_TRANSPORT_H_
+#define COS_C_SDK_V5_COS_C_SDK_COS_TRANSPORT_H_
 
 #include "cos_sys_define.h"
 #include "cos_buf.h"
@@ -75,13 +75,13 @@ struct cos_http_request_s {
     char *host;
     char *proto;
     char *signed_url;
-    
+
     http_method_e method;
     char *uri;
     char *resource;
     cos_table_t *headers;
     cos_table_t *query_params;
-    
+
     cos_list_t body;
     int64_t body_len;
     char *file_path;
@@ -136,7 +136,7 @@ typedef enum {
     cos_array_header_t *cleanup;                 \
     cos_http_transport_options_t *options;       \
     cos_http_controller_ex_t *controller;
-    
+
 struct cos_http_transport_s {
     COS_HTTP_BASE_TRANSPORT_DEFINE
 };
@@ -154,4 +154,4 @@ struct cos_curl_http_transport_s {
 
 COS_CPP_END
 
-#endif
+#endif  //  COS_C_SDK_V5_COS_C_SDK_COS_TRANSPORT_H_

@@ -32,8 +32,7 @@ static const struct testlist {
     {"LastTest", NULL}
 };
 
-int run_all_tests(int argc, char *argv[])
-{
+int run_all_tests(int argc, char *argv[]) {
     int i;
     int exit_code;
     int list_provided = 0;
@@ -103,13 +102,12 @@ int run_all_tests(int argc, char *argv[])
     return exit_code;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     int exit_code = -1;
 
-    TEST_COS_ENDPOINT = TEST_COS_ENDPOINT != NULL ? 
+    TEST_COS_ENDPOINT = TEST_COS_ENDPOINT != NULL ?
                         TEST_COS_ENDPOINT : getenv("COS_TEST_ENDPOINT");
-    TEST_ACCESS_KEY_ID = TEST_ACCESS_KEY_ID != NULL ? 
+    TEST_ACCESS_KEY_ID = TEST_ACCESS_KEY_ID != NULL ?
                          TEST_ACCESS_KEY_ID : getenv("COS_TEST_ACCESS_KEY_ID");
     TEST_ACCESS_KEY_SECRET = TEST_ACCESS_KEY_SECRET != NULL ?
                              TEST_ACCESS_KEY_SECRET : getenv("COS_TEST_ACCESS_KEY_SECRET");
@@ -122,7 +120,7 @@ int main(int argc, char *argv[])
     TEST_REGION = getenv("COS_TEST_REGION");
     TEST_UIN = getenv("COS_TEST_UIN");
     TEST_CI_ENDPOINT = getenv("COS_TEST_CI_ENDPOINT");
-    
+
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);
     }

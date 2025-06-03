@@ -47,14 +47,13 @@ void log_status(cos_status_t* s) {
     if (s->req_id)
         cos_warn_log("status->req_id: %s", s->req_id);
 }
-void get_object_url_demo()
-{
+void get_object_url_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_string_t object;
-        
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -66,8 +65,7 @@ void get_object_url_demo()
     cos_pool_destroy(p);
 }
 
-void get_presigned_url_demo()
-{
+void get_presigned_url_demo() {
     char object_name[] = "test.txt";  // 对象名称
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
@@ -77,7 +75,7 @@ void get_presigned_url_demo()
     cos_table_t *params = NULL;
     cos_table_t *headers = NULL;
     int sign_host = 1;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -99,7 +97,6 @@ void get_presigned_url_demo()
     printf("presigned_url_safe: %s\n", presigned_url.data);
 
     cos_pool_destroy(p);
-    
 }
 int main() {
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {

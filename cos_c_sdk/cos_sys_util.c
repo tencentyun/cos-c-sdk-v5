@@ -39,8 +39,7 @@ int get_object_key_simplify_check() {
 void set_object_key_simplify_check(int user_object_key_simplify_check) {
     object_key_simplify_check = user_object_key_simplify_check;
 }
-int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root)
-{
+int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root) {
     cos_buf_t *b;
     size_t len;
 
@@ -58,16 +57,15 @@ int cos_parse_xml_body(cos_list_t *bc, mxml_node_t **root)
         *root = mxmlLoadString(NULL, buffer, MXML_OPAQUE_CALLBACK);
         free(buffer);
         if (NULL == *root) {
-           return COSE_INTERNAL_ERROR; 
+           return COSE_INTERNAL_ERROR;
         }
     }
 
     return COSE_OK;
 }
 
-int cos_convert_to_gmt_time(char* date, const char* format, apr_time_exp_t *tm)
-{
-    int size = apr_snprintf(date, COS_MAX_GMT_TIME_LEN, format, 
+int cos_convert_to_gmt_time(char* date, const char* format, apr_time_exp_t *tm) {
+    int size = apr_snprintf(date, COS_MAX_GMT_TIME_LEN, format,
         g_s_wday[tm->tm_wday], tm->tm_mday, g_s_mon[tm->tm_mon], 1900 + tm->tm_year, tm->tm_hour, tm->tm_min, tm->tm_sec);
     if (size >= 0 && size < COS_MAX_GMT_TIME_LEN) {
         return COSE_OK;
@@ -76,8 +74,7 @@ int cos_convert_to_gmt_time(char* date, const char* format, apr_time_exp_t *tm)
     }
 }
 
-int cos_get_gmt_str_time(char datestr[COS_MAX_GMT_TIME_LEN])
-{
+int cos_get_gmt_str_time(char datestr[COS_MAX_GMT_TIME_LEN]) {
     int s;
     apr_time_t now;
     char buf[128];
@@ -88,7 +85,7 @@ int cos_get_gmt_str_time(char datestr[COS_MAX_GMT_TIME_LEN])
         cos_error_log("apr_time_exp_gmt fialure, code:%d %s.", s, apr_strerror(s, buf, sizeof(buf)));
         return COSE_INTERNAL_ERROR;
     }
-    
+
     if ((s = cos_convert_to_gmt_time(datestr, g_s_gmt_format, &result))
         != COSE_OK) {
         cos_error_log("cos_convert_to_GMT failure, code:%d.", s);
@@ -97,8 +94,7 @@ int cos_get_gmt_str_time(char datestr[COS_MAX_GMT_TIME_LEN])
     return s;
 }
 
-int cos_url_encode(char *dest, const char *src, int maxSrcSize)
-{
+int cos_url_encode(char *dest, const char *src, int maxSrcSize) {
     static const char *hex = "0123456789ABCDEF";
 
     int len = 0;
@@ -129,13 +125,11 @@ int cos_url_encode(char *dest, const char *src, int maxSrcSize)
     return COSE_OK;
 }
 
-static int table_dict_cmp(const void * a, const void * b)
-{
+static int table_dict_cmp(const void * a, const void * b) {
    return strcasecmp(((cos_table_entry_t*)a)->key, ((cos_table_entry_t*)b)->key);
 }
 
-void cos_table_sort_by_dict(cos_table_t *table)
-{
+void cos_table_sort_by_dict(cos_table_t *table) {
     const cos_array_header_t *tarr;
     const cos_table_entry_t *telts;
 
@@ -149,8 +143,7 @@ void cos_table_sort_by_dict(cos_table_t *table)
     qsort((void *)telts, tarr->nelts, tarr->elt_size, table_dict_cmp);
 }
 
-void cos_init_sign_header_table()
-{
+void cos_init_sign_header_table() {
     int idx = 0;
 
     if (g_sign_header_table != NULL && !apr_is_empty_table(g_sign_header_table)) {
@@ -164,8 +157,7 @@ void cos_init_sign_header_table()
     }
 }
 
-void cos_deinit_sign_header_table()
-{
+void cos_deinit_sign_header_table() {
     if (g_sign_header_table != NULL) {
         apr_table_clear(g_sign_header_table);
         g_sign_header_table = NULL;
@@ -177,16 +169,14 @@ void cos_deinit_sign_header_table()
     }
 }
 
-static void cos_strlow(char *str)
-{
+static void cos_strlow(char *str) {
     while (*str) {
         *str = tolower(*str);
         str++;
     }
 }
 
-int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_string_t *querystr)
-{
+int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_string_t *querystr) {
     int rs;
     int pos;
     int len;
@@ -208,7 +198,7 @@ int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_str
 
     tarr = cos_table_elts(query_params);
     telts = (cos_table_entry_t*)tarr->elts;
-    
+
     for (pos = 0; pos < tarr->nelts; ++pos) {
         if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
             cos_error_log("query params args too big, key:%s.", telts[pos].key);
@@ -233,24 +223,21 @@ int cos_query_params_to_string(cos_pool_t *p, cos_table_t *query_params, cos_str
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
 
-static int is_sign_header(const char *header)
-{
-    return (apr_table_get(g_sign_header_table, header) != NULL) || 
+static int is_sign_header(const char *header) {
+    return (apr_table_get(g_sign_header_table, header) != NULL) ||
             (strstr(header, X_COS_HEADER) == header) ||
             (strstr(header, X_CI_HEADER) == header);
 }
 
-static int is_empty_header_value(char *value)
-{
+static int is_empty_header_value(char *value) {
     return value != NULL && *value == '\0';
 }
 
-int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type)
-{
+int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type) {
     int rs;
     int pos;
     int len;
@@ -272,7 +259,7 @@ int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *q
 
     tarr = cos_table_elts(table);
     telts = (cos_table_entry_t*)tarr->elts;
-    
+
     for (pos = 0; pos < tarr->nelts; ++pos) {
         if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
             cos_error_log("table params args too big, key:%s.", telts[pos].key);
@@ -305,12 +292,11 @@ int cos_table_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *q
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
 
-int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type)
-{
+int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_t *querystr, sign_content_type_e sign_type) {
     int rs;
     int pos;
     int len;
@@ -332,7 +318,7 @@ int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_
 
     tarr = cos_table_elts(table);
     telts = (cos_table_entry_t*)tarr->elts;
-    
+
     for (pos = 0; pos < tarr->nelts; ++pos) {
         if ((rs = cos_url_encode(ebuf, telts[pos].key, COS_MAX_QUERY_ARG_LEN)) != COSE_OK) {
             cos_error_log("table params args too big, key:%s.", telts[pos].key);
@@ -354,48 +340,11 @@ int cos_table_key_to_string(cos_pool_t *p, const cos_table_t *table, cos_string_
     // result
     querystr->data = (char *)querybuf->pos;
     querystr->len = cos_buf_size(querybuf);
-    
+
     return COSE_OK;
 }
 
-#if 0
-void cos_gnome_sort(const char **headers, int size)
-{
-    const char *tmp;
-    int i = 0, last_highest = 0;
-
-    while (i < size) {
-        if ((i == 0) || apr_strnatcasecmp(headers[i-1], headers[i]) < 0) {
-            i = ++last_highest;
-        } else {
-            tmp = headers[i];
-            headers[i] = headers[i - 1];
-            headers[--i] = tmp;
-        }
-    }
-}
-
-const char* cos_http_method_to_string(http_method_e method)
-{
-    switch (method) {
-        case HTTP_GET:
-            return "GET";
-        case HTTP_HEAD:
-            return "HEAD";
-        case HTTP_PUT:
-            return "PUT";
-        case HTTP_POST:
-            return "POST";
-        case HTTP_DELETE:
-            return "DELETE";
-        default:
-            return "UNKNOWN";
-    }
-}
-#endif
-
-const char* cos_http_method_to_string_lower(http_method_e method)
-{
+const char* cos_http_method_to_string_lower(http_method_e method) {
     switch (method) {
         case HTTP_GET:
             return "get";
@@ -413,9 +362,8 @@ const char* cos_http_method_to_string_lower(http_method_e method)
 }
 
 
-int cos_base64_encode(const unsigned char *in, int inLen, char *out)
-{
-    static const char *ENC = 
+int cos_base64_encode(const unsigned char *in, int inLen, char *out) {
+    static const char *ENC =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     char *original_out = out;
@@ -459,13 +407,12 @@ int cos_base64_encode(const unsigned char *in, int inLen, char *out)
 //
 // HMAC(K,m) = SHA1((K ^ OPAD) . SHA1((K ^ IPAD) . m))
 void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
-               const unsigned char *message, int message_len)
-{
+               const unsigned char *message, int message_len) {
     unsigned char kopad[64], kipad[64];
     int i;
     unsigned char digest[APR_SHA1_DIGESTSIZE];
     apr_sha1_ctx_t context;
-    
+
     if (key_len > 64) {
         key_len = 64;
     }
@@ -516,33 +463,32 @@ unsigned char* cos_md5(cos_pool_t* pool, const char *in, apr_size_t in_len) {
     return out;
 };
 
-int cos_url_decode(const char *in, char *out)
-{
+int cos_url_decode(const char *in, char *out) {
     static const char tbl[256] = {
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-         0, 1, 2, 3, 4, 5, 6, 7,  8, 9,-1,-1,-1,-1,-1,-1,
-        -1,10,11,12,13,14,15,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,10,11,12,13,14,15,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+         0, 1, 2, 3, 4, 5, 6, 7,  8, 9, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
     char c, v1, v2;
 
     if(in != NULL) {
         while((c=*in++) != '\0') {
             if(c == '%') {
-                if(!(v1=*in++) || (v1=tbl[(unsigned char)v1])<0 || 
-                   !(v2=*in++) || (v2=tbl[(unsigned char)v2])<0) {
+                if(!(v1 = *in++) || (v1 = tbl[(unsigned char)v1]) < 0 ||
+                   !(v2 = *in++) || (v2 = tbl[(unsigned char)v2]) < 0) {
                     *out = '\0';
                     return -1;
                 }
@@ -563,8 +509,7 @@ int cos_url_decode(const char *in, char *out)
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-int64_t cos_strtoll(const char *nptr, char **endptr, int base)
-{
+int64_t cos_strtoll(const char *nptr, char **endptr, int base) {
     const char *s;
     /* LONGLONG */
     int64_t acc, cutoff;
@@ -671,13 +616,11 @@ int64_t cos_strtoll(const char *nptr, char **endptr, int base)
     return (acc);
 }
 
-int64_t cos_atoi64(const char *nptr)
-{
+int64_t cos_atoi64(const char *nptr) {
     return cos_strtoull(nptr, NULL, 10);
 }
 
-uint64_t cos_strtoull(const char *nptr, char **endptr, int base)
-{
+uint64_t cos_strtoull(const char *nptr, char **endptr, int base) {
     const char *s;
     uint64_t acc, cutoff;
     int c;
@@ -693,7 +636,7 @@ uint64_t cos_strtoull(const char *nptr, char **endptr, int base)
     if (c == '-') {
         neg = 1;
         c = *s++;
-    } else { 
+    } else {
         neg = 0;
         if (c == '+')
             c = *s++;
@@ -743,29 +686,25 @@ uint64_t cos_strtoull(const char *nptr, char **endptr, int base)
     return (acc);
 }
 
-uint64_t cos_atoui64(const char *nptr) 
-{
+uint64_t cos_atoui64(const char *nptr) {
     return cos_strtoull(nptr, NULL, 10);
 }
 
 
-void cos_get_hex_from_digest(unsigned char hexdigest[40], unsigned char digest[20])
-{
+void cos_get_hex_from_digest(unsigned char hexdigest[40], unsigned char digest[20]) {
     unsigned char hex_digits[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     int j = 0;
     int i = 0;
-    
-    for(; i < 20; i++)
-    {
+
+    for(; i < 20; i++) {
         hexdigest[j++] = hex_digits[(digest[i] >> 4) & 0x0f];
         hexdigest[j++] = hex_digits[digest[i] & 0x0f];
     }
 }
 
 void cos_get_hmac_sha1_hexdigest(unsigned char hexdigest[40], const unsigned char *key, int key_len,
-                                               const unsigned char *message, int message_len)
-{
+                                               const unsigned char *message, int message_len) {
     unsigned char hmac[20];
 
     HMAC_SHA1(hmac, key, key_len, message, message_len);
@@ -773,11 +712,10 @@ void cos_get_hmac_sha1_hexdigest(unsigned char hexdigest[40], const unsigned cha
     cos_get_hex_from_digest(hexdigest, hmac);
 }
 
-void cos_get_sha1_hexdigest(unsigned char hexdigest[40], const unsigned char *message, int message_len)
-{
+void cos_get_sha1_hexdigest(unsigned char hexdigest[40], const unsigned char *message, int message_len) {
     unsigned char digest[20];
     apr_sha1_ctx_t context;
-    
+
     apr_sha1_init(&context);
     apr_sha1_update(&context, (const char *)message, (unsigned int)message_len);
     apr_sha1_final(digest, &context);

@@ -16,13 +16,13 @@ extern int cos_curl_code_to_status(CURLcode code);
 /*
  * cos_status.h
  */
-void test_cos_status_parse_from_body(CuTest *tc){
+void test_cos_status_parse_from_body(CuTest *tc) {
     cos_pool_t *pool;
     apr_pool_create(&pool, NULL);
 
     // 调用要测试的函数
     {
-        cos_status_t s ;
+        cos_status_t s;
         int res = cos_status_parse_from_body(pool, NULL, 200, &s);
         printf("test_cos_status_parse_from_body 200 ok\n");
     }
@@ -96,8 +96,7 @@ void test_cos_status_parse_from_body(CuTest *tc){
 /*
  * cos_xml.c
  */
-void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
-{
+void test_get_xml_doc_with_empty_cos_list(CuTest *tc) {
     set_retry_change_domin(0);
     cos_log_set_print(cos_log_print_default);
     cos_log_set_format(cos_log_format_default);
@@ -106,14 +105,13 @@ void test_get_xml_doc_with_empty_cos_list(CuTest *tc)
     cos_list_t bc;
     cos_list_init(&bc);
 
-    
     ret = get_xmldoc(&bc, &xml_node);
     CuAssertIntEquals(tc, COSE_XML_PARSE_ERROR, ret);
 
     printf("test_get_xml_doc_with_empty_cos_list ok\n");
 }
 
-void test_build_lifecycle_xml(CuTest *tc){
+void test_build_lifecycle_xml(CuTest *tc) {
     cos_pool_t *pool = NULL;
     cos_pool_create(&pool, NULL);
 
@@ -171,7 +169,7 @@ void test_cos_serveral_parse_from_xml_node(CuTest *tc) {
 
 void print_node_values(mxml_node_t *node) {
     mxml_type_t type = mxmlGetType(node);
-    
+
     switch (type) {
         case MXML_ELEMENT:
             printf("ELEMENT: %s\n", mxmlGetElement(node));
@@ -205,7 +203,7 @@ void test_cos_get_domain_parse_from_body(CuTest *tc) {
     memcpy(b->pos, buffer, len);
     b->last += len;
     cos_list_add_tail(&b->node, &body);
-    
+
     // 创建 cos_domain_params_t 对象
     cos_domain_params_t *domain = cos_create_domain_params(pool);
 
@@ -264,7 +262,7 @@ void test_change_host_suffix(CuTest *tc) {
     printf("test_change_host_suffix ok\n");
 }
 void test_change_endpoint_suffix(CuTest *tc) {
-    cos_string_t endpoint;  
+    cos_string_t endpoint;
     endpoint.data = strdup("example.cos.myqcloud.com");
     endpoint.len = strlen(endpoint.data);
     change_endpoint_suffix(&endpoint);
@@ -292,11 +290,11 @@ void test_cos_set_request_route(CuTest *tc) {
 }
 void test_cos_gen_object_url(CuTest *tc) {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_string_t object;
-        
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -312,7 +310,7 @@ void test_starts_with_failed(CuTest *tc) {
     int ret;
     cos_string_t str;
     cos_str_set(&str, "hangzhou.city");
-    
+
     ret = starts_with(&str, "xixi");
     CuAssertIntEquals(tc, 0, ret);
 
@@ -364,12 +362,12 @@ void test_cos_get_object_uri_with_cname(CuTest *tc) {
 
     cos_str_set(&bucket, "bucket-1");
     cos_str_set(&object, "key-2");
-    
+
     cos_get_object_uri(options, &bucket, &object, &req, &error_msg);
     CuAssertStrEquals(tc, "", req.proto);
     CuAssertStrEquals(tc, "key-2", req.uri);
     CuAssertStrEquals(tc, "img.abc.com", req.host);
-    
+
     cos_pool_destroy(p);
 
     printf("test_cos_get_object_uri_with_cname ok\n");
@@ -391,12 +389,12 @@ void test_cos_get_object_uri_with_ip(CuTest *tc) {
 
     cos_str_set(&bucket, "bucket-1");
     cos_str_set(&object, "key-2");
-    
+
     cos_get_object_uri(options, &bucket, &object, &req, &error_msg);
     CuAssertStrEquals(tc, "http://", req.proto);
     CuAssertStrEquals(tc, "key-2", req.uri);
     CuAssertStrEquals(tc, "140.205.63.8", req.host);
-    
+
     cos_pool_destroy(p);
 
     printf("test_cos_get_object_uri_with_ip ok\n");
@@ -416,13 +414,13 @@ void test_cos_get_bucket_uri_with_ip(CuTest *tc) {
     cos_str_set(&options->config->endpoint, "140.205.63.8");
 
     cos_str_set(&bucket, "bucket-1");
-    
+
     cos_get_bucket_uri(options, &bucket, &req, &error_msg);
     CuAssertStrEquals(tc, "", req.proto);
     CuAssertStrEquals(tc, "", req.uri);
     CuAssertStrEquals(tc, "140.205.63.8", req.host);
     CuAssertStrEquals(tc, "", req.resource);
-    
+
     cos_pool_destroy(p);
 
     printf("test_cos_get_bucket_uri_with_ip ok\n");
@@ -442,13 +440,13 @@ void test_cos_get_bucket_uri_with_cname(CuTest *tc) {
     cos_str_set(&options->config->endpoint, "https://img.abc.com");
 
     cos_str_set(&bucket, "bucket-1");
-    
+
     cos_get_bucket_uri(options, &bucket, &req, &error_msg);
     CuAssertStrEquals(tc, "https://", req.proto);
     CuAssertStrEquals(tc, "", req.uri);
     CuAssertStrEquals(tc, "img.abc.com", req.host);
     CuAssertStrEquals(tc, "", req.resource);
-    
+
     cos_pool_destroy(p);
 
     printf("test_cos_get_bucket_uri_with_cname ok\n");
@@ -562,7 +560,7 @@ void test_is_config_params_vaild(CuTest *tc) {
         options->config->endpoint.len = 0;
         cos_string_t bucket;
         cos_str_set(&bucket, "qp");
-        
+
         int code = cos_get_object_uri(options, &bucket, NULL, NULL, &error_msg);
         CuAssertIntEquals(tc, 0, code);
         printf("test_is_config_params_vaild endpoint invaild ok\n");
@@ -622,7 +620,7 @@ void test_is_config_params_vaild(CuTest *tc) {
         cos_table_t *resp_headers = NULL;
         int is_cname = 0;
         cos_status_t *s = NULL;
-        
+
         options = cos_request_options_create(p);
         init_test_request_options(options, is_cname);
         cos_http_request_t *req = cos_http_request_create(options->pool);;
@@ -646,7 +644,7 @@ void test_cos_url_encode_failed(CuTest *tc) {
     int ret;
     char *dest;
     dest = (char*)malloc(1024);
-    
+
     ret = cos_url_encode(dest, "/mingdi-hz-3/./xxx/./ddd/", 1);
     CuAssertIntEquals(tc, COSE_INVALID_ARGUMENT, ret);
 
@@ -661,7 +659,7 @@ void test_cos_url_encode_with_blank_char(CuTest *tc) {
     char *dest;
     source = "abc.xx.com/a b";
     dest = (char*)malloc(20);
-    
+
     ret = cos_url_encode(dest, source, strlen(source));
     CuAssertIntEquals(tc, COSE_OK, ret);
     CuAssertStrEquals(tc, "abc.xx.com%2Fa%20b", dest);
@@ -678,12 +676,12 @@ void test_cos_url_decode_with_percent(CuTest *tc) {
 
     in = "abc.xx.com/a%20b";
     out = (char*)malloc(20);
-    
+
     ret = cos_url_decode(in, out);
     CuAssertIntEquals(tc, 0, ret);
 
     free(out);
-    
+
     printf("test_cos_url_decode_with_percent ok\n");
 }
 
@@ -694,7 +692,7 @@ void test_cos_url_decode_with_add(CuTest *tc) {
 
     in = "abc.xx.com/a+b";
     out = (char*)malloc(20);
-    
+
     ret = cos_url_decode(in, out);
     CuAssertIntEquals(tc, 0, ret);
 
@@ -710,12 +708,12 @@ void test_cos_url_decode_failed(CuTest *tc) {
 
     in = "abc.xx.com/a%xb";
     out = (char*)malloc(20);
-    
+
     ret = cos_url_decode(in, out);
     CuAssertIntEquals(tc, -1, ret);
 
     free(out);
-    
+
     printf("test_cos_url_decode_failed ok\n");
 }
 
@@ -750,8 +748,7 @@ void test_cos_should_retry(CuTest *tc) {
     printf("test_cos_should_retry ok\n");
 }
 
-void test_cos_strtoll(CuTest *tc)
-{
+void test_cos_strtoll(CuTest *tc) {
     int64_t val = 0;
     char *endptr = NULL;
 
@@ -778,8 +775,7 @@ void test_cos_strtoll(CuTest *tc)
     CuAssertTrue(tc, val == INT64_MIN);
 }
 
-void test_cos_strtoull(CuTest *tc)
-{
+void test_cos_strtoull(CuTest *tc) {
     uint64_t val = 0;
     char *endptr = NULL;
 
@@ -806,9 +802,8 @@ void test_cos_strtoull(CuTest *tc)
     CuAssertTrue(tc, val == UINT64_MAX);
 }
 
-CuSuite *test_cos_sys()
-{
-    CuSuite* suite = CuSuiteNew();   
+CuSuite *test_cos_sys() {
+    CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_is_default_domain);
     SUITE_ADD_TEST(suite, test_is_config_params_vaild);
