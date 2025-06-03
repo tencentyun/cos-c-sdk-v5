@@ -775,7 +775,7 @@ cos_status_t *cos_upload_object_by_part_copy
 (
         cos_request_options_t *options,
         const cos_string_t *copy_source,
-        const cos_string_t *dest_bucket, 
+        const cos_string_t *dest_bucket,
         const cos_string_t *dest_object,
         int64_t part_size
 ) {
@@ -819,7 +819,7 @@ cos_status_t *cos_upload_object_by_part_copy
     cos_table_t *init_multipart_resp_headers = NULL;
     cos_string_t upload_id;
     init_multipart_headers = cos_table_make(subpool, 0);
-    s = cos_init_multipart_upload(options, dest_bucket, dest_object, 
+    s = cos_init_multipart_upload(options, dest_bucket, dest_object,
             &upload_id, init_multipart_headers, &init_multipart_resp_headers);
     if (!cos_status_is_ok(s)) {
         ret = cos_status_dup(parent_pool, s);
@@ -868,7 +868,7 @@ cos_status_t *cos_upload_object_by_part_copy
 }
 
 cos_status_t *cos_download_part_to_file(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
                                         cos_upload_file_t *download_file,
                                         cos_table_t **resp_headers) {
@@ -877,11 +877,11 @@ cos_status_t *cos_download_part_to_file(const cos_request_options_t *options,
 }
 
 cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
-                                           const cos_string_t *bucket, 
+                                           const cos_string_t *bucket,
                                            const cos_string_t *object,
                                            cos_upload_file_t *download_file,
                                            cos_progress_callback progress_callback,
-                                           cos_table_t *headers, 
+                                           cos_table_t *headers,
                                            cos_table_t *params,
                                            cos_table_t **resp_headers) {
     cos_status_t *s = NULL;
@@ -895,13 +895,13 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
     int res = COSE_OK;
     char range_buf[64];
     char *error_msg = NULL;
-    
+
     headers = cos_table_create_if_null(options, headers, 1);
     params = cos_table_create_if_null(options, params, 0);
     apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
     apr_table_add(headers, COS_RANGE, range_buf);
 
-    if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+    if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                             &req, params, headers, progress_callback, 0, &resp, &error_msg)) {
         cos_invalid_param_status_set(options, s, error_msg);
         return s;
@@ -922,13 +922,13 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
         char range_buf[64];
         char *error_msg = NULL;
         cos_table_t *headers = NULL;
-        
+
         headers = cos_table_create_if_null(options, headers, 1);
         params = cos_table_create_if_null(options, params, 0);
         apr_snprintf(range_buf, sizeof(range_buf), "bytes=%"APR_INT64_T_FMT"-%"APR_INT64_T_FMT, download_file->file_pos, download_file->file_last-1);
         apr_table_add(headers, COS_RANGE, range_buf);
 
-        if (!cos_init_object_request(options, bucket, object, HTTP_GET, 
+        if (!cos_init_object_request(options, bucket, object, HTTP_GET,
                                 &req, params, headers, progress_callback, 0, &resp, &error_msg)) {
             cos_invalid_param_status_set(options, s, error_msg);
             return s;
@@ -946,7 +946,7 @@ cos_status_t *cos_do_download_part_to_file(const cos_request_options_t *options,
     }
     cos_fill_read_response_header(resp, resp_headers);
 
-    if (is_enable_crc(options) && has_crc_in_response(resp) && 
+    if (is_enable_crc(options) && has_crc_in_response(resp) &&
         !has_range_or_process_in_request(req)) {
             cos_check_crc_consistent(resp->crc64, resp->headers, s);
     }

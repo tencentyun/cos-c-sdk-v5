@@ -1717,9 +1717,9 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
-                                  const cos_string_t *bucket, 
+                                  const cos_string_t *bucket,
                                   const cos_string_t *job_id,
-                                  cos_table_t *headers, 
+                                  cos_table_t *headers,
                                   cos_table_t **resp_headers,
                                   ci_auditing_job_result_t **job_result);
 
@@ -1734,7 +1734,7 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
  */
 cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
                                         const ci_media_buckets_request_t *media_request,
-                                        cos_table_t *headers, 
+                                        cos_table_t *headers,
                                         cos_table_t **resp_headers,
                                         ci_media_buckets_result_t **media_result);
 
@@ -1750,11 +1750,11 @@ cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
-                                        const cos_string_t *bucket, 
+                                        const cos_string_t *bucket,
                                         const cos_string_t *object,
                                         const ci_get_snapshot_request_t *snapshot_request,
-                                        cos_table_t *headers, 
-                                        cos_list_t *buffer, 
+                                        cos_table_t *headers,
+                                        cos_list_t *buffer,
                                         cos_table_t **resp_headers);
 
 /*
@@ -1769,11 +1769,11 @@ cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
-                                      const cos_string_t *bucket, 
+                                      const cos_string_t *bucket,
                                       const cos_string_t *object,
                                       const ci_get_snapshot_request_t *snapshot_request,
-                                      cos_table_t *headers, 
-                                      cos_string_t *filename, 
+                                      cos_table_t *headers,
+                                      cos_string_t *filename,
                                       cos_table_t **resp_headers);
 
 /*
@@ -1787,9 +1787,9 @@ cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
  * @return  cos_status_t, code is 2xx success, other failure
  */
 cos_status_t *ci_get_media_info(const cos_request_options_t *options,
-                                const cos_string_t *bucket, 
+                                const cos_string_t *bucket,
                                 const cos_string_t *object,
-                                cos_table_t *headers, 
+                                cos_table_t *headers,
                                 cos_table_t **resp_headers,
                                 ci_media_info_result_t **media_result);
 

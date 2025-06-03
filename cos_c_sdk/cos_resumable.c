@@ -432,7 +432,7 @@ void * APR_THREAD_FUNC upload_part(apr_thread_t *thd, void *data) {
 cos_status_t *cos_resumable_upload_file_without_cp(cos_request_options_t *options,
                                                    cos_string_t *bucket,
                                                    cos_string_t *object,
-                                                   cos_string_t *filepath,                        
+                                                   cos_string_t *filepath,
                                                    cos_table_t *headers,
                                                    cos_table_t *params,
                                                    int32_t thread_num,
@@ -836,7 +836,7 @@ cos_status_t *cos_resumable_upload_file_with_cp(cos_request_options_t *options,
 cos_status_t *cos_resumable_upload_file(cos_request_options_t *options,
                                         cos_string_t *bucket,
                                         cos_string_t *object,
-                                        cos_string_t *filepath,                        
+                                        cos_string_t *filepath,
                                         cos_table_t *headers,
                                         cos_table_t *params,
                                         cos_resumable_clt_params_t *clt_params,
@@ -1629,12 +1629,12 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
         for (i = 0; i < checkpoint->part_num; i++) {
             iter_crc64 = cos_crc64_combine(iter_crc64, checkpoint->parts[i].crc64, checkpoint->parts[i].size);
         }
-        if ((rv = cos_check_crc_consistent(iter_crc64, resp_headers, s)) != COSE_OK) { 
+        if ((rv = cos_check_crc_consistent(iter_crc64, resp_headers, s)) != COSE_OK) {
             apr_file_remove(checkpoint_path->data, parent_pool);
             apr_file_remove(tmp_filename.data, options->pool);
             cos_inconsistent_error_status_set(s, rv);
             return s;
-        }    
+        }
     }
     rv = cos_temp_file_rename(s, tmp_filename.data, filepath->data, options->pool);
     if (rv != APR_SUCCESS) {
@@ -1648,8 +1648,8 @@ cos_status_t *cos_resumable_download_file_with_cp(cos_request_options_t *options
 
 
 cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
-        cos_string_t *bucket, 
-        cos_string_t *object, 
+        cos_string_t *bucket,
+        cos_string_t *object,
         cos_string_t *filepath,
         cos_table_t *headers,
         cos_table_t *params,
@@ -1657,7 +1657,7 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
         cos_progress_callback progress_callback) {
     int32_t thread_num = 0;
     int64_t part_size = 0;
-    cos_status_t *s = NULL; 
+    cos_status_t *s = NULL;
     cos_string_t checkpoint_path;
 
     if (!object_key_simplify_check(object->data)) {
@@ -1679,7 +1679,7 @@ cos_status_t *cos_resumable_download_file(cos_request_options_t *options,
     if(is_should_retry_endpoint(s, options->config->endpoint.data)) {
         int32_t thread_num = 0;
         int64_t part_size = 0;
-        cos_status_t *s = NULL; 
+        cos_status_t *s = NULL;
         cos_string_t checkpoint_path;
 
         char *host = options->config->endpoint.data;

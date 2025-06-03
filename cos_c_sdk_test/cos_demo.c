@@ -494,8 +494,7 @@ void test_append_object() {
             position = atol(content_length_str);
         }
     }
-    for (; index < count; index++)
-    {
+    for (; index < count; index++) {
         cos_str_set(&file, TEST_APPEND_NAMES[index]);
         s = cos_append_object_from_file(options, &bucket, &object,
                                         position, &file, NULL, &resp_headers);
@@ -663,10 +662,9 @@ void test_put_object_from_file_with_sse() {
     {
         int i = 0;
         apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
-        for ( ; i < pp->nelts; i++)
-        {
+        for ( ; i < pp->nelts; i++) {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key, ele->val);
+            printf("%s: %s\n", ele->key, ele->val);
         }
     }
 
@@ -707,10 +705,9 @@ void test_get_object_to_file_with_sse() {
     {
         int i = 0;
         apr_array_header_t * pp = (apr_array_header_t *) apr_table_elts(resp_headers);
-        for ( ; i < pp->nelts; i++)
-        {
+        for ( ; i < pp->nelts; i++) {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key, ele->val);
+            printf("%s: %s\n", ele->key, ele->val);
         }
     }
 
@@ -1552,7 +1549,7 @@ void test_cors() {
     //delete cors
     cos_delete_bucket_cors(options, &bucket, &resp_headers);
     log_status(s);
-    
+
     cos_pool_destroy(p);
 
 }
@@ -1564,7 +1561,7 @@ void test_versioning() {
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1583,7 +1580,7 @@ void test_versioning() {
     s = cos_get_bucket_versioning(options, &bucket, versioning, &resp_headers);
     log_status(s);
     printf("bucket versioning status: %s\n", versioning->status.data);
-    
+
     cos_pool_destroy(p);
 
 }
@@ -1598,7 +1595,7 @@ void test_replication() {
     cos_string_t bucket;
     cos_string_t dst_bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1608,7 +1605,7 @@ void test_replication() {
     dst_options = cos_request_options_create(p);
     init_test_request_options(dst_options, is_cname);
     cos_str_set(&dst_options->config->endpoint, "cn-east.myqcloud.com");
-    
+
     //enable bucket versioning
     cos_versioning_content_t *versioning = NULL;
     versioning = cos_create_versioning_content(p);
@@ -1621,7 +1618,7 @@ void test_replication() {
     cos_replication_params_t *replication_param = NULL;
     replication_param = cos_create_replication_params(p);
     cos_str_set(&replication_param->role, "qcs::cam::uin/100000616666:uin/100000616666");
-    
+
     cos_replication_rule_content_t *rule = NULL;
     rule = cos_create_replication_rule_content(p);
     cos_str_set(&rule->id, "Rule_01");
@@ -1645,7 +1642,7 @@ void test_replication() {
     cos_str_set(&rule->storage_class, "Standard_IA");
     cos_str_set(&rule->dst_bucket, "qcs:id/0:cos:cn-east:appid/1253686666:replicationtest");
     cos_list_add_tail(&rule->node, &replication_param->rule_list);
-    
+
     //put bucket replication
     s = cos_put_bucket_replication(options, &bucket, replication_param, &resp_headers);
     log_status(s);
@@ -1672,7 +1669,7 @@ void test_replication() {
     log_status(s);
     s = cos_put_bucket_versioning(dst_options, &dst_bucket, versioning, &resp_headers);
     log_status(s);
-    
+
     cos_pool_destroy(p);
 
 }
@@ -1687,7 +1684,7 @@ void test_presigned_url() {
     cos_table_t *params = NULL;
     cos_table_t *headers = NULL;
     int sign_host = 1;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1708,7 +1705,7 @@ void test_presigned_url() {
     printf("presigned_url_safe: %s\n", presigned_url.data);
 
     cos_pool_destroy(p);
-    
+
 }
 
 void test_head_bucket() {
@@ -1754,7 +1751,7 @@ void test_check_bucket_exist() {
     init_test_request_options(options, is_cname);
 
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     // 检查桶是否存在
     status = cos_check_bucket_exist(options, &bucket, &bucket_exist, &resp_headers);
     if (bucket_exist == COS_BUCKET_NON_EXIST) {
@@ -1879,7 +1876,7 @@ void test_website() {
     }
 
     status = cos_delete_bucket_website(options, &bucket, &resp_headers);
-    log_status(status); 
+    log_status(status);
 
     cos_pool_destroy(pool);
 }
@@ -2006,7 +2003,7 @@ void test_inventory() {
     options->ctl = cos_http_controller_create(options->pool, 0);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
 
-    // put bucket inventory 
+    // put bucket inventory
     len = snprintf(dest_bucket, 128, "qcs::cos:%s::%s", TEST_REGION, TEST_BUCKET_NAME);
     dest_bucket[len] = 0;
     for (i = 0; i < inum; i++) {
@@ -2044,13 +2041,13 @@ void test_inventory() {
         log_status(status);
     }
 
-    // get inventory 
+    // get inventory
     get_params = cos_create_inventory_params(pool);
     cos_str_set(&get_params->id, buf[inum/2]);
     status = cos_get_bucket_inventory(options, &bucket, get_params, &resp_headers);
-    log_status(status); 
+    log_status(status);
 
-    printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+    printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n",
             get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
     printf("destination:\n");
     printf("\tencryption: %d\n", get_params->destination.encryption);
@@ -2063,13 +2060,13 @@ void test_inventory() {
     }
 
     // list inventory
-    list_params = cos_create_list_inventory_params(pool); 
+    list_params = cos_create_list_inventory_params(pool);
     status = cos_list_bucket_inventory(options, &bucket, list_params, &resp_headers);
     log_status(status);
 
     get_params = NULL;
     cos_list_for_each_entry(cos_inventory_params_t, get_params, &list_params->inventorys, node) {
-        printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n", 
+        printf("id: %s\nis_enabled: %s\nfrequency: %s\nfilter_prefix: %s\nincluded_object_versions: %s\n",
                 get_params->id.data, get_params->is_enabled.data, get_params->frequency.data, get_params->filter_prefix.data, get_params->included_object_versions.data);
         printf("destination:\n");
         printf("\tencryption: %d\n", get_params->destination.encryption);
@@ -2137,7 +2134,7 @@ void test_bucket_tagging() {
         printf("taging key: %s\n", tag->key.data);
         printf("taging value: %s\n", tag->value.data);
 
-    } 
+    }
 
     // delete tagging
     status = cos_delete_bucket_tagging(options, &bucket, &resp_headers);
@@ -2196,7 +2193,7 @@ void test_object_tagging() {
         printf("taging key: %s\n", tag->key.data);
         printf("taging value: %s\n", tag->value.data);
 
-    } 
+    }
 
     // delete tagging
     status = cos_delete_object_tagging(options, &bucket, &object, &version_id, NULL, &resp_headers);
@@ -2289,7 +2286,7 @@ void test_intelligenttiering() {
     // put intelligenttiering
     params = cos_create_intelligenttiering_params(pool);
     cos_str_set(&params->status, "Enabled");
-    params->days = 30; 
+    params->days = 30;
 
     status = cos_put_bucket_intelligenttiering(options, &bucket, params, &resp_headers);
     log_status(status);
@@ -2355,12 +2352,12 @@ void test_list_directory() {
     cos_table_t *resp_headers;
     int is_truncated = 1;
     cos_string_t marker;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     //list object (get bucket)
     cos_list_object_params_t *list_params = NULL;
     list_params = cos_create_list_object_params(p);
@@ -2391,7 +2388,7 @@ void test_list_directory() {
 
         is_truncated = list_params->truncated;
         marker = list_params->next_marker;
-    }    
+    }
     cos_pool_destroy(p);
 }
 
@@ -2404,12 +2401,12 @@ void test_list_all_objects() {
     cos_table_t *resp_headers;
     int is_truncated = 1;
     cos_string_t marker;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     //list object (get bucket)
     cos_list_object_params_t *list_params = NULL;
     list_params = cos_create_list_object_params(p);
@@ -2432,7 +2429,7 @@ void test_list_all_objects() {
 
         is_truncated = list_params->truncated;
         marker = list_params->next_marker;
-    }    
+    }
     cos_pool_destroy(p);
 }
 
@@ -2508,17 +2505,17 @@ void test_move() {
 
     //创建内存池
     cos_pool_create(&p, NULL);
-    
+
     //初始化请求选项
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     //设置对象复制
     cos_str_set(&object, TEST_OBJECT_NAME1);
     cos_str_set(&src_endpoint, TEST_COS_ENDPOINT);
     cos_str_set(&src_object, TEST_OBJECT_NAME2);
-    
+
     cos_copy_object_params_t *params = NULL;
     params = cos_create_copy_object_params(p);
     s = cos_copy_object(options, &bucket, &src_object, &src_endpoint, &bucket, &object, NULL, params, &resp_headers);
@@ -2538,7 +2535,7 @@ void test_move() {
 // 基础图片处理
 void test_ci_base_image_process() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -2546,7 +2543,7 @@ void test_ci_base_image_process() {
     cos_string_t file;
     cos_table_t *resp_headers;
     cos_table_t *params = NULL;
-      
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
@@ -2630,7 +2627,7 @@ void test_ci_image_qrcode() {
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, "test.jpg");
-    
+
     headers = cos_table_make(p, 1);
     apr_table_addn(headers, "pic-operations", "{\"is_pic_info\":1,\"rules\":[{\"fileid\":\"test.png\",\"rule\":\"QRcode/cover/1\"}]}");
     // 上传时识别
@@ -2667,13 +2664,13 @@ void test_ci_image_qrcode() {
     printf("ImageResult: %s\n", result2->result_image.data);
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
 // 图片压缩
 void test_ci_image_compression() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -2867,7 +2864,7 @@ static void log_media_info_result(ci_media_info_result_t *result) {
 
 void test_ci_video_auditing() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -2921,7 +2918,7 @@ void test_ci_video_auditing() {
 
 void test_ci_media_process_media_bucket() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_table_t *resp_headers;
@@ -2958,7 +2955,7 @@ void test_ci_media_process_media_bucket() {
 
 void test_ci_media_process_snapshot() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -2973,7 +2970,7 @@ void test_ci_media_process_snapshot() {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
-    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);   
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
     cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
     cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
     cos_str_set(&options->config->appid, TEST_APPID);
@@ -3019,7 +3016,7 @@ void test_ci_media_process_snapshot() {
 
 void test_ci_media_process_media_info() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -3031,7 +3028,7 @@ void test_ci_media_process_media_info() {
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     options->config = cos_config_create(options->pool);
-    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);   
+    cos_str_set(&options->config->endpoint, TEST_COS_ENDPOINT);
     cos_str_set(&options->config->access_key_id, TEST_ACCESS_KEY_ID);
     cos_str_set(&options->config->access_key_secret, TEST_ACCESS_KEY_SECRET);
     cos_str_set(&options->config->appid, TEST_APPID);
@@ -3055,7 +3052,7 @@ int main(int argc, char *argv[]) {
     // 通过环境变量获取 SECRETID 和 SECRETKEY
     TEST_ACCESS_KEY_ID     = getenv("COS_SECRETID");
     TEST_ACCESS_KEY_SECRET = getenv("COS_SECRETKEY");
- 
+
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
        exit(1);
     }
@@ -3101,7 +3098,7 @@ int main(int argc, char *argv[]) {
     //multipart_upload_file_from_buffer();
     //abort_multipart_upload();
     //list_multipart();
-    
+
     //pthread_t tid[20];
     //test_resumable_upload_with_multi_threads();
     //test_resumable();
