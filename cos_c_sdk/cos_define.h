@@ -619,7 +619,7 @@ typedef struct {
     cos_string_t url;
     int snapshot_time;
     cos_string_t text;
-    
+
     ci_auditing_snapshot_info_t porn_info;
     ci_auditing_snapshot_info_t terrorism_info;
     ci_auditing_snapshot_info_t politics_info;

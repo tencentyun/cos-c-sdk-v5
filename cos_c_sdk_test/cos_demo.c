@@ -16,7 +16,7 @@ static char *TEST_ACCESS_KEY_SECRET;            //your secret_key
 // 开发者访问 COS 服务时拥有的用户维度唯一资源标识，用以标识资源，可在 https://console.cloud.tencent.com/cam/capi 页面获取
 static char TEST_APPID[] = "<APPID>";    //your appid
 //the cos bucket name, syntax: [bucket]-[appid], for example: mybucket-1253666666，可在 https://console.cloud.tencent.com/cos5/bucket 查看
-static char TEST_BUCKET_NAME[] = "<bucketname-appid>";    
+static char TEST_BUCKET_NAME[] = "<bucketname-appid>";
 // 对象拥有者，比如用户UIN：100000000001
 static char TEST_UIN[] = "<Uin>";    //your uin
 // 地域信息，枚举值可参见 https://cloud.tencent.com/document/product/436/6224 文档，例如：ap-beijing、ap-hongkong、eu-frankfurt 等
@@ -37,8 +37,7 @@ static char TEST_MULTIPART_OBJECT3[] = "multipart3.dat";
 static char TEST_MULTIPART_OBJECT4[] = "multipart4.dat";
 
 
-static void print_headers(cos_table_t *headers)
-{
+static void print_headers(cos_table_t *headers) {
     const cos_array_header_t *tarr;
     const cos_table_entry_t *telts;
     int i = 0;
@@ -57,8 +56,7 @@ static void print_headers(cos_table_t *headers)
     }
 }
 
-void init_test_config(cos_config_t *config, int is_cname)
-{
+void init_test_config(cos_config_t *config, int is_cname) {
     cos_str_set(&config->endpoint, TEST_COS_ENDPOINT);
     cos_str_set(&config->access_key_id, TEST_ACCESS_KEY_ID);
     cos_str_set(&config->access_key_secret, TEST_ACCESS_KEY_SECRET);
@@ -66,23 +64,20 @@ void init_test_config(cos_config_t *config, int is_cname)
     config->is_cname = is_cname;
 }
 
-void init_test_request_options(cos_request_options_t *options, int is_cname)
-{
+void init_test_request_options(cos_request_options_t *options, int is_cname) {
     options->config = cos_config_create(options->pool);
     init_test_config(options->config, is_cname);
     options->ctl = cos_http_controller_create(options->pool, 0);
 }
 
-void log_status(cos_status_t *s)
-{
+void log_status(cos_status_t *s) {
     cos_warn_log("status->code: %d", s->code);
     if (s->error_code) cos_warn_log("status->error_code: %s", s->error_code);
     if (s->error_msg) cos_warn_log("status->error_msg: %s", s->error_msg);
     if (s->req_id) cos_warn_log("status->req_id: %s", s->req_id);
 }
 
-void test_sign()
-{
+void test_sign() {
     cos_pool_t *p = NULL;
     const unsigned char secret_key[] = "your secret_key";
     const unsigned char time_str[] = "1480932292;1481012292";
@@ -102,21 +97,21 @@ void test_sign()
 
     // method
     value = "get";
-    cos_buf_append_string(p, fmt_str, value, strlen(value));                  
-    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);        
-    
+    cos_buf_append_string(p, fmt_str, value, strlen(value));
+    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
+
     // canonicalized resource(URI)
-    cos_buf_append_string(p, fmt_str, uri, strlen(uri));                  
-    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1); 
+    cos_buf_append_string(p, fmt_str, uri, strlen(uri));
+    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
 
     // query-parameters
     cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
-    
-    
+
+
     // Host
     cos_buf_append_string(p, fmt_str, "host=", sizeof("host=")-1);
-    cos_buf_append_string(p, fmt_str, host, strlen(host));                  
-    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);    
+    cos_buf_append_string(p, fmt_str, host, strlen(host));
+    cos_buf_append_string(p, fmt_str, "\n", sizeof("\n")-1);
 
     char * pstr3 = apr_pstrndup(p, (char*)fmt_str->pos, cos_buf_size(fmt_str));
     cos_warn_log("Format string: %s", pstr3);
@@ -126,12 +121,11 @@ void test_sign()
 
     char * pstr2 = apr_pstrndup(p, (char*)fmt_str_hex, sizeof(fmt_str_hex));
     cos_warn_log("Format string sha1hash: %s", pstr2);
-    
+
     cos_pool_destroy(p);
 }
 
-void test_bucket()
-{
+void test_bucket() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -139,7 +133,7 @@ void test_bucket()
     cos_acl_e cos_acl = COS_ACL_PRIVATE;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -158,8 +152,8 @@ void test_bucket()
     cos_list_object_content_t *content = NULL;
     char *line = NULL;
     cos_list_for_each_entry(cos_list_object_content_t, content, &list_params->object_list, node) {
-        line = apr_psprintf(p, "%.*s\t%.*s\t%.*s\n", content->key.len, content->key.data, 
-            content->size.len, content->size.data, 
+        line = apr_psprintf(p, "%.*s\t%.*s\t%.*s\n", content->key.len, content->key.data,
+            content->size.len, content->size.data,
             content->last_modified.len, content->last_modified.data);
         printf("%s", line);
         printf("next marker: %s\n", list_params->next_marker.data);
@@ -168,18 +162,17 @@ void test_bucket()
     cos_list_for_each_entry(cos_list_object_common_prefix_t, common_prefix, &list_params->common_prefix_list, node) {
         printf("common prefix: %s\n", common_prefix->prefix.data);
     }
-    
+
 
     //delete bucket
     s = cos_delete_bucket(options, &bucket, &resp_headers);
     log_status(s);
-    
-    
-    cos_pool_destroy(p);    
+
+
+    cos_pool_destroy(p);
 }
 
-void test_list_objects()
-{
+void test_list_objects() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -211,18 +204,17 @@ void test_list_objects()
     log_status(s);
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_bucket_lifecycle()
-{
+void test_bucket_lifecycle() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -253,7 +245,7 @@ void test_bucket_lifecycle()
     cos_str_set(&rule_content->status, "Enabled");
     rule_content->abort.days = 1;
     cos_list_add_tail(&rule_content->node, &rule_list);
-    
+
     s = cos_put_bucket_lifecycle(options, &bucket, &rule_list, &resp_headers);
     log_status(s);
 
@@ -264,12 +256,11 @@ void test_bucket_lifecycle()
 
     cos_delete_bucket_lifecycle(options, &bucket, &resp_headers);
     log_status(s);
-    
-    cos_pool_destroy(p);    
+
+    cos_pool_destroy(p);
 }
 
-void test_put_object_with_limit()
-{
+void test_put_object_with_limit() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -304,11 +295,10 @@ void test_put_object_with_limit()
     log_status(s);
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_get_object_with_limit()
-{
+void test_get_object_with_limit() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -343,17 +333,16 @@ void test_get_object_with_limit()
     log_status(s);
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_gen_object_url()
-{
+void test_gen_object_url() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_string_t object;
-        
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -365,10 +354,9 @@ void test_gen_object_url()
     cos_pool_destroy(p);
 }
 
-void test_create_dir()
-{
+void test_create_dir() {
     cos_pool_t *p = NULL;
-    int is_cname = 0; 
+    int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -376,7 +364,7 @@ void test_create_dir()
     cos_table_t *resp_headers;
     cos_table_t *headers = NULL;
     cos_list_t buffer;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -385,7 +373,7 @@ void test_create_dir()
 
     //上传文件夹
     cos_list_init(&buffer);
-    s = cos_put_object_from_buffer(options, &bucket, &object, 
+    s = cos_put_object_from_buffer(options, &bucket, &object,
             &buffer, headers, &resp_headers);
     if (cos_status_is_ok(s)) {
         printf("put object succeeded\n");
@@ -396,8 +384,7 @@ void test_create_dir()
     cos_pool_destroy(p);
 }
 
-void test_object()
-{
+void test_object() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -421,7 +408,7 @@ void test_object()
     cos_list_init(&buffer);
     content = cos_buf_pack(options->pool, str, strlen(str));
     cos_list_add_tail(&content->node, &buffer);
-    s = cos_put_object_from_buffer(options, &bucket, &object, 
+    s = cos_put_object_from_buffer(options, &bucket, &object,
                    &buffer, headers, &resp_headers);
     log_status(s);
 
@@ -432,7 +419,7 @@ void test_object()
         headers = cos_table_make(p, 1);
         cos_table_add_int(headers, "x-cos-traffic-limit", 819200);
     }
-    s = cos_get_object_to_buffer(options, &bucket, &object, 
+    s = cos_get_object_to_buffer(options, &bucket, &object,
                        headers, NULL, &download_buffer, &resp_headers);
     log_status(s);
     print_headers(resp_headers);
@@ -451,7 +438,7 @@ void test_object()
     }
     cos_warn_log("Download data=%s", buf);
 
-    
+
     cos_str_set(&file, TEST_OBJECT_NAME4);
     cos_str_set(&object, TEST_OBJECT_NAME4);
     s = cos_put_object_from_file(options, &bucket, &object, &file, NULL, &resp_headers);
@@ -477,8 +464,7 @@ void test_object()
     cos_pool_destroy(p);
 }
 
-void test_append_object()
-{
+void test_append_object() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -511,7 +497,7 @@ void test_append_object()
     for (; index < count; index++)
     {
         cos_str_set(&file, TEST_APPEND_NAMES[index]);
-        s = cos_append_object_from_file(options, &bucket, &object, 
+        s = cos_append_object_from_file(options, &bucket, &object,
                                         position, &file, NULL, &resp_headers);
         log_status(s);
 
@@ -525,11 +511,10 @@ void test_append_object()
     }
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_head_object()
-{
+void test_head_object() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -558,11 +543,10 @@ void test_head_object()
     }
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_check_object_exist()
-{
+void test_check_object_exist() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -593,8 +577,7 @@ void test_check_object_exist()
     cos_pool_destroy(p);
 }
 
-void test_object_restore()
-{
+void test_object_restore() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -618,13 +601,11 @@ void test_object_restore()
     cos_pool_destroy(p);
 }
 
-void progress_callback(int64_t consumed_bytes, int64_t total_bytes)
-{
+void progress_callback(int64_t consumed_bytes, int64_t total_bytes) {
     printf("consumed_bytes = %"APR_INT64_T_FMT", total_bytes = %"APR_INT64_T_FMT"\n", consumed_bytes, total_bytes);
 }
 
-void test_put_object_from_file()
-{
+void test_put_object_from_file() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -653,8 +634,7 @@ void test_put_object_from_file()
     cos_pool_destroy(p);
 }
 
-void test_put_object_from_file_with_sse() 
-{
+void test_put_object_from_file_with_sse() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -686,15 +666,14 @@ void test_put_object_from_file_with_sse()
         for ( ; i < pp->nelts; i++)
         {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key,ele->val);
+            printf("%s: %s\n",ele->key, ele->val);
         }
     }
 
     cos_pool_destroy(p);
 }
 
-void test_get_object_to_file_with_sse()
-{
+void test_get_object_to_file_with_sse() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -731,7 +710,7 @@ void test_get_object_to_file_with_sse()
         for ( ; i < pp->nelts; i++)
         {
             apr_table_entry_t *ele = (apr_table_entry_t *)pp->elts+i;
-            printf("%s: %s\n",ele->key,ele->val);
+            printf("%s: %s\n",ele->key, ele->val);
         }
     }
 
@@ -740,8 +719,7 @@ void test_get_object_to_file_with_sse()
 
 }
 
-void multipart_upload_file_from_file()
-{
+void multipart_upload_file_from_file() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -768,13 +746,13 @@ void multipart_upload_file_from_file()
     complete_headers = cos_table_make(p, 1);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, TEST_MULTIPART_OBJECT);
-    
+
     //init mulitipart
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+        printf("Init multipart upload succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Init multipart upload failed\n");
@@ -812,16 +790,16 @@ void multipart_upload_file_from_file()
     params = cos_create_list_upload_part_params(p);
     params->max_ret = 1000;
     cos_list_init(&complete_part_list);
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              params, &resp_headers);
 
     if (cos_status_is_ok(s)) {
         printf("List multipart succeeded\n");
         cos_list_for_each_entry(cos_list_part_content_t, part_content, &params->part_list, node) {
             printf("part_number = %s, size = %s, last_modified = %s, etag = %s\n",
-                   part_content->part_number.data, 
-                   part_content->size.data, 
-                   part_content->last_modified.data, 
+                   part_content->part_number.data,
+                   part_content->size.data,
+                   part_content->last_modified.data,
                    part_content->etag.data);
         }
     } else {
@@ -842,7 +820,7 @@ void multipart_upload_file_from_file()
             &complete_part_list, complete_headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
+        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Complete multipart upload from file failed\n");
@@ -851,8 +829,7 @@ void multipart_upload_file_from_file()
     cos_pool_destroy(p);
 }
 
-void multipart_upload_file_from_buffer()
-{
+void multipart_upload_file_from_buffer() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -873,13 +850,13 @@ void multipart_upload_file_from_buffer()
     complete_headers = cos_table_make(p, 1);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, TEST_MULTIPART_OBJECT);
-    
+
     //init mulitipart
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+        printf("Init multipart upload succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Init multipart upload failed\n");
@@ -943,7 +920,7 @@ void multipart_upload_file_from_buffer()
             &complete_part_list, complete_headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n", 
+        printf("Complete multipart upload from file succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
         printf("Complete multipart upload from file failed\n");
@@ -952,8 +929,7 @@ void multipart_upload_file_from_buffer()
     cos_pool_destroy(p);
 }
 
-void abort_multipart_upload()
-{
+void abort_multipart_upload() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -971,34 +947,33 @@ void abort_multipart_upload()
     cos_str_set(&bucket, TEST_BUCKET_NAME);
     cos_str_set(&object, TEST_MULTIPART_OBJECT);
 
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, headers, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Init multipart upload succeeded, upload_id:%.*s\n", 
+        printf("Init multipart upload succeeded, upload_id:%.*s\n",
                upload_id.len, upload_id.data);
     } else {
-        printf("Init multipart upload failed\n"); 
+        printf("Init multipart upload failed\n");
         cos_pool_destroy(p);
         return;
     }
-    
-    s = cos_abort_multipart_upload(options, &bucket, &object, &upload_id, 
+
+    s = cos_abort_multipart_upload(options, &bucket, &object, &upload_id,
                                    &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("Abort multipart upload succeeded, upload_id::%.*s\n", 
+        printf("Abort multipart upload succeeded, upload_id::%.*s\n",
                upload_id.len, upload_id.data);
     } else {
-        printf("Abort multipart upload failed\n"); 
-    }    
+        printf("Abort multipart upload failed\n");
+    }
 
     cos_pool_destroy(p);
 }
 
 
-void list_multipart()
-{
+void list_multipart() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -1013,7 +988,7 @@ void list_multipart()
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
-    
+
     list_multipart_params = cos_create_list_multipart_upload_params(p);
     list_multipart_params->max_ret = 999;
     s = cos_list_multipart_upload(options, &bucket, list_multipart_params, &resp_headers);
@@ -1022,31 +997,30 @@ void list_multipart()
     list_upload_param = cos_create_list_upload_part_params(p);
     list_upload_param->max_ret = 1000;
     cos_string_t upload_id;
-    cos_str_set(&upload_id,"149373379126aee264fecbf5fe8ddb8b9cd23b76c73ab1af0bcfd50683cc4254f81ebe2386");
+    cos_str_set(&upload_id, "149373379126aee264fecbf5fe8ddb8b9cd23b76c73ab1af0bcfd50683cc4254f81ebe2386");
     cos_str_set(&object, TEST_MULTIPART_OBJECT);
-    s = cos_list_upload_part(options, &bucket, &object, &upload_id, 
+    s = cos_list_upload_part(options, &bucket, &object, &upload_id,
                              list_upload_param, &resp_headers);
     log_status(s);
     if (cos_status_is_ok(s)) {
-        printf("List upload part succeeded, upload_id::%.*s\n", 
+        printf("List upload part succeeded, upload_id::%.*s\n",
                upload_id.len, upload_id.data);
         cos_list_part_content_t *part_content = NULL;
         cos_list_for_each_entry(cos_list_part_content_t, part_content, &list_upload_param->part_list, node) {
             printf("part_number = %s, size = %s, last_modified = %s, etag = %s\n",
-                   part_content->part_number.data, 
-                   part_content->size.data, 
-                   part_content->last_modified.data, 
+                   part_content->part_number.data,
+                   part_content->size.data,
+                   part_content->last_modified.data,
                    part_content->etag.data);
         }
     } else {
-        printf("List upload part failed\n"); 
-    }   
-    
+        printf("List upload part failed\n");
+    }
+
     cos_pool_destroy(p);
 }
 
-void test_resumable()
-{
+void test_resumable() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1071,8 +1045,7 @@ void test_resumable()
 }
 
 
-void test_cos_download_part_to_file()
-{
+void test_cos_download_part_to_file() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1081,7 +1054,7 @@ void test_cos_download_part_to_file()
     cos_string_t object;
     cos_string_t filepath;
     cos_table_t *resp_headers = NULL;
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1095,8 +1068,7 @@ void test_cos_download_part_to_file()
     cos_pool_destroy(p);
 }
 
-void test_resumable_upload_with_multi_threads()
-{
+void test_resumable_upload_with_multi_threads() {
     cos_pool_t *p = NULL;
     cos_string_t bucket;
     cos_string_t object;
@@ -1118,7 +1090,7 @@ void test_resumable_upload_with_multi_threads()
 
     // upload
     clt_params = cos_create_resumable_clt_params_content(p, 1024 * 1024, 8, COS_FALSE, NULL);
-    s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL, 
+    s = cos_resumable_upload_file(options, &bucket, &object, &filename, headers, NULL,
         clt_params, NULL, &resp_headers, NULL);
     log_status(s);
     if (cos_status_is_ok(s)) {
@@ -1130,8 +1102,7 @@ void test_resumable_upload_with_multi_threads()
     cos_pool_destroy(p);
 }
 
-void test_delete_objects()
-{
+void test_delete_objects() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_string_t bucket;
@@ -1163,7 +1134,7 @@ void test_delete_objects()
     s = cos_delete_objects(options, &bucket, &object_list, is_quiet,
         &resp_headers, &deleted_object_list);
     log_status(s);
-    
+
     cos_pool_destroy(p);
 
     if (cos_status_is_ok(s)) {
@@ -1173,8 +1144,7 @@ void test_delete_objects()
     }
 }
 
-void test_delete_objects_by_prefix()
-{
+void test_delete_objects_by_prefix() {
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     int is_cname = 0;
@@ -1182,7 +1152,7 @@ void test_delete_objects_by_prefix()
     cos_status_t *s = NULL;
     cos_string_t prefix;
     char *prefix_str = "";
-    
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1196,8 +1166,7 @@ void test_delete_objects_by_prefix()
     printf("test_delete_object_by_prefix ok\n");
 }
 
-void test_acl()
-{
+void test_acl() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1206,7 +1175,7 @@ void test_acl()
     cos_string_t bucket;
     cos_string_t object;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1248,8 +1217,7 @@ void test_acl()
     cos_pool_destroy(p);
 }
 
-void test_copy()
-{
+void test_copy() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1286,11 +1254,10 @@ void test_copy()
     }
 
     //销毁内存池
-    cos_pool_destroy(p); 
+    cos_pool_destroy(p);
 }
 
-void test_modify_storage_class()
-{
+void test_modify_storage_class() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1301,7 +1268,7 @@ void test_modify_storage_class()
     cos_string_t src_object;
     cos_string_t src_endpoint;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1325,8 +1292,7 @@ void test_modify_storage_class()
     cos_pool_destroy(p);
 }
 
-void test_copy_mt()
-{
+void test_copy_mt() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1336,7 +1302,7 @@ void test_copy_mt()
     cos_string_t src_bucket;
     cos_string_t src_object;
     cos_string_t src_endpoint;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1352,8 +1318,7 @@ void test_copy_mt()
     cos_pool_destroy(p);
 }
 
-void test_copy_with_part_copy()
-{
+void test_copy_with_part_copy() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1361,7 +1326,7 @@ void test_copy_with_part_copy()
     cos_string_t bucket;
     cos_string_t object;
     cos_string_t copy_source;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1375,8 +1340,7 @@ void test_copy_with_part_copy()
     cos_pool_destroy(p);
 }
 
-void make_rand_string(cos_pool_t *p, int len, cos_string_t *data)
-{
+void make_rand_string(cos_pool_t *p, int len, cos_string_t *data) {
     char *str = NULL;
     int i = 0;
     str = (char *)cos_palloc(p, len + 1);
@@ -1387,12 +1351,11 @@ void make_rand_string(cos_pool_t *p, int len, cos_string_t *data)
     cos_str_set(data, str);
 }
 
-int64_t get_file_size(const char *file_path)
-{
-    int64_t filesize = -1; 
+int64_t get_file_size(const char *file_path) {
+    int64_t filesize = -1;
     struct stat statbuff;
 
-    if(stat(file_path, &statbuff) < 0){
+    if(stat(file_path, &statbuff) < 0) {
         return filesize;
     } else {
         filesize = statbuff.st_size;
@@ -1401,8 +1364,7 @@ int64_t get_file_size(const char *file_path)
     return filesize;
 }
 
-void test_part_copy()
-{
+void test_part_copy() {
     cos_pool_t *p = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
@@ -1441,11 +1403,11 @@ void test_part_copy()
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
 
-    // create multipart upload local file    
+    // create multipart upload local file
     make_rand_string(p, 10 * 1024 * 1024, &data);
     fd = fopen(local_filename, "w");
     fwrite(data.data, sizeof(data.data[0]), data.len, fd);
-    fclose(fd);    
+    fclose(fd);
 
     init_test_request_options(options, is_cname);
     cos_str_set(&bucket, TEST_BUCKET_NAME);
@@ -1456,7 +1418,7 @@ void test_part_copy()
 
     //init mulitipart
     cos_str_set(&object, dest_object_name);
-    s = cos_init_multipart_upload(options, &bucket, &object, 
+    s = cos_init_multipart_upload(options, &bucket, &object,
                                   &upload_id, NULL, &resp_headers);
     log_status(s);
 
@@ -1494,10 +1456,10 @@ void test_part_copy()
     list_upload_part_params = cos_create_list_upload_part_params(p);
     list_upload_part_params->max_ret = 10;
     cos_list_init(&complete_part_list);
-        
+
     cos_str_set(&dest_bucket, TEST_BUCKET_NAME);
     cos_str_set(&dest_object, dest_object_name);
-    s = cos_list_upload_part(options, &dest_bucket, &dest_object, &upload_id, 
+    s = cos_list_upload_part(options, &dest_bucket, &dest_object, &upload_id,
                              list_upload_part_params, &list_part_resp_headers);
     log_status(s);
     cos_list_for_each_entry(cos_list_part_content_t, part_content, &list_upload_part_params->part_list, node) {
@@ -1506,17 +1468,17 @@ void test_part_copy()
         cos_str_set(&complete_content->etag, part_content->etag.data);
         cos_list_add_tail(&complete_content->node, &complete_part_list);
     }
-     
+
     //complete multipart
     headers = cos_table_make(p, 0);
-    s = cos_complete_multipart_upload(options, &dest_bucket, &dest_object, 
+    s = cos_complete_multipart_upload(options, &dest_bucket, &dest_object,
             &upload_id, &complete_part_list, headers, &complete_resp_headers);
     log_status(s);
-    
+
     //check upload copy part content equal to local file
     headers = cos_table_make(p, 0);
     cos_str_set(&download_file, download_filename);
-    s = cos_get_object_to_file(options, &dest_bucket, &dest_object, headers, 
+    s = cos_get_object_to_file(options, &dest_bucket, &dest_object, headers,
                                query_params, &download_file, &resp_headers);
     log_status(s);
     printf("local file len = %"APR_INT64_T_FMT", download file len = %"APR_INT64_T_FMT, get_file_size(local_filename), get_file_size(download_filename));
@@ -1528,15 +1490,14 @@ void test_part_copy()
 }
 
 
-void test_cors()
-{
+void test_cors() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
     cos_request_options_t *options = NULL;
     cos_string_t bucket;
     cos_table_t *resp_headers = NULL;
-   
+
     cos_pool_create(&p, NULL);
     options = cos_request_options_create(p);
     init_test_request_options(options, is_cname);
@@ -1596,8 +1557,7 @@ void test_cors()
 
 }
 
-void test_versioning()
-{
+void test_versioning() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1629,8 +1589,7 @@ void test_versioning()
 }
 
 
-void test_replication()
-{
+void test_replication() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -1718,8 +1677,7 @@ void test_replication()
 
 }
 
-void test_presigned_url()
-{
+void test_presigned_url() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_request_options_t *options = NULL;
@@ -1753,8 +1711,7 @@ void test_presigned_url()
     
 }
 
-void test_head_bucket()
-{
+void test_head_bucket() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -1780,8 +1737,7 @@ void test_head_bucket()
     cos_pool_destroy(pool);
 }
 
-void test_check_bucket_exist()
-{
+void test_check_bucket_exist() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -1813,8 +1769,7 @@ void test_check_bucket_exist()
     cos_pool_destroy(pool);
 }
 
-void test_get_service()
-{
+void test_get_service() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -1855,8 +1810,7 @@ void test_get_service()
     cos_pool_destroy(pool);
 }
 
-void test_website()
-{
+void test_website() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -1930,8 +1884,7 @@ void test_website()
     cos_pool_destroy(pool);
 }
 
-void test_domain()
-{
+void test_domain() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -1984,8 +1937,7 @@ void test_domain()
     cos_pool_destroy(pool);
 }
 
-void test_logging()
-{
+void test_logging() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -2029,8 +1981,7 @@ void test_logging()
     cos_pool_destroy(pool);
 }
 
-void test_inventory() 
-{
+void test_inventory() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     int inum = 3, i, len;
@@ -2142,8 +2093,7 @@ void test_inventory()
     cos_pool_destroy(pool);
 }
 
-void test_bucket_tagging()
-{
+void test_bucket_tagging() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -2196,8 +2146,7 @@ void test_bucket_tagging()
     cos_pool_destroy(pool);
 }
 
-void test_object_tagging()
-{
+void test_object_tagging() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -2256,8 +2205,7 @@ void test_object_tagging()
     cos_pool_destroy(pool);
 }
 
-static void log_get_referer(cos_referer_params_t *result)
-{
+static void log_get_referer(cos_referer_params_t *result) {
     int index = 0;
     cos_referer_domain_t *domain;
 
@@ -2271,8 +2219,7 @@ static void log_get_referer(cos_referer_params_t *result)
     }
 }
 
-void test_referer()
-{
+void test_referer() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -2318,8 +2265,7 @@ void test_referer()
     cos_pool_destroy(pool);
 }
 
-void test_intelligenttiering()
-{
+void test_intelligenttiering() {
     cos_pool_t *pool = NULL;
     int is_cname = 0;
     cos_status_t *status = NULL;
@@ -2358,8 +2304,7 @@ void test_intelligenttiering()
     cos_pool_destroy(pool);
 }
 
-void test_delete_directory()
-{
+void test_delete_directory() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2401,8 +2346,7 @@ void test_delete_directory()
     cos_pool_destroy(p);
 }
 
-void test_list_directory()
-{
+void test_list_directory() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2451,8 +2395,7 @@ void test_list_directory()
     cos_pool_destroy(p);
 }
 
-void test_list_all_objects()
-{
+void test_list_all_objects() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2493,8 +2436,7 @@ void test_list_all_objects()
     cos_pool_destroy(p);
 }
 
-void test_download_directory()
-{
+void test_download_directory() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2553,8 +2495,7 @@ void test_download_directory()
     cos_pool_destroy(p);
 }
 
-void test_move()
-{
+void test_move() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2595,8 +2536,7 @@ void test_move()
 }
 
 // 基础图片处理
-void test_ci_base_image_process()
-{
+void test_ci_base_image_process() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -2631,8 +2571,7 @@ void test_ci_base_image_process()
 }
 
 // 持久化处理
-void test_ci_image_process()
-{
+void test_ci_image_process() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2672,8 +2611,7 @@ void test_ci_image_process()
 }
 
 // 二维码识别
-void test_ci_image_qrcode()
-{
+void test_ci_image_qrcode() {
     cos_pool_t *p = NULL;
     int is_cname = 0;
     cos_status_t *s = NULL;
@@ -2733,8 +2671,7 @@ void test_ci_image_qrcode()
 }
 
 // 图片压缩
-void test_ci_image_compression()
-{
+void test_ci_image_compression() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -2776,15 +2713,13 @@ void test_ci_image_compression()
     }
 }
 
-static void log_video_auditing_result(ci_video_auditing_job_result_t *result)
-{
+static void log_video_auditing_result(ci_video_auditing_job_result_t *result) {
     cos_warn_log("jobid: %s", result->jobs_detail.job_id.data);
     cos_warn_log("state: %s", result->jobs_detail.state.data);
     cos_warn_log("creation_time: %s", result->jobs_detail.creation_time.data);
 }
 
-static void log_get_auditing_result(ci_auditing_job_result_t *result)
-{
+static void log_get_auditing_result(ci_auditing_job_result_t *result) {
     int index = 0;
     ci_auditing_snapshot_result_t *snapshot_info;
     ci_auditing_audio_section_result_t *audio_section_info;
@@ -2854,8 +2789,7 @@ static void log_get_auditing_result(ci_auditing_job_result_t *result)
     }
 }
 
-static void log_media_buckets_result(ci_media_buckets_result_t *result)
-{
+static void log_media_buckets_result(ci_media_buckets_result_t *result) {
     int index = 0;
     ci_media_bucket_list_t *media_bucket;
 
@@ -2872,8 +2806,7 @@ static void log_media_buckets_result(ci_media_buckets_result_t *result)
     }
 }
 
-static void log_media_info_result(ci_media_info_result_t *result)
-{
+static void log_media_info_result(ci_media_info_result_t *result) {
     // format
     cos_warn_log("format.num_stream: %d", result->format.num_stream);
     cos_warn_log("format.num_program: %d", result->format.num_program);
@@ -2932,8 +2865,7 @@ static void log_media_info_result(ci_media_info_result_t *result)
     cos_warn_log("stream.subtitle.language: %s", result->stream.subtitle.language.data);
 }
 
-void test_ci_video_auditing()
-{
+void test_ci_video_auditing() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -2987,8 +2919,7 @@ void test_ci_video_auditing()
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_media_bucket()
-{
+void test_ci_media_process_media_bucket() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -3025,8 +2956,7 @@ void test_ci_media_process_media_bucket()
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_snapshot()
-{
+void test_ci_media_process_snapshot() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -3087,8 +3017,7 @@ void test_ci_media_process_snapshot()
     cos_pool_destroy(p);
 }
 
-void test_ci_media_process_media_info()
-{
+void test_ci_media_process_media_info() {
     cos_pool_t *p = NULL;
     int is_cname = 0; 
     cos_status_t *s = NULL;
@@ -3122,8 +3051,7 @@ void test_ci_media_process_media_info()
     cos_pool_destroy(p);
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // 通过环境变量获取 SECRETID 和 SECRETKEY
     TEST_ACCESS_KEY_ID     = getenv("COS_SECRETID");
     TEST_ACCESS_KEY_SECRET = getenv("COS_SECRETKEY");

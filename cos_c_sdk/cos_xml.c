@@ -24,7 +24,7 @@ int get_truncated_from_xml(cos_pool_t *p, mxml_node_t *xml_node, const char *tru
 static char* new_xml_buff(mxml_node_t *doc);
 
 char* new_xml_buff(mxml_node_t *doc) {
-    int	bytes;				
+    int	bytes;
     char buffer[8192];
     char *s;
 
@@ -273,10 +273,10 @@ int cos_acl_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_acl_params_t *con
         if (NULL != node) {
             cos_acl_contents_parse(p, node, "Grant", &content->grantee_list);
         }
-        
+
         mxmlDelete(root);
     }
-    
+
     return res;
 }
 
@@ -356,10 +356,10 @@ int cos_replication_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_replicati
         }
 
         cos_replication_rules_parse(p, root, "Rule", &content->rule_list);
-        
+
         mxmlDelete(root);
     }
-    
+
     return res;
 }
 
@@ -386,10 +386,10 @@ int cos_copy_object_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_copy_obje
             last_modify = apr_pstrdup(p, node_content);
             cos_str_set(&content->last_modify, last_modify);
         }
-        
+
         mxmlDelete(root);
     }
-    
+
     return res;
 }
 
@@ -481,7 +481,7 @@ void cos_list_objects_prefix_parse(cos_pool_t *p, mxml_node_t *xml_node, cos_lis
     char *prefix;
     mxml_node_t *node;
     const char *node_content;
-    
+
     node = mxmlFindElement(xml_node, xml_node, "Prefix", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
@@ -522,13 +522,13 @@ int cos_list_objects_parse_from_body(cos_pool_t *p, cos_list_t *bc,
         }
 
         *truncated = get_truncated_from_xml(p, root, truncated_xml_path);
-        
+
         cos_list_objects_contents_parse(p, root, buckets_xml_path, object_list);
         cos_list_objects_common_prefix_parse(p, root, common_prefix_xml_path, common_prefix_list);
 
         mxmlDelete(root);
     }
-    
+
     return res;
 }
 
@@ -550,7 +550,7 @@ int cos_upload_id_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_string_t *u
     return res;
 }
 
-void cos_list_parts_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path, 
+void cos_list_parts_contents_parse(cos_pool_t *p, mxml_node_t *root, const char *xml_path,
     cos_list_t *part_list) {
     mxml_node_t *content_node;
     cos_list_part_content_t *content;
@@ -642,7 +642,7 @@ void cos_list_multipart_uploads_contents_parse(cos_pool_t *p, mxml_node_t *root,
     }
 }
 
-void cos_list_multipart_uploads_content_parse(cos_pool_t *p, mxml_node_t *xml_node, 
+void cos_list_multipart_uploads_content_parse(cos_pool_t *p, mxml_node_t *xml_node,
     cos_list_multipart_upload_content_t *content) {
     char *key;
     char *upload_id;
@@ -723,7 +723,7 @@ char *build_complete_multipart_upload_xml(cos_pool_t *p, cos_list_t *bc) {
         mxmlNewText(part_number_node, 0, content->part_number.data);
         mxmlNewText(etag_node, 0, content->etag.data);
     }
-    
+
     xml_buff = new_xml_buff(doc);
     if (xml_buff == NULL) {
         mxmlDelete(doc);
@@ -741,7 +741,7 @@ char *build_complete_multipart_upload_xml(cos_pool_t *p, cos_list_t *bc) {
 void build_complete_multipart_upload_body(cos_pool_t *p, cos_list_t *part_list, cos_list_t *body) {
     char *complete_multipart_upload_xml;
     cos_buf_t *b;
-    
+
     complete_multipart_upload_xml = build_complete_multipart_upload_xml(p, part_list);
     cos_list_init(body);
     b = cos_buf_pack(p, complete_multipart_upload_xml, strlen(complete_multipart_upload_xml));
@@ -758,7 +758,7 @@ char *build_lifecycle_xml(cos_pool_t *p, cos_list_t *lifecycle_rule_list) {
     mxml_node_t *transition_node = NULL;
     mxml_node_t *expire_node = NULL;
     mxml_node_t *abort_node = NULL;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "LifecycleConfiguration");
     cos_list_for_each_entry(cos_lifecycle_rule_content_t, content, lifecycle_rule_list, node) {
@@ -804,7 +804,7 @@ char *build_lifecycle_xml(cos_pool_t *p, cos_list_t *lifecycle_rule_list) {
             mxmlNewText(days_node, 0, value_str);
         }
     }
-    
+
     xml_buff = new_xml_buff(doc);
     if (xml_buff == NULL) {
         mxmlDelete(doc);
@@ -812,7 +812,7 @@ char *build_lifecycle_xml(cos_pool_t *p, cos_list_t *lifecycle_rule_list) {
     }
     cos_str_set(&xml_doc, xml_buff);
     lifecycle_xml = cos_pstrdup(p, &xml_doc);
-    
+
     free(xml_buff);
     mxmlDelete(doc);
 
@@ -843,12 +843,12 @@ char *build_versioning_xml(cos_pool_t *p, cos_versioning_content_t *versioning) 
     cos_string_t xml_doc;
     mxml_node_t *doc;
     mxml_node_t *root_node;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "VersioningConfiguration");
     mxml_node_t *status_node = mxmlNewElement(root_node, "Status");
     mxmlNewText(status_node, 0, versioning->status.data);
-    
+
     xml_buff = new_xml_buff(doc);
     if (xml_buff == NULL) {
         mxmlDelete(doc);
@@ -856,7 +856,7 @@ char *build_versioning_xml(cos_pool_t *p, cos_versioning_content_t *versioning) 
     }
     cos_str_set(&xml_doc, xml_buff);
     cors_xml = cos_pstrdup(p, &xml_doc);
-    
+
     free(xml_buff);
     mxmlDelete(doc);
 
@@ -870,7 +870,7 @@ char *build_cors_xml(cos_pool_t *p, cos_list_t *cors_rule_list) {
     mxml_node_t *doc;
     mxml_node_t *root_node;
     cos_cors_rule_content_t *content;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "CORSConfiguration");
     cos_list_for_each_entry(cos_cors_rule_content_t, content, cors_rule_list, node) {
@@ -898,7 +898,7 @@ char *build_cors_xml(cos_pool_t *p, cos_list_t *cors_rule_list) {
             mxmlNewText(expose_header_node, 0, content->expose_header.data);
         }
     }
-    
+
     xml_buff = new_xml_buff(doc);
     if (xml_buff == NULL) {
         mxmlDelete(doc);
@@ -906,7 +906,7 @@ char *build_cors_xml(cos_pool_t *p, cos_list_t *cors_rule_list) {
     }
     cos_str_set(&xml_doc, xml_buff);
     cors_xml = cos_pstrdup(p, &xml_doc);
-    
+
     free(xml_buff);
     mxmlDelete(doc);
 
@@ -929,7 +929,7 @@ char *build_replication_xml(cos_pool_t *p, cos_replication_params_t *replication
     mxml_node_t *doc;
     mxml_node_t *root_node;
     cos_replication_rule_content_t *content = NULL;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "ReplicationConfiguration");
     if (replication_param->role.len !=0 && strcmp(replication_param->role.data, "") != 0) {
@@ -960,7 +960,7 @@ char *build_replication_xml(cos_pool_t *p, cos_replication_params_t *replication
             mxmlNewText(bucket_node, 0, content->storage_class.data);
         }
     }
-    
+
     xml_buff = new_xml_buff(doc);
     if (xml_buff == NULL) {
         mxmlDelete(doc);
@@ -968,7 +968,7 @@ char *build_replication_xml(cos_pool_t *p, cos_replication_params_t *replication
     }
     cos_str_set(&xml_doc, xml_buff);
     replication_xml = cos_pstrdup(p, &xml_doc);
-    
+
     free(xml_buff);
     mxmlDelete(doc);
 
@@ -1015,7 +1015,7 @@ void build_website_body(cos_pool_t *p, cos_website_params_t *website_params, cos
     cos_list_add_tail(&b->node, body);
 }
 
-char* build_website_xml(cos_pool_t *p, cos_website_params_t *website_params) { 
+char* build_website_xml(cos_pool_t *p, cos_website_params_t *website_params) {
     char *website_xml;
     char *xml_buff;
     cos_string_t xml_doc;
@@ -1036,7 +1036,7 @@ char* build_website_xml(cos_pool_t *p, cos_website_params_t *website_params) {
         cos_list_for_each_entry(cos_website_rule_content_t, content, &website_params->rule_list, node) {
             mxml_node_t *rule_node = mxmlNewElement(rules_node, "RoutingRule");
 
-            if (!cos_is_null_string(&content->condition_errcode) 
+            if (!cos_is_null_string(&content->condition_errcode)
                     || !cos_is_null_string(&content->condition_prefix)) {
 
                 mxml_node_t *condition_node = mxmlNewElement(rule_node, "Condition");
@@ -1044,7 +1044,7 @@ char* build_website_xml(cos_pool_t *p, cos_website_params_t *website_params) {
                 build_xml_node(condition_node, "KeyPrefixEquals", &content->condition_prefix);
             }
 
-            if (!cos_is_null_string(&content->redirect_protocol) 
+            if (!cos_is_null_string(&content->redirect_protocol)
                     || !cos_is_null_string(&content->redirect_replace_key)
                     || !cos_is_null_string(&content->redirect_replace_key_prefix)) {
 
@@ -1166,7 +1166,7 @@ char *build_inventory_xml(cos_pool_t *p, cos_inventory_params_t *params) {
     mxml_node_t *root_node;
     mxml_node_t *dest_node;
     mxml_node_t *optional_node;
-    
+
     doc = mxmlNewXML("1.0");
     root_node = mxmlNewElement(doc, "InventoryConfiguration");
     build_xml_node(root_node, "Id", &params->id);
@@ -1326,7 +1326,7 @@ char *build_intelligenttiering_xml(cos_pool_t *p, cos_intelligenttiering_params_
     }
     cos_str_set(&xml_doc, xml_buff);
     xml = cos_pstrdup(p, &xml_doc);
- 
+
     free(xml_buff);
     mxmlDelete(doc);
     return xml;
@@ -1644,7 +1644,7 @@ void cos_common_parse_from_parent_node(cos_pool_t *p, mxml_node_t *root, const c
     if (pnode != NULL) {
         cos_common_parse_from_xml_node(p, pnode, root, cxml, param);
     }
-} 
+}
 
 void cos_get_website_parse_rules(cos_pool_t *p, mxml_node_t *root, cos_website_params_t *website) {
     static const char *kRoutingRule = "RoutingRule";
@@ -1781,14 +1781,14 @@ void cos_inventory_parse_from_node(cos_pool_t *p, mxml_node_t *root, cos_invento
         optional_node = mxmlFindElement(dest_node, root, "SSE-COS", NULL, NULL, MXML_DESCEND);
         if (optional_node != NULL) {
             params->destination.encryption = 1;
-        } 
+        }
     }
 
     optional_node = mxmlFindElement(root, root, "OptionalFields", NULL, NULL, MXML_DESCEND);
     if (optional_node != NULL) {
         char *content;
         mxml_node_t *field_node = mxmlFindElement(optional_node, optional_node, "Field", NULL, NULL, MXML_DESCEND);
-        while (field_node != NULL) { 
+        while (field_node != NULL) {
             cos_inventory_optional_t *optional = cos_create_inventory_optional(p);
             const char *opaque = mxmlGetOpaque(field_node);
             if (opaque != NULL) {
@@ -1804,7 +1804,7 @@ void cos_inventory_parse_from_node(cos_pool_t *p, mxml_node_t *root, cos_invento
 int cos_get_inventory_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_inventory_params_t *params) {
     int res = 0;
     mxml_node_t *root;
-   
+
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
         cos_inventory_parse_from_node(p, root, params);
@@ -1849,7 +1849,7 @@ int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_p
             mxml_node_t *tag_node = mxmlFindElement(tags_node, tags_node, "Tag", NULL, NULL, MXML_DESCEND);
             while (tag_node != NULL) {
                 cos_tagging_tag_t *tag = cos_create_tagging_tag(p);
-                cos_common_parse_from_xml_node(p, tag_node, tag_node, "Key", &tag->key); 
+                cos_common_parse_from_xml_node(p, tag_node, tag_node, "Key", &tag->key);
                 cos_common_parse_from_xml_node(p, tag_node, tag_node, "Value", &tag->value);
                 cos_list_add_tail(&tag->node, &params->node);
                 tag_node = mxmlFindElement(tag_node, tags_node, "Tag", NULL, NULL, MXML_DESCEND);
@@ -1857,7 +1857,7 @@ int cos_get_tagging_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_tagging_p
         }
         mxmlDelete(root);
     }
- 
+
     return res;
 }
 
@@ -1893,7 +1893,7 @@ int cos_get_referer_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_referer_p
 int cos_get_intelligenttiering_parse_from_body(cos_pool_t *p, cos_list_t *bc, cos_intelligenttiering_params_t *params) {
     int res = 0;
     mxml_node_t *root;
-    
+
     res = get_xmldoc(bc, &root);
     if (res == COSE_OK) {
         cos_string_t val;
@@ -1924,7 +1924,7 @@ void cos_object_key_parse(cos_pool_t *p, mxml_node_t * xml_node,
     char *encoded_key;
     const char *node_content;
     mxml_node_t *node;
-    
+
     node = mxmlFindElement(xml_node, xml_node, "Key", NULL, NULL, MXML_DESCEND);
     node_content = mxmlGetOpaque(node);
     if (node_content != NULL) {
@@ -2059,7 +2059,7 @@ int get_xmlnode_value_uint64(cos_pool_t *p, mxml_node_t *xml_node, const char *x
     node_content = get_xmlnode_value(p, xml_node, xml_path);
     if (NULL == node_content) {
         return COS_FALSE;
-    }    
+    }
     *value = cos_atoui64(node_content);
     return COS_TRUE;
 }
@@ -2069,7 +2069,7 @@ int get_xmlnode_value_float(cos_pool_t *p, mxml_node_t *xml_node, const char *xm
     node_content = get_xmlnode_value(p, xml_node, xml_path);
     if (NULL == node_content) {
         return COS_FALSE;
-    }    
+    }
     *value = atof(node_content);
     return COS_TRUE;
 }
@@ -2172,7 +2172,7 @@ int cos_checkpoint_parse_from_body(cos_pool_t *p, const char *xml_body, cos_chec
 
     root = mxmlLoadString(NULL, xml_body, MXML_OPAQUE_CALLBACK);
     if (NULL == root) {
-        return COSE_XML_PARSE_ERROR; 
+        return COSE_XML_PARSE_ERROR;
     }
 
     // MD5
@@ -2406,7 +2406,7 @@ static void ci_get_request_id(cos_pool_t *p, mxml_node_t *node, cos_status_t *s)
     }
 }
 
-int ci_video_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,  
+int ci_video_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
                                              ci_video_auditing_job_result_t *res, cos_status_t *s) {
     int ret;
     mxml_node_t *root = NULL;
@@ -2530,7 +2530,7 @@ static int ci_get_auditing_audio_section_parse(cos_pool_t *p, ci_auditing_job_re
     return ret;
 }
 
-int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, 
+int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
                                            ci_auditing_job_result_t *res, cos_status_t *s) {
     int ret;
     mxml_node_t *root = NULL;
@@ -2590,11 +2590,11 @@ int ci_get_auditing_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
 
         mxmlDelete(root);
     }
-    
+
     return ret;
 }
 
-int ci_media_buckets_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, 
+int ci_media_buckets_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
                                            ci_media_buckets_result_t *res, cos_status_t *s) {
     int ret;
     mxml_node_t *root = NULL;
@@ -2630,7 +2630,7 @@ int ci_media_buckets_result_parse_from_body(cos_pool_t *p, cos_list_t *bc,
 
         mxmlDelete(root);
     }
-    
+
     return ret;
 }
 
@@ -2736,6 +2736,6 @@ int ci_media_info_result_parse_from_body(cos_pool_t *p, cos_list_t *bc, ci_media
 
         mxmlDelete(root);
     }
-    
+
     return ret;
 }
