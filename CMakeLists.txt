@@ -127,6 +127,9 @@ INSTALL(FILES
   cos_c_sdk/cos_xml.h
   DESTINATION include/cos_c_sdk)
 
+configure_file(cos_c_sdk.pc.in cos_c_sdk.pc @ONLY)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/cos_c_sdk.pc DESTINATION lib/pkgconfig)
+
 add_subdirectory(cos_c_sdk_test)
 
 if(BUILD_UNITTEST)
