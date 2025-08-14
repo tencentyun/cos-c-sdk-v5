@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libcos_c_sdk
+Description: C SDK library for tencent COS
+Version: 5.0.24
+Requires.private: apr-util-1 apr-1 mxml libcurl
+Libs: -L${libdir} -lcos_c_sdk
+Cflags: -I${includedir}/cos_c_sdk
