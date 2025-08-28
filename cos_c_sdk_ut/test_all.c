@@ -17,6 +17,7 @@ extern CuSuite *test_cos_xml();
 extern CuSuite *test_cos_crc();
 extern CuSuite *test_cos_sys();
 extern CuSuite *test_cos_resumable();
+extern CuSuite *test_cos_retry();
 
 static const struct testlist {
     const char *testname;
@@ -29,6 +30,7 @@ static const struct testlist {
     {"test_cos_resumable", test_cos_resumable},
     {"test_cos_crc", test_cos_crc},
     {"test_cos_sys", test_cos_sys},
+    {"test_cos_retry", test_cos_retry},
     {"LastTest", NULL}
 };
 

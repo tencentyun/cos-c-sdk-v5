@@ -125,6 +125,14 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req, cos_http_response_t *resp, const int retry);
 
 /**
+ * @brief process cos request for put copy operations, including sign request, send request, get response
+ **/
+cos_status_t *cos_process_request_put_copy(const cos_request_options_t *options,
+                                           cos_http_request_t *req,
+                                           cos_http_response_t *resp,
+                                           const int retry);
+
+ /**
  * @brief process cos request with signed_url including send request, get response
  **/
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,
