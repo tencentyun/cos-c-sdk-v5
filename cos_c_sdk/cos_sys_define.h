@@ -102,7 +102,7 @@ typedef apr_array_header_t cos_array_header_t;
 #define cos_pcalloc(p, s) apr_pcalloc(p, s)
 
 #define COS_RETRY_TIME 3
-#define COS_RETRY_SLEEP_TIME_MICRO_SEC 1000000
+#define COS_RETRY_INTERVAL_US 100000
 
 #define COS_INIT_WINSOCK 1
 #define COS_MD5_STRING_LEN 32

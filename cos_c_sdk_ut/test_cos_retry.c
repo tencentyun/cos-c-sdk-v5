@@ -28,6 +28,7 @@ void init_retry_test_config(cos_config_t *config, int is_cname, int normal_domai
     cos_str_set(&config->access_key_secret, ERR_TEST_ACCESS_KEY_SECRET);
     cos_str_set(&config->appid, ERR_TEST_APPID);
     config->is_cname = is_cname;
+    config->retry_interval_us = 0;
 }
 
 void init_retry_test_request_options(cos_request_options_t *options, int is_cname, int normal_domain) {

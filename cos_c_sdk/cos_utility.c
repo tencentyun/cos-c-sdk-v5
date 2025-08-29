@@ -228,8 +228,29 @@ int is_should_switch_domain(const cos_request_options_t *options,
     return COS_FALSE;
 }
 
-int do_switch_domain(const cos_request_options_t *options,
+int do_switch_domain_and_sign(const cos_request_options_t *options,
                                cos_http_request_t *req) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+
+    size_t old_len = strlen(old_suffix);
+    size_t new_len = strlen(new_suffix);
+
+    char *old_host = req->host;
+
+    if (strncmp(old_host + strlen(old_host) - old_len, old_suffix, old_len) == 0) {
+        size_t new_size = strlen(old_host) - old_len + new_len + 1;
+        char *new_host = (char *)cos_palloc(options->pool, new_size);
+        if (new_host == NULL) {
+            cos_error_log("Failed to allocate memory for new host");
+            return COSE_OVER_MEMORY;
+        } 
+        strncpy(new_host, old_host, strlen(old_host) - old_len);
+        strncpy(new_host + strlen(old_host) - old_len, new_suffix, new_len);
+        new_host[new_size - 1] = '\0';
+        req->host = new_host;
+    }
+    
     if (apr_table_get(req->headers, COS_HOST) != NULL) {
         apr_table_unset(req->headers, COS_HOST);
     }
@@ -553,6 +574,7 @@ cos_config_t *cos_config_create(cos_pool_t *p) {
     config = (cos_config_t *)cos_pcalloc(p, sizeof(cos_config_t));
     config->retry_change_domain = COS_FALSE;
     config->retry_times = COS_RETRY_TIME;
+    config->retry_interval_us = COS_RETRY_INTERVAL_US;
     
     return config;
 }
@@ -1504,24 +1526,22 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
     }
 
     char *host = req->host;
-    int malloc_host_flag = 0;
 
     int retry_times = options->config->retry_times;
-    uint16_t retry_count = 0;
+    options->ctl->retry_count = 0;
     for (int i = 0; i <= retry_times; i++) {
 
         if (i != 0) {
             apr_table_set(req->headers, COS_SDK_RETRY, "true");
-            retry_count++;
-            apr_sleep(COS_RETRY_SLEEP_TIME_MICRO_SEC);
+            options->ctl->retry_count++;
+            apr_sleep(i * options->config->retry_interval_us);
         }
 
         s = cos_send_request(options->ctl, req, resp);
         if (s->code >= 500 || check_io_error(s)) {//5xx以及超时等网络错误，始终重试
             //最后一次切换域名
             if (i == retry_times - 1  && is_should_switch_domain(options, req, resp)) {
-                malloc_host_flag = change_host_suffix(&req->host);
-                int res = do_switch_domain(options, req);
+                int res = do_switch_domain_and_sign(options, req);
                 if (res != COSE_OK) {
                     cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
                     break;
@@ -1529,8 +1549,7 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
             }
         } else if ((s->code == 301 || s->code == 302 || s->code == 307) //301/302/307满足条件重试
                     && i < retry_times && is_should_switch_domain(options, req, resp)) {
-            malloc_host_flag = change_host_suffix(&req->host);
-            int res = do_switch_domain(options, req);
+            int res = do_switch_domain_and_sign(options, req);
             if (res != COSE_OK) {
                 cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
                 break;
@@ -1542,12 +1561,7 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
         }
     }
     
-    options->ctl->retry_count = retry_count;
-
-    if (malloc_host_flag) { 
-        free(req->host);
-        req->host = host;
-    }
+    req->host = host;
     return s;
 }
 

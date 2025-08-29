@@ -153,6 +153,7 @@ typedef struct {
     cos_string_t proxy_passwd;
     int retry_change_domain;
     int retry_times;
+    int retry_interval_us;
 } cos_config_t;
 
 typedef struct {
