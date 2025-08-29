@@ -233,21 +233,17 @@ int do_switch_domain_and_sign(const cos_request_options_t *options,
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
-    size_t old_len = strlen(old_suffix);
-    size_t new_len = strlen(new_suffix);
-
     char *old_host = req->host;
 
-    if (strncmp(old_host + strlen(old_host) - old_len, old_suffix, old_len) == 0) {
-        size_t new_size = strlen(old_host) - old_len + new_len + 1;
+    if (is_default_domain(old_host)) {
+        size_t prefix_len = strlen(old_host) - strlen(old_suffix);
+        size_t new_size = prefix_len + strlen(new_suffix) + 1;
         char *new_host = (char *)cos_palloc(options->pool, new_size);
         if (new_host == NULL) {
             cos_error_log("Failed to allocate memory for new host");
             return COSE_OVER_MEMORY;
-        } 
-        strncpy(new_host, old_host, strlen(old_host) - old_len);
-        strncpy(new_host + strlen(old_host) - old_len, new_suffix, new_len);
-        new_host[new_size - 1] = '\0';
+        }
+        snprintf(new_host, new_size, "%.*s%s", (int)prefix_len, old_host, new_suffix);
         req->host = new_host;
     }
     
@@ -1560,7 +1556,7 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
             break;
         }
     }
-    
+
     req->host = host;
     return s;
 }
