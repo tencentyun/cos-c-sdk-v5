@@ -120,7 +120,7 @@ void test_get_retry_no_switch_normal_domain(CuTest *tc) {
     do_get_retry_test_no_switch_normal_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_get_retry_test_no_switch_normal_domain(tc, "timeout", 0, 0);
     do_get_retry_test_no_switch_normal_domain(tc, "shutdown", -996, 3);
 }
@@ -158,7 +158,7 @@ void test_get_retry_no_switch_other_domain(CuTest *tc) {
     do_get_retry_test_no_switch_other_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_get_retry_test_no_switch_other_domain(tc, "timeout", 0, 0);
     do_get_retry_test_no_switch_other_domain(tc, "shutdown", -996, 3);
 }
@@ -196,7 +196,7 @@ void test_get_retry_switch_normal_domain(CuTest *tc) {
     do_get_retry_test_switch_normal_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_get_retry_test_switch_normal_domain(tc, "timeout", 0, 0);
     do_get_retry_test_switch_normal_domain(tc, "shutdown", -996, 3);
 }
@@ -234,7 +234,7 @@ void test_get_retry_switch_other_domain(CuTest *tc) {
     do_get_retry_test_switch_other_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_get_retry_test_switch_other_domain(tc, "timeout", 0, 0);
     do_get_retry_test_switch_other_domain(tc, "shutdown", -996, 3);
 }
@@ -324,7 +324,7 @@ void test_copy_retry_no_switch_normal_domain(CuTest *tc) {
     do_copy_retry_test_no_switch_normal_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_copy_retry_test_no_switch_normal_domain(tc, "timeout", 0, 0);
     do_copy_retry_test_no_switch_normal_domain(tc, "shutdown", -996, 3);
 
@@ -364,7 +364,7 @@ void test_copy_retry_no_switch_other_domain(CuTest *tc) {
     do_copy_retry_test_no_switch_other_domain(tc, "504r", 504, 3);
 
     // timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_copy_retry_test_no_switch_other_domain(tc, "timeout", 0, 0);
     do_copy_retry_test_no_switch_other_domain(tc, "shutdown", -996, 3);
 
@@ -404,7 +404,7 @@ void test_copy_retry_switch_normal_domain(CuTest *tc) {
     do_copy_retry_test_switch_normal_domain(tc, "504r", 504, 3);
 
     //timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_copy_retry_test_switch_normal_domain(tc, "timeout", 0, 0);
     do_copy_retry_test_switch_normal_domain(tc, "shutdown", -996, 3);
 
@@ -444,7 +444,7 @@ void test_copy_retry_switch_other_domain(CuTest *tc) {
     do_copy_retry_test_switch_other_domain(tc, "504r", 504, 3);
 
     //timeout和shutdown
-    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试
+    // 对于测试环境（mock server）,当前c sdk timeout时，不会触发io error，所以无法重试，正常会触发io error并重试
     do_copy_retry_test_switch_other_domain(tc, "timeout", 0, 0);
     do_copy_retry_test_switch_other_domain(tc, "shutdown", -996, 3);
 
@@ -460,7 +460,7 @@ CuSuite *test_cos_retry() {
     ERR_TEST_APPID = getenv("COS_ERR_TEST_APPID");
     ERR_TEST_BUCKET = getenv("COS_ERR_TEST_BUCKET");
 
-    // SUITE_ADD_TEST(suite, test_get_retry_no_switch_normal_domain);
+    SUITE_ADD_TEST(suite, test_get_retry_no_switch_normal_domain);
     SUITE_ADD_TEST(suite, test_get_retry_no_switch_other_domain);
     SUITE_ADD_TEST(suite, test_get_retry_switch_normal_domain);
     SUITE_ADD_TEST(suite, test_get_retry_switch_other_domain);

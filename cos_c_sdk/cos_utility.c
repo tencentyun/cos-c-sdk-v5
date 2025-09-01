@@ -1485,7 +1485,7 @@ void reset_list_pos(cos_list_t *list) {
     }
 }
 
-int check_put_copy_error_from_body(const cos_http_response_t *resp) {
+int check_error_from_body(const cos_http_response_t *resp) {
     cos_status_t *s = cos_status_create(resp->pool);
     s = cos_status_parse_from_body(resp->pool, &resp->body, resp->status, s);
     if (s->code == 200 && s->error_code != NULL &&
@@ -1550,7 +1550,7 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
                 cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
                 break;
             }
-        } else if (check_body && check_put_copy_error_from_body(resp)) {
+        } else if (check_body && check_error_from_body(resp)) {
             continue;
         } else {//2xx/4xx以及其他3xx不满足条件的不重试
             break;
@@ -1561,7 +1561,7 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
     return s;
 }
 
-cos_status_t *cos_process_request_put_copy(const cos_request_options_t *options,
+cos_status_t *cos_process_request_check_body(const cos_request_options_t *options,
                                            cos_http_request_t *req,
                                            cos_http_response_t *resp,
                                            const int retry) {
