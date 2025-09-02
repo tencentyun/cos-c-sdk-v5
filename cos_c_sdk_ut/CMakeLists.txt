@@ -10,7 +10,8 @@ configure_file (
 set(SAMPLE_SOURCE_FILES CuTest.c cos_test_util.c cos_config.c test_cos_bucket.c 
     test_cos_object.c test_cos_multipart.c  
     test_cos_progress.c cjson_utils.c cjson.c
-    test_cos_resumable.c test_cos_sys.c test_cos_crc.c test_all.c)
+    test_cos_resumable.c test_cos_sys.c test_cos_crc.c test_cos_retry.c
+    test_all.c)
 
 # find_path(APR_INCLUDE_DIR apr-1/apr_time.h)
 # find_path(APR_UTIL_INCLUDE_DIR apr/include/apr-1/apr_md5.h)

@@ -115,6 +115,8 @@ extern const int SIGN_HEADER_NUM;
 extern const char X_COS_HEADER[];
 extern const char COS_VERSION_ID[];
 extern const char X_CI_HEADER[];
+extern const char COS_SDK_RETRY[];
+extern const char COS_REQUEST_ID[];
 
 
 
@@ -149,7 +151,9 @@ typedef struct {
     int proxy_port;
     cos_string_t proxy_user;
     cos_string_t proxy_passwd;
-    int retry_change_domin;
+    int retry_change_domain;
+    int retry_times;
+    int retry_interval_us;
 } cos_config_t;
 
 typedef struct {

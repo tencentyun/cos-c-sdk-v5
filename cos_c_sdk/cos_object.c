@@ -615,7 +615,7 @@ cos_status_t *cos_copy_object(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request_check_body(options, req, resp, 1);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
 

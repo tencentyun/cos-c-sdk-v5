@@ -16,6 +16,9 @@ const char COS_CREATE_QUEUE_ERROR_CODE[] = "CreateQueueFail";
 const char COS_CREATE_THREAD_POOL_ERROR_CODE[] = "CreateThreadPoolFail";
 const char COS_LACK_OF_CONTENT_LEN_ERROR_CODE[] = "LackOfContentLength";
 const char COS_SERVER_ERROR_CODE[] = "ServerError";
+const char COS_INTERNAL_ERROR_CODE[] = "InternalError";
+const char COS_SLOW_DOWN_ERROR_CODE[] = "SlowDown";
+const char COS_SERVICE_UNAVAILABLE_ERROR_CODE[] = "ServiceUnavailable";
 
 
 cos_status_t *cos_status_create(cos_pool_t *p) {

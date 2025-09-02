@@ -291,7 +291,7 @@ cos_status_t *cos_do_complete_multipart_upload(const cos_request_options_t *opti
     build_complete_multipart_upload_body(options->pool, part_list, &body);
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request_check_body(options, req, resp, 0);
     if(is_should_retry(s, req->host)) {
         char *host = options->config->endpoint.data;
         change_endpoint_suffix(&options->config->endpoint);
