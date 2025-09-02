@@ -1525,7 +1525,8 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
 
     int retry_times = options->config->retry_times;
     options->ctl->retry_count = 0;
-    for (int i = 0; i <= retry_times; i++) {
+    int i = 0;
+    for (i = 0; i <= retry_times; i++) {
 
         if (i != 0) {
             apr_table_set(req->headers, COS_SDK_RETRY, "true");
