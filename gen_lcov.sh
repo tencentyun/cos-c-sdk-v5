@@ -31,8 +31,7 @@ lcov -extract arvinzhu.info ${EXTRACT} -o arvinzhu_filted.info
 
 REMOVE="${workspace}/cos_c_sdk_ut/cjson.c  ${workspace}/cos_c_sdk_ut/cjson_utils.c ${workspace}/cos_c_sdk_ut/test_all.c"
 lcov -remove arvinzhu.info ${REMOVE} -o arvinzhu_filted.info
-rm arvinzhu.info
-mv arvinzhu_filted.info arvinzhu.info
+
 # genhtml and zip
 genhtml -o UTReport -prefix=`pwd` arvinzhu_init_filted.info arvinzhu_filted.info
 tar -cvf UTReport.tar UTReport

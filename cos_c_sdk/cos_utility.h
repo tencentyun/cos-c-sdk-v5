@@ -125,6 +125,14 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req, cos_http_response_t *resp, const int retry);
 
 /**
+ * @brief process cos request for operations that need to check error from body, including sign request, send request, get response
+ **/
+cos_status_t *cos_process_request_check_body(const cos_request_options_t *options,
+                                           cos_http_request_t *req,
+                                           cos_http_response_t *resp,
+                                           const int retry);
+
+ /**
  * @brief process cos request with signed_url including send request, get response
  **/
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,

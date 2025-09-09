@@ -217,6 +217,47 @@ int is_should_retry_endpoint(const cos_status_t *s, const char *str) {
 }
 #endif
 
+int is_should_switch_domain(const cos_request_options_t *options,
+                            const cos_http_request_t *req,
+                            const cos_http_response_t *resp) {
+    if (options->config->retry_change_domain == COS_TRUE
+        && is_default_domain(req->host) 
+        && apr_table_get(resp->headers, COS_REQUEST_ID) == NULL){
+        return COS_TRUE;
+    }
+    return COS_FALSE;
+}
+
+int do_switch_domain_and_sign(const cos_request_options_t *options,
+                               cos_http_request_t *req) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+
+    char *old_host = req->host;
+
+    if (is_default_domain(old_host)) {
+        size_t prefix_len = strlen(old_host) - strlen(old_suffix);
+        size_t new_size = prefix_len + strlen(new_suffix) + 1;
+        char *new_host = (char *)cos_palloc(options->pool, new_size);
+        if (new_host == NULL) {
+            cos_error_log("Failed to allocate memory for new host");
+            return COSE_OVER_MEMORY;
+        }
+        snprintf(new_host, new_size, "%.*s%s", (int)prefix_len, old_host, new_suffix);
+        req->host = new_host;
+    }
+    
+    if (apr_table_get(req->headers, COS_HOST) != NULL) {
+        apr_table_unset(req->headers, COS_HOST);
+    }
+    if (apr_table_get(req->headers, COS_AUTHORIZATION) != NULL) {
+        apr_table_unset(req->headers, COS_AUTHORIZATION);
+    }
+
+    int res = cos_sign_request(req, options->config);
+    return res;
+}
+
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *target) {
     if (body_len == 0) {
         return COS_FALSE;
@@ -517,7 +558,21 @@ int is_valid_ip(const char *str) {
 }
 
 cos_config_t *cos_config_create(cos_pool_t *p) {
-    return (cos_config_t *)cos_pcalloc(p, sizeof(cos_config_t));
+    int s;
+    cos_config_t *config;
+
+    if (p == NULL) {
+        if ((s = cos_pool_create(&p, NULL)) != APR_SUCCESS) {
+            cos_fatal_log("cos_pool_create failure.");
+            return NULL;
+        }
+    }
+    config = (cos_config_t *)cos_pcalloc(p, sizeof(cos_config_t));
+    config->retry_change_domain = COS_FALSE;
+    config->retry_times = COS_RETRY_TIME;
+    config->retry_interval_us = COS_RETRY_INTERVAL_US;
+    
+    return config;
 }
 
 cos_request_options_t *cos_request_options_create(cos_pool_t *p) {
@@ -1430,10 +1485,31 @@ void reset_list_pos(cos_list_t *list) {
     }
 }
 
-cos_status_t *cos_process_request(const cos_request_options_t *options,
+int check_error_from_body(const cos_http_response_t *resp) {
+    cos_status_t *s = cos_status_create(resp->pool);
+    s = cos_status_parse_from_body(resp->pool, &resp->body, resp->status, s);
+    if (s->code == 200 && s->error_code != NULL &&
+        (strcmp(s->error_code, COS_INTERNAL_ERROR_CODE) == 0 ||
+         strcmp(s->error_code, COS_SLOW_DOWN_ERROR_CODE) == 0 ||
+         strcmp(s->error_code, COS_SERVICE_UNAVAILABLE_ERROR_CODE) == 0)) {
+        return COS_TRUE;
+    }
+    return COS_FALSE;
+}
+
+int check_io_error(const cos_status_t *s) {
+    if (s->error_code != NULL && 
+         strcmp(s->error_code, COS_HTTP_IO_ERROR_CODE) == 0) {
+        return COS_TRUE;
+    }
+    return COS_FALSE;
+}
+
+cos_status_t *do_cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req,
                                   cos_http_response_t *resp,
-                                  const int retry) {
+                                  const int retry,
+                                  const int check_body) {
     int res = COSE_OK;
     cos_status_t *s;
 
@@ -1444,60 +1520,60 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
         cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
         return s;
     }
-    s = cos_send_request(options->ctl, req, resp);
 
-    if (retry && is_should_retry(s, req->host)) {
-        if (apr_table_get(req->headers, "Host") != NULL) {
-            apr_table_unset(req->headers, "Host");
-        }
-        if (apr_table_get(req->headers, "Authorization") != NULL) {
-            apr_table_unset(req->headers, "Authorization");
-        }
-        char *host = req->host;
-        int malloc_host_flag = change_host_suffix(&req->host);
-        reset_list_pos(&req->body);
-        req->crc64 = 0;
-        res = cos_sign_request(req, options->config);
-        if (res != COSE_OK) {
-            cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
-            return s;
-        }
-        if (req->file_path != NULL) {
-            cos_string_t file;
-            cos_str_set(&file, req->file_path);
-            res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
-            if (res != COSE_OK) {
-                cos_file_error_status_set(s, res);
-                return s;
-            }
-        }
-        if (req->file_path != NULL) {
-            cos_string_t file;
-            cos_str_set(&file, req->file_path);
-            res = cos_write_request_body_from_file(options->pool, &file, req, req->headers);
-            if (res != COSE_OK) {
-                cos_file_error_status_set(s, res);
-                return s;
-            }
-        }
+    char *host = req->host;
 
-        ((cos_http_controller_ex_t *)options->ctl)->error_code = COSE_OK;
-        resp->status = 0;
-        req->consumed_bytes = 0;
+    int retry_times = options->config->retry_times;
+    options->ctl->retry_count = 0;
+    int i = 0;
+    for (i = 0; i <= retry_times; i++) {
+
+        if (i != 0) {
+            apr_table_set(req->headers, COS_SDK_RETRY, "true");
+            options->ctl->retry_count++;
+            apr_sleep(i * options->config->retry_interval_us);
+        }
 
         s = cos_send_request(options->ctl, req, resp);
-        //clear body
-        if (req->clear_body) {
-            cos_buf_t *b;
-            cos_buf_t *n;
-            cos_list_for_each_entry_safe(cos_buf_t, b, n, &req->body, node) {
-                cos_list_del(&b->node);
+        if (s->code >= 500 || check_io_error(s)) {//5xx以及超时等网络错误，始终重试
+            //最后一次切换域名
+            if (i == retry_times - 1  && is_should_switch_domain(options, req, resp)) {
+                int res = do_switch_domain_and_sign(options, req);
+                if (res != COSE_OK) {
+                    cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
+                    break;
+                }
             }
+        } else if ((s->code == 301 || s->code == 302 || s->code == 307) //301/302/307满足条件重试
+                    && i < retry_times && is_should_switch_domain(options, req, resp)) {
+            int res = do_switch_domain_and_sign(options, req);
+            if (res != COSE_OK) {
+                cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
+                break;
+            }
+        } else if (check_body && check_error_from_body(resp)) {
+            continue;
+        } else {//2xx/4xx以及其他3xx不满足条件的不重试
+            break;
         }
-        if(malloc_host_flag) free(req->host);
-        req->host = host;
     }
+
+    req->host = host;
     return s;
+}
+
+cos_status_t *cos_process_request_check_body(const cos_request_options_t *options,
+                                           cos_http_request_t *req,
+                                           cos_http_response_t *resp,
+                                           const int retry) {
+    return do_cos_process_request(options, req, resp, retry, COS_TRUE);
+}
+
+cos_status_t *cos_process_request(const cos_request_options_t *options,
+                                  cos_http_request_t *req,
+                                  cos_http_response_t *resp,
+                                  const int retry) {
+    return do_cos_process_request(options, req, resp, retry, COS_FALSE);
 }
 
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,

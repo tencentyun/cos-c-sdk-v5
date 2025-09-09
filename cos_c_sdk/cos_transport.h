@@ -52,6 +52,7 @@ struct cos_http_transport_options_s {
     int64_t first_byte_time;                    \
     int64_t finish_time;                        \
     uint32_t owner:1;                           \
+    uint16_t retry_count;                       \
     void *user_data;
 
 struct cos_http_controller_s {
