@@ -154,6 +154,7 @@ typedef struct {
     int retry_change_domain;
     int retry_times;
     int retry_interval_us;
+    int omit_cos_sdk_retry_header;
 } cos_config_t;
 
 typedef struct {

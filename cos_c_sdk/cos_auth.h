@@ -43,6 +43,11 @@ int cos_get_signed_headers(cos_pool_t *p, const cos_string_t *access_key_id,
 int cos_sign_request(cos_http_request_t *req, const cos_config_t *config);
 
 /**
+  * @brief  resign cos request
+**/
+int cos_resign_request(cos_http_request_t *req, const cos_config_t *config);
+
+/**
   * @brief  generate cos request Signature
 **/
 int get_cos_request_signature(const cos_request_options_t *options, cos_http_request_t *req,

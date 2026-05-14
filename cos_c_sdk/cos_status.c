@@ -1,4 +1,5 @@
 #include "cos_log.h"
+#include "cos_sys_define.h"
 #include "cos_sys_util.h"
 #include "cos_status.h"
 
@@ -56,6 +57,21 @@ int cos_should_retry(cos_status_t *s) {
     return COS_FALSE;
 }
 
+static mxml_node_t *cos_find_error_node(mxml_node_t *root) {
+    const char *element;
+
+    if (root == NULL || mxmlGetType(root) != MXML_ELEMENT) {
+        return NULL;
+    }
+
+    element = mxmlGetElement(root);
+    if (element != NULL && strcmp(element, "Error") == 0) {
+        return root;
+    }
+
+    return mxmlFindElement(root, root, "Error", NULL, NULL, MXML_DESCEND);
+}
+
 static void cos_status_fill_error_from_xml(cos_pool_t *p, mxml_node_t *root,
                                            mxml_node_t *error_node, cos_status_t *s) {
     mxml_node_t *n;
@@ -73,7 +89,7 @@ static void cos_status_fill_error_from_xml(cos_pool_t *p, mxml_node_t *root,
 }
 
 cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, int need_check_2xx_body, cos_status_t *s){
-    mxml_node_t *root = NULL, *error_node;
+    mxml_node_t *root = NULL, *error_node = NULL;
 
     if (s == NULL) {
         s = cos_status_create(p);
@@ -101,9 +117,9 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
         s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
         return s;
     }
-    
-    error_node = mxmlFindElement(root, root, "Error", NULL, NULL, MXML_DESCEND);
 
+    error_node = cos_find_error_node(root);
+    
     if (!cos_http_is_ok(code)) {
         // case 2.b, case 2.c
         if (error_node == NULL) {
@@ -114,6 +130,10 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
     } else if (error_node != NULL) {
         // case 3.c
         cos_status_fill_error_from_xml(p, root, error_node, s);
+        if (s->error_code == NULL) {
+            s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
+        }
+        s->code = COSE_SERVICE_ERROR;
     }
     
     mxmlDelete(root);

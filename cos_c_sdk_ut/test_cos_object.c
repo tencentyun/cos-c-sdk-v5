@@ -1933,6 +1933,11 @@ void test_ci_image_qrcode(CuTest *tc) {
     CuAssertIntEquals(tc, 200, s->code);
     CuAssertPtrNotNull(tc, resp_headers);
 
+    if (result2 == NULL) {
+        cos_pool_destroy(p);
+        return;
+    }
+
     cos_list_for_each_entry(ci_qrcode_info_t, content, &result2->qrcode_info, node) {
         printf("CodeUrl: %s\n", content->code_url.data);
         printf("Point: %s\n", content->point[0].data);

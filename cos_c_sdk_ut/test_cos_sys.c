@@ -23,7 +23,7 @@ void test_cos_status_parse_from_body(CuTest *tc) {
     // 调用要测试的函数
     {
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, NULL, 200, &s);
+        int res = cos_status_parse_from_body(pool, NULL, 200,COS_FALSE, &s);
         printf("test_cos_status_parse_from_body 200 ok\n");
     }
     {
@@ -38,7 +38,7 @@ void test_cos_status_parse_from_body(CuTest *tc) {
         b->last += len;
         cos_list_add_tail(&b->node, &body);
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        int res = cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
         CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
         printf("test_cos_status_parse_from_body 400 1ok\n");
     }
@@ -86,7 +86,7 @@ void test_cos_status_parse_from_body(CuTest *tc) {
         b->last += len;
         cos_list_add_tail(&b->node, &body);
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, &body, 400, &s);
+        int res = cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
         CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
         printf("test_cos_status_parse_from_body 400 2ok\n");
     }
