@@ -117,7 +117,7 @@ void cos_init_signed_url_request(const cos_request_options_t *options, const cos
  * @brief  cos send request
  **/
 cos_status_t *cos_send_request(cos_http_controller_t *ctl, cos_http_request_t *req,
-                               cos_http_response_t *resp);
+                               cos_http_response_t *resp, int need_check_2xx_body);
 
 /**
  * @brief process cos request including sign request, send request, get response

@@ -56,54 +56,66 @@ int cos_should_retry(cos_status_t *s) {
     return COS_FALSE;
 }
 
-cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, cos_status_t *s) {
-    int res;
-    mxml_node_t *root, *node;
-    mxml_node_t *code_node, *message_node;
-    const char *node_content;
+static void cos_status_fill_error_from_xml(cos_pool_t *p, mxml_node_t *root,
+                                           mxml_node_t *error_node, cos_status_t *s) {
+    mxml_node_t *n;
+    const char *content;
+
+    n = mxmlFindElement(error_node, root, "Code", NULL, NULL, MXML_DESCEND);
+    if (n != NULL && (content = mxmlGetOpaque(n)) != NULL) {
+        s->error_code = apr_pstrdup(p, content);
+    }
+
+    n = mxmlFindElement(error_node, root, "Message", NULL, NULL, MXML_DESCEND);
+    if (n != NULL && (content = mxmlGetOpaque(n)) != NULL) {
+        s->error_msg = apr_pstrdup(p, content);
+    }
+}
+
+cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, int need_check_2xx_body, cos_status_t *s){
+    mxml_node_t *root = NULL, *error_node;
 
     if (s == NULL) {
         s = cos_status_create(p);
     }
     s->code = code;
 
-    if (cos_http_is_ok(code)) {
+    // cases:
+    // 1. 2xx and no need to check body, return directly
+    // 2. not 2xx, parse body error: 
+    //    a. empty or xml parse error: return unknown error
+    //    b. no error in body, return error
+    //    c. error exists in body, return parsed error
+    // 3. 2xx and need to check body
+    //    a. empty or xml parse error: return unknown error
+    //    b. no error in body, return directly
+    //    c. error exists in body, return parsed error
+
+    // case 1: 
+    if (cos_http_is_ok(code) && !need_check_2xx_body) {
         return s;
     }
 
-    if (cos_list_empty(bc)) {
+    // case 2.a, case 3.a
+    if (cos_list_empty(bc) || cos_parse_xml_body(bc, &root) != COSE_OK) {
         s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
         return s;
     }
+    
+    error_node = mxmlFindElement(root, root, "Error", NULL, NULL, MXML_DESCEND);
 
-    if ((res = cos_parse_xml_body(bc, &root)) != COSE_OK) {
-        s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
-        return s;
+    if (!cos_http_is_ok(code)) {
+        // case 2.b, case 2.c
+        if (error_node == NULL) {
+            s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
+        } else {
+            cos_status_fill_error_from_xml(p, root, error_node, s);
+        }
+    } else if (error_node != NULL) {
+        // case 3.c
+        cos_status_fill_error_from_xml(p, root, error_node, s);
     }
-
-    node = mxmlFindElement(root, root, "Error", NULL, NULL, MXML_DESCEND);
-    if (NULL == node) {
-        char *xml_content = cos_buf_list_content(p, bc);
-        cos_error_log("Xml format invalid, root node name is not Error.\n");
-        cos_error_log("Xml Content:%s\n", xml_content);
-        s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
-        mxmlDelete(root);
-        return s;
-    }
-
-    code_node = mxmlFindElement(node, root, "Code", NULL, NULL, MXML_DESCEND);
-    node_content = mxmlGetOpaque(code_node);
-    if (node_content != NULL) {
-        s->error_code = apr_pstrdup(p, node_content);
-    }
-
-    message_node = mxmlFindElement(node, root, "Message", NULL, NULL, MXML_DESCEND);
-    node_content = mxmlGetOpaque(message_node);
-    if (node_content != NULL) {
-        s->error_msg = apr_pstrdup(p, node_content);
-    }
-
+    
     mxmlDelete(root);
-
     return s;
 }
