@@ -49,7 +49,7 @@ make install
 int main(int argc, char *argv[])
 {
     /* 程序入口处调用 cos_http_io_initialize 方法，这个方法内部会做一些全局资源的初始化，涉及网络，内存等部分 */
- ? ?if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
+    if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);
     }
     
@@ -244,3 +244,29 @@ int main(int argc, char *argv[])
     //destroy memory pool
     cos_pool_destroy(p); 
 ```
+
+## SDK 使用注意事项
+
+### 多线程场景
+
+需要注意的是，COS C SDK 内存池使用了 apr 库的 apr_pool，apr_pool 大多数操作都不是线程安全的。
+
+```c
+/* apr_pools.h
+* Note that most operations on pools are not thread-safe: a single pool
+* should only be accessed by a single thread at any given time. The one
+* exception to this rule is creating a subpool of a given pool: one or more
+* threads can safely create subpools at the same time that another thread
+* accesses the parent pool.
+/
+```
+
+在多线程场景下，建议遵循以下原则：
+
+- 一个 pool 同一时间只归一个线程使用；
+- 可以创建多个 pool，每个线程使用一个 pool；
+- 需要时，可以创建子 pool，用于临时使用，使用完毕后销毁，需注意子 pool 会随着父 pool 的销毁而销毁；
+- 父 pool 中只读数据可以被多个线程引用，但必须保证父 pool 生命周期覆盖所有线程。
+
+
+此外，每次请求所需的 `cos_request_options_t *optins` 结构的全部三个字段：`config`, `ctl`, `pool` 均应该独立创建，不要共用。
