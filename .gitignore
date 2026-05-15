@@ -50,4 +50,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
 build/*
+cos_c_sdk_ut/test.h
+.vscode
+.codebuddy

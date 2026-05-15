@@ -652,12 +652,12 @@ cos_status_t *copy
     //get object size
     cos_table_t *head_resp_headers = NULL;
     cos_request_options_t *head_options = cos_request_options_create(subpool);
-    head_options->config = cos_config_create(subpool);
-    cos_str_set(&head_options->config->endpoint, src_endpoint->data);
-    cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
-    cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
-    cos_str_set(&head_options->config->appid, options->config->appid.data);
+    head_options->config = cos_config_copy(subpool, options->config);
+    cos_str_set(&head_options->config->endpoint, cos_pstrdup(subpool, src_endpoint));
     head_options->ctl = cos_http_controller_create(subpool, 0);
+    if (head_options->ctl != NULL && options->ctl != NULL && options->ctl->options != NULL) {
+        head_options->ctl->options = cos_http_request_options_copy(subpool, options->ctl->options);
+    }
     s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
     if (!cos_status_is_ok(s)) {
         ret = cos_status_dup(parent_pool, s);

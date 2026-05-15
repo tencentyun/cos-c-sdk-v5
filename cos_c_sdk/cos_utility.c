@@ -575,6 +575,47 @@ cos_config_t *cos_config_create(cos_pool_t *p) {
     return config;
 }
 
+cos_config_t *cos_config_copy(cos_pool_t *p, const cos_config_t *src) {
+    cos_config_t *config;
+
+    config = cos_config_create(p);
+    if (src == NULL) {
+        return config;
+    }
+
+    if (!cos_is_null_string(&src->endpoint)) {
+        cos_str_set(&config->endpoint, cos_pstrdup(p, &src->endpoint));
+    }
+    if (!cos_is_null_string(&src->access_key_id)) {
+        cos_str_set(&config->access_key_id, cos_pstrdup(p, &src->access_key_id));
+    }
+    if (!cos_is_null_string(&src->access_key_secret)) {
+        cos_str_set(&config->access_key_secret, cos_pstrdup(p, &src->access_key_secret));
+    }
+    if (!cos_is_null_string(&src->appid)) {
+        cos_str_set(&config->appid, cos_pstrdup(p, &src->appid));
+    }
+    if (!cos_is_null_string(&src->sts_token)) {
+        cos_str_set(&config->sts_token, cos_pstrdup(p, &src->sts_token));
+    }
+    if (!cos_is_null_string(&src->proxy_host)) {
+        cos_str_set(&config->proxy_host, cos_pstrdup(p, &src->proxy_host));
+    }
+    if (!cos_is_null_string(&src->proxy_user)) {
+        cos_str_set(&config->proxy_user, cos_pstrdup(p, &src->proxy_user));
+    }
+    if (!cos_is_null_string(&src->proxy_passwd)) {
+        cos_str_set(&config->proxy_passwd, cos_pstrdup(p, &src->proxy_passwd));
+    }
+    config->is_cname = src->is_cname;
+    config->proxy_port = src->proxy_port;
+    config->retry_change_domain = src->retry_change_domain;
+    config->retry_times = src->retry_times;
+    config->retry_interval_us = src->retry_interval_us;
+
+    return config;
+}
+
 cos_request_options_t *cos_request_options_create(cos_pool_t *p) {
     int s;
     cos_request_options_t *options;

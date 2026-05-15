@@ -28,6 +28,7 @@ void cos_set_default_request_options(cos_http_request_options_t *op);
 void cos_set_default_transport_options(cos_http_transport_options_t *op);
 
 cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p);
+cos_http_request_options_t *cos_http_request_options_copy(cos_pool_t *p, const cos_http_request_options_t *src);
 
 cos_http_request_t *cos_http_request_create(cos_pool_t *p);
 cos_http_response_t *cos_http_response_create(cos_pool_t *p);

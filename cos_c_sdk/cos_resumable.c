@@ -110,16 +110,11 @@ void cos_build_thread_params(cos_transport_thread_params_t *thr_params, int part
     cos_http_controller_t *ctl;
     for (; i < part_num; i++) {
         cos_pool_create(&subpool, parent_pool);
-        config = cos_config_create(subpool);
-        cos_str_set(&config->endpoint, options->config->endpoint.data);
-        cos_str_set(&config->access_key_id, options->config->access_key_id.data);
-        cos_str_set(&config->access_key_secret, options->config->access_key_secret.data);
-        cos_str_set(&config->appid, options->config->appid.data);
-        if (options->config->sts_token.data != NULL) {
-            cos_str_set(&config->sts_token, options->config->sts_token.data);
-        }
-        config->is_cname = options->config->is_cname;
+        config = cos_config_copy(subpool, options->config);
         ctl = cos_http_controller_create(subpool, 0);
+        if (ctl != NULL && options->ctl != NULL && options->ctl->options != NULL) {
+            ctl->options = cos_http_request_options_copy(subpool, options->ctl->options);
+        }
         thr_params[i].options.config = config;
         thr_params[i].options.ctl = ctl;
         thr_params[i].options.pool = subpool;
@@ -146,13 +141,11 @@ void cos_build_copy_thread_params(cos_upload_copy_thread_params_t *thr_params, i
     cos_http_controller_t *ctl;
     for (; i < part_num; i++) {
         cos_pool_create(&subpool, parent_pool);
-        config = cos_config_create(subpool);
-        cos_str_set(&config->endpoint, options->config->endpoint.data);
-        cos_str_set(&config->access_key_id, options->config->access_key_id.data);
-        cos_str_set(&config->access_key_secret, options->config->access_key_secret.data);
-        cos_str_set(&config->appid, options->config->appid.data);
-        config->is_cname = options->config->is_cname;
+        config = cos_config_copy(subpool, options->config);
         ctl = cos_http_controller_create(subpool, 0);
+        if (ctl != NULL && options->ctl != NULL && options->ctl->options != NULL) {
+            ctl->options = cos_http_request_options_copy(subpool, options->ctl->options);
+        }
         thr_params[i].options.config = config;
         thr_params[i].options.ctl = ctl;
         thr_params[i].options.pool = subpool;
@@ -1007,12 +1000,12 @@ cos_status_t *cos_upload_object_by_part_copy_mt
     //get object size
     cos_table_t *head_resp_headers = NULL;
     cos_request_options_t *head_options = cos_request_options_create(subpool);
-    head_options->config = cos_config_create(subpool);
-    cos_str_set(&head_options->config->endpoint, src_endpoint->data);
-    cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
-    cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
-    cos_str_set(&head_options->config->appid, options->config->appid.data);
+    head_options->config = cos_config_copy(subpool, options->config);
+    cos_str_set(&head_options->config->endpoint, cos_pstrdup(subpool, src_endpoint));
     head_options->ctl = cos_http_controller_create(subpool, 0);
+    if (head_options->ctl != NULL && options->ctl != NULL && options->ctl->options != NULL) {
+        head_options->ctl->options = cos_http_request_options_copy(subpool, options->ctl->options);
+    }
     s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
     if (!cos_status_is_ok(s)) {
         ret = cos_status_dup(parent_pool, s);
@@ -1064,12 +1057,12 @@ cos_status_t *cos_upload_object_by_part_copy_mt
         //get object size
         cos_table_t *head_resp_headers = NULL;
         cos_request_options_t *head_options = cos_request_options_create(subpool);
-        head_options->config = cos_config_create(subpool);
-        cos_str_set(&head_options->config->endpoint, src_endpoint->data);
-        cos_str_set(&head_options->config->access_key_id, options->config->access_key_id.data);
-        cos_str_set(&head_options->config->access_key_secret, options->config->access_key_secret.data);
-        cos_str_set(&head_options->config->appid, options->config->appid.data);
+        head_options->config = cos_config_copy(subpool, options->config);
+        cos_str_set(&head_options->config->endpoint, cos_pstrdup(subpool, src_endpoint));
         head_options->ctl = cos_http_controller_create(subpool, 0);
+        if (head_options->ctl != NULL && options->ctl != NULL && options->ctl->options != NULL) {
+            head_options->ctl->options = cos_http_request_options_copy(subpool, options->ctl->options);
+        }
         s = cos_head_object(head_options, src_bucket, src_object, NULL, &head_resp_headers);
         if (!cos_status_is_ok(s)) {
             ret = cos_status_dup(parent_pool, s);

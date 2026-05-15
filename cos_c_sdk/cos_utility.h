@@ -51,6 +51,7 @@ const char *get_cos_acl_str(cos_acl_e cos_acl);
  * @brief  create cos config including host, port, access_key_id, access_key_secret, is_cos_domain
  **/
 cos_config_t *cos_config_create(cos_pool_t *p);
+cos_config_t *cos_config_copy(cos_pool_t *p, const cos_config_t *src);
 
 /**
  * @brief evaluate config to curl
