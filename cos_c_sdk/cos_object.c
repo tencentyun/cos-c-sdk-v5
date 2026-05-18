@@ -47,7 +47,7 @@ cos_status_t *cos_do_put_object_from_buffer(const cos_request_options_t *options
     }
     cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_body(resp, resp_body);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -106,7 +106,7 @@ cos_status_t *cos_do_put_object_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_body(resp, resp_body);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -155,7 +155,7 @@ cos_status_t *cos_do_get_object_to_buffer(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_body(resp, buffer);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -218,7 +218,7 @@ cos_status_t *cos_do_get_object_to_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     if (is_enable_crc(options) && has_crc_in_response(resp) &&
@@ -252,7 +252,7 @@ cos_status_t *cos_head_object(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     if(s != NULL && s->code == 404) {
         s->error_code = "NosuchKey";
@@ -316,7 +316,7 @@ cos_status_t *cos_do_delete_object(const cos_request_options_t *options,
     }
     (void)cos_get_object_uri(options, bucket, object, req, &error_msg);
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -353,7 +353,7 @@ cos_status_t *cos_append_object_from_buffer(const cos_request_options_t *options
     }
     cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -393,7 +393,7 @@ cos_status_t *cos_do_append_object_from_buffer(const cos_request_options_t *opti
     }
     cos_write_request_body_from_buffer(options->pool, buffer, req, headers);
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
 
@@ -441,7 +441,7 @@ cos_status_t *cos_append_object_from_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -488,7 +488,7 @@ cos_status_t *cos_do_append_object_from_file(const cos_request_options_t *option
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     cos_fill_read_response_body(resp, resp_body);
 
@@ -539,7 +539,7 @@ cos_status_t *cos_put_object_acl(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -569,7 +569,7 @@ cos_status_t *cos_get_object_acl(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
 
@@ -741,7 +741,7 @@ cos_status_t *cos_post_object_restore(const cos_request_options_t *options,
 
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -805,7 +805,7 @@ cos_status_t *cos_put_object_tagging(const cos_request_options_t *options,
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -837,7 +837,7 @@ cos_status_t *cos_get_object_tagging(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
 
@@ -870,7 +870,7 @@ cos_status_t *cos_delete_object_tagging(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
 
     return s;
@@ -1095,7 +1095,7 @@ cos_status_t *ci_image_process(const cos_request_options_t *options,
     }
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
 
@@ -1156,7 +1156,7 @@ cos_status_t *ci_get_qrcode(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 1);
+    s = cos_process_request(options, req, resp, COS_TRUE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) return s;
     *results = ci_create_qrcode_result(options->pool);

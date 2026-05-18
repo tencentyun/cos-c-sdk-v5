@@ -229,12 +229,59 @@ int is_should_switch_domain(const cos_request_options_t *options,
     return COS_FALSE;
 }
 
+static int do_switch_copy_source_domain(const cos_request_options_t *options,
+                                        cos_http_request_t *req) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+    const char *copy_source = NULL;
+    const char *path = NULL;
+    char *copy_source_host = NULL;
+    char *new_copy_source = NULL;
+    size_t host_len = 0;
+    size_t prefix_len = 0;
+    size_t new_size = 0;
+
+    if (req->headers == NULL) {
+        return COSE_OK;
+    }
+
+    copy_source = apr_table_get(req->headers, COS_COPY_SOURCE);
+    if (copy_source == NULL) {
+        return COSE_OK;
+    }
+
+    path = strchr(copy_source, '/');
+    host_len = path == NULL ? strlen(copy_source) : (size_t)(path - copy_source);
+    copy_source_host = apr_pstrndup(options->pool, copy_source, host_len);
+    if (copy_source_host == NULL) {
+        cos_error_log("Failed to allocate memory for copy source host");
+        return COSE_OVER_MEMORY;
+    }
+    if (!is_default_domain(copy_source_host)) {
+        return COSE_OK;
+    }
+
+    prefix_len = host_len - strlen(old_suffix);
+    new_size = prefix_len + strlen(new_suffix) + strlen(copy_source + host_len) + 1;
+    new_copy_source = (char *)cos_palloc(options->pool, new_size);
+    if (new_copy_source == NULL) {
+        cos_error_log("Failed to allocate memory for new copy source");
+        return COSE_OVER_MEMORY;
+    }
+
+    snprintf(new_copy_source, new_size, "%.*s%s%s", (int)prefix_len,
+             copy_source, new_suffix, copy_source + host_len);
+    apr_table_set(req->headers, COS_COPY_SOURCE, new_copy_source);
+    return COSE_OK;
+}
+
 static int do_switch_domain(const cos_request_options_t *options,
                                cos_http_request_t *req) {
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
     char *old_host = req->host;
+    int res = COSE_OK;
 
     if (is_default_domain(old_host)) {
         size_t prefix_len = strlen(old_host) - strlen(old_suffix);
@@ -246,6 +293,11 @@ static int do_switch_domain(const cos_request_options_t *options,
         }
         snprintf(new_host, new_size, "%.*s%s", (int)prefix_len, old_host, new_suffix);
         req->host = new_host;
+    }
+
+    res = do_switch_copy_source_domain(options, req);
+    if (res != COSE_OK) {
+        return res;
     }
     
     return COSE_OK;
@@ -610,6 +662,7 @@ cos_config_t *cos_config_copy(cos_pool_t *p, const cos_config_t *src) {
     config->retry_change_domain = src->retry_change_domain;
     config->retry_times = src->retry_times;
     config->retry_interval_us = src->retry_interval_us;
+    config->omit_cos_sdk_retry_header = src->omit_cos_sdk_retry_header;
 
     return config;
 }
@@ -1673,7 +1726,6 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
     int res = COSE_OK;
     int retry_times = options->config->retry_times;
     int i = 0;
-    char *host = NULL;
     cos_status_t *s;
     cos_retry_file_state_t retry_file_state;
 
@@ -1685,7 +1737,6 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
         return s;
     }
 
-    host = req->host;
     cos_retry_file_state_init(&retry_file_state, req, resp);
 
     options->ctl->retry_count = 0;
@@ -1737,7 +1788,6 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
         }
     }
 
-    req->host = host;
     return s;
 }
 

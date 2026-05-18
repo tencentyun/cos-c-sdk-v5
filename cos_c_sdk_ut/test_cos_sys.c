@@ -13,6 +13,17 @@
 extern int starts_with(const cos_string_t *str, const char *prefix);
 extern int cos_curl_code_to_status(CURLcode code);
 
+static void make_body_from_string(cos_pool_t *pool, cos_list_t *body, const char *buffer) {
+    cos_buf_t *b;
+    int len = strlen(buffer);
+
+    cos_list_init(body);
+    b = cos_create_buf(pool, len);
+    memcpy(b->pos, buffer, len);
+    b->last += len;
+    cos_list_add_tail(&b->node, body);
+}
+
 /*
  * cos_status.h
  */
@@ -20,76 +31,113 @@ void test_cos_status_parse_from_body(CuTest *tc) {
     cos_pool_t *pool;
     apr_pool_create(&pool, NULL);
 
-    // 调用要测试的函数
     {
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, NULL, 200,COS_FALSE, &s);
-        printf("test_cos_status_parse_from_body 200 ok\n");
+        memset(&s, 0, sizeof(cos_status_t));
+        cos_status_parse_from_body(pool, NULL, 200, COS_FALSE, &s);
+        CuAssertIntEquals(tc, 200, s.code);
+        CuAssertPtrEquals(tc, NULL, s.error_code);
     }
     {
         cos_list_t body;
-        cos_list_init(&body);
+        const char *buffer = "<Error><Code>InternalError</Code><Message>error message</Message></Error>";
+        cos_status_t s;
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 200, COS_FALSE, &s);
+        CuAssertIntEquals(tc, 200, s.code);
+        CuAssertPtrEquals(tc, NULL, s.error_code);
+    }
+    {
+        cos_list_t body;
+        const char *buffer = "<Error><Code>InternalError</Code><Message>error message</Message></Error>";
+        cos_status_t s;
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 200, COS_TRUE, &s);
+        CuAssertIntEquals(tc, COSE_SERVICE_ERROR, s.code);
+        CuAssertStrEquals(tc, COS_INTERNAL_ERROR_CODE, s.error_code);
+        CuAssertStrEquals(tc, "error message", s.error_msg);
+    }
+    {
+        cos_list_t body;
+        const char *buffer = "<?xml version='1.0' encoding='utf-8' ?><Error><Code>InternalError</Code><Message>error message</Message></Error>";
+        cos_status_t s;
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 200, COS_TRUE, &s);
+        CuAssertIntEquals(tc, COSE_SERVICE_ERROR, s.code);
+        CuAssertStrEquals(tc, COS_INTERNAL_ERROR_CODE, s.error_code);
+        CuAssertStrEquals(tc, "error message", s.error_msg);
+    }
+    {
+        cos_list_t body;
+        const char *buffer = "<CopyObjectResult><ETag>test</ETag></CopyObjectResult>";
+        cos_status_t s;
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 200, COS_TRUE, &s);
+        CuAssertIntEquals(tc, 200, s.code);
+        CuAssertPtrEquals(tc, NULL, s.error_code);
+    }
+    {
+        cos_list_t body;
+        const char *buffer = "<Error><Code>InternalError</Code><Message>error message</Message></Error>";
+        cos_status_t s;
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 500, COS_FALSE, &s);
+        CuAssertIntEquals(tc, 500, s.code);
+        CuAssertStrEquals(tc, COS_INTERNAL_ERROR_CODE, s.error_code);
+        CuAssertStrEquals(tc, "error message", s.error_msg);
+    }
+    {
+        cos_list_t body;
         const char *buffer = "<root><Status>active</Status><Name>test</Name><Type>test</Type><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
-
-        cos_buf_t *b;
-        int len = strlen(buffer);
-        b = cos_create_buf(pool, len);
-        memcpy(b->pos, buffer, len);
-        b->last += len;
-        cos_list_add_tail(&b->node, &body);
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
-        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
-        printf("test_cos_status_parse_from_body 400 1ok\n");
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
+        CuAssertIntEquals(tc, 400, s.code);
+        CuAssertStrEquals(tc, COS_UNKNOWN_ERROR_CODE, s.error_code);
     }
     {
         cos_list_t body;
-        cos_list_init(&body);
         const char *buffer = "<root><Status>active</Status><Name>test</Name><ETag>test</ETag><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+        int res;
 
-        cos_buf_t *b;
-        int len = strlen(buffer);
-        b = cos_create_buf(pool, len);
-        memcpy(b->pos, buffer, len);
-        b->last += len;
-        cos_list_add_tail(&b->node, &body);
-        cos_status_t s;
-        int res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
-        CuAssertIntEquals(tc, res, COS_TRUE);
-        printf("test_cos_status_parse_from_body 400 1ok\n");
+        make_body_from_string(pool, &body, buffer);
+        res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
+        CuAssertIntEquals(tc, COS_TRUE, res);
     }
     {
         cos_list_t body;
-        cos_list_init(&body);
         const char *buffer = "<root><Status>active</Status><Name>test</Name><ForcedReplacement>test</ForcedReplacement></DomainRule></root>";
+        int res;
 
-        cos_buf_t *b;
-        int len = strlen(buffer);
-        b = cos_create_buf(pool, len);
-        memcpy(b->pos, buffer, len);
-        b->last += len;
-        cos_list_add_tail(&b->node, &body);
-        cos_status_t s;
-        int res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
-        CuAssertIntEquals(tc, res, COS_FALSE);
-        printf("test_cos_status_parse_from_body 400 1ok\n");
+        make_body_from_string(pool, &body, buffer);
+        res = check_status_with_resp_body(&body, strlen(buffer), "ETag");
+        CuAssertIntEquals(tc, COS_FALSE, res);
     }
     {
         cos_list_t body;
-        cos_list_init(&body);
         const char *buffer = "<root><Status>active</Status></root>";
-
-        cos_buf_t *b;
-        int len = strlen(buffer);
-        b = cos_create_buf(pool, len);
-        memcpy(b->pos, buffer, len);
-        b->last += len;
-        cos_list_add_tail(&b->node, &body);
         cos_status_t s;
-        int res = cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
-        CuAssertIntEquals(tc, s.error_code, COS_UNKNOWN_ERROR_CODE);
-        printf("test_cos_status_parse_from_body 400 2ok\n");
+
+        memset(&s, 0, sizeof(cos_status_t));
+        make_body_from_string(pool, &body, buffer);
+        cos_status_parse_from_body(pool, &body, 400, COS_FALSE, &s);
+        CuAssertIntEquals(tc, 400, s.code);
+        CuAssertStrEquals(tc, COS_UNKNOWN_ERROR_CODE, s.error_code);
     }
+
+    apr_pool_destroy(pool);
     printf("test_cos_status_parse_from_body ok\n");
 }
 

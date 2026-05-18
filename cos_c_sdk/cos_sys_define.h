@@ -25,6 +25,18 @@
 # define COS_CPP_END
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define COS_DEPRECATED            __attribute__((deprecated))
+#  define COS_DEPRECATED_MSG(msg)   __attribute__((deprecated(msg)))
+#elif defined(_MSC_VER)
+#  define COS_DEPRECATED            __declspec(deprecated)
+#  define COS_DEPRECATED_MSG(msg)   __declspec(deprecated(msg))
+#else
+#  define COS_DEPRECATED
+#  define COS_DEPRECATED_MSG(msg)
+#endif
+
+
 typedef enum {
     HTTP_GET,
     HTTP_HEAD,
