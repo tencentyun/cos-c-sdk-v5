@@ -351,7 +351,7 @@ int cos_curl_code_to_status(CURLcode code) {
         case CURLE_OPERATION_TIMEDOUT:
             return COSE_CONNECTION_FAILED;
         case CURLE_PARTIAL_FILE:
-            return COSE_OK;
+            return COSE_CONNECTION_FAILED;
         case CURLE_SSL_CACERT:
             return COSE_FAILED_VERIFICATION;
         default:

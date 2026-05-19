@@ -275,8 +275,8 @@ static int do_switch_copy_source_domain(const cos_request_options_t *options,
     return COSE_OK;
 }
 
-static int do_switch_domain(const cos_request_options_t *options,
-                               cos_http_request_t *req) {
+int do_switch_domain(const cos_request_options_t *options,
+                     cos_http_request_t *req) {
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
@@ -1578,24 +1578,16 @@ void reset_list_pos(cos_list_t *list) {
     }
 }
 
-typedef struct {
-    int has_req_file;
-    int64_t req_file_pos;
-    int64_t req_file_last;
-    int has_resp_file;
-    int64_t resp_file_pos;
-    int64_t resp_file_last;
-} cos_retry_file_state_t;
-
-static void cos_retry_file_state_init(cos_retry_file_state_t *state,
-                                      const cos_http_request_t *req,
-                                      const cos_http_response_t *resp) {
+void cos_retry_file_state_init(cos_retry_file_state_t *state,
+                               const cos_http_request_t *req,
+                               const cos_http_response_t *resp) {
     state->has_req_file = COS_FALSE;
     state->req_file_pos = 0;
     state->req_file_last = 0;
     state->has_resp_file = COS_FALSE;
     state->resp_file_pos = 0;
     state->resp_file_last = 0;
+    state->req_init_crc = req->crc64;
 
     if (req->file_buf != NULL && req->file_path != NULL) {
         state->has_req_file = COS_TRUE;
@@ -1652,7 +1644,11 @@ static int cos_retry_reset_request_file(cos_pool_t *pool,
 static int cos_retry_reset_response_file(cos_pool_t *pool,
                                          cos_http_response_t *resp,
                                          const cos_retry_file_state_t *state) {
-    if (!state->has_resp_file || resp->write_body != cos_write_http_body_file_part) {
+    int res;
+    int is_resp_file_part = resp->write_body == cos_write_http_body_file_part;
+    int is_resp_file = resp->write_body == cos_write_http_body_file;
+
+    if (!state->has_resp_file || (!is_resp_file_part && !is_resp_file)) {
         return COSE_OK;
     }
 
@@ -1661,20 +1657,30 @@ static int cos_retry_reset_response_file(cos_pool_t *pool,
     }
 
     if (resp->file_buf->file == NULL) {
+        if (is_resp_file) {
+            return cos_open_file_for_write(pool, resp->file_path, resp->file_buf);
+        }
         return cos_open_file_for_range_write(pool, resp->file_path,
                                              state->resp_file_pos,
                                              state->resp_file_last,
                                              resp->file_buf);
     }
 
+    if (is_resp_file) {
+        res = apr_file_trunc(resp->file_buf->file, state->resp_file_pos);
+        if (res != APR_SUCCESS) {
+            return COSE_FILE_TRUNC_ERROR;
+        }
+    }
+
     return cos_retry_seek_file_buf(resp->file_buf, state->resp_file_pos, state->resp_file_last);
 }
 
-static int cos_retry_reset_state(cos_pool_t *pool,
-                                 cos_http_controller_t *ctl,
-                                 cos_http_request_t *req,
-                                 cos_http_response_t *resp,
-                                 const cos_retry_file_state_t *state)
+int cos_retry_reset_state(cos_pool_t *pool,
+                          cos_http_controller_t *ctl,
+                          cos_http_request_t *req,
+                          cos_http_response_t *resp,
+                          const cos_retry_file_state_t *state)
 {
     int res = COSE_OK;
     cos_http_controller_ex_t *ctl_ex = (cos_http_controller_ex_t *)ctl;
@@ -1688,7 +1694,7 @@ static int cos_retry_reset_state(cos_pool_t *pool,
     resp->content_length = 0;
     resp->crc64 = 0;
 
-    req->crc64 = 0;
+    req->crc64 = state->req_init_crc;
     req->consumed_bytes = 0;
     reset_list_pos(&req->body);
 

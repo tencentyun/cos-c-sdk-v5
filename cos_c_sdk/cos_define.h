@@ -164,6 +164,16 @@ typedef struct {
 } cos_request_options_t;
 
 typedef struct {
+    int has_req_file;
+    int64_t req_file_pos;
+    int64_t req_file_last;
+    int has_resp_file;
+    int64_t resp_file_pos;
+    int64_t resp_file_last;
+    uint64_t req_init_crc;
+} cos_retry_file_state_t;
+
+typedef struct {
     cos_list_t node;
     cos_string_t type;
     cos_string_t id;
