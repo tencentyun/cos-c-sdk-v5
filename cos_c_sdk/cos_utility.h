@@ -27,14 +27,15 @@ COS_CPP_START
 **/
 int is_cos_domain(const cos_string_t *str);
 
-int is_should_retry(const cos_status_t *s, const char *str);
+COS_DEPRECATED int is_should_retry(const cos_status_t *s, const char *str);
 int is_default_domain(const char *str);
-int is_should_retry_endpoint(const cos_status_t *s, const char *str);
+COS_DEPRECATED int is_should_retry_endpoint(const cos_status_t *s, const char *str);
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *target);
+int object_key_simplify_check(const char *object_path);
 int is_default_endpoint(const char *str);
 int change_host_suffix(char **endpoint);
-void change_endpoint_suffix(cos_string_t *endpoint);
-void clear_change_endpoint_suffix(cos_string_t *endpoint, char *host);
+COS_DEPRECATED void change_endpoint_suffix(cos_string_t *endpoint);
+COS_DEPRECATED void clear_change_endpoint_suffix(cos_string_t *endpoint, char *host);
 /**
  * @brief  check hostname is ip.
  **/
@@ -51,6 +52,7 @@ const char *get_cos_acl_str(cos_acl_e cos_acl);
  * @brief  create cos config including host, port, access_key_id, access_key_secret, is_cos_domain
  **/
 cos_config_t *cos_config_create(cos_pool_t *p);
+cos_config_t *cos_config_copy(cos_pool_t *p, const cos_config_t *src);
 
 /**
  * @brief evaluate config to curl
@@ -116,7 +118,7 @@ void cos_init_signed_url_request(const cos_request_options_t *options, const cos
  * @brief  cos send request
  **/
 cos_status_t *cos_send_request(cos_http_controller_t *ctl, cos_http_request_t *req,
-                               cos_http_response_t *resp);
+                               cos_http_response_t *resp, int need_check_2xx_body);
 
 /**
  * @brief process cos request including sign request, send request, get response

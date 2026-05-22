@@ -154,6 +154,7 @@ typedef struct {
     int retry_change_domain;
     int retry_times;
     int retry_interval_us;
+    int omit_cos_sdk_retry_header;
 } cos_config_t;
 
 typedef struct {
@@ -161,6 +162,16 @@ typedef struct {
     cos_http_controller_t *ctl; /*< cos http controller, more see cos_transport.h */
     cos_pool_t *pool;
 } cos_request_options_t;
+
+typedef struct {
+    int has_req_file;
+    int64_t req_file_pos;
+    int64_t req_file_last;
+    int has_resp_file;
+    int64_t resp_file_pos;
+    int64_t resp_file_last;
+    uint64_t req_init_crc;
+} cos_retry_file_state_t;
 
 typedef struct {
     cos_list_t node;

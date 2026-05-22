@@ -106,6 +106,29 @@ cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p) {
     return options;
 }
 
+cos_http_request_options_t *cos_http_request_options_copy(cos_pool_t *p, const cos_http_request_options_t *src) {
+    cos_http_request_options_t *options;
+
+    options = cos_http_request_options_create(p);
+    if (src == NULL) {
+        return options;
+    }
+
+    options->speed_limit = src->speed_limit;
+    options->speed_time = src->speed_time;
+    options->dns_cache_timeout = src->dns_cache_timeout;
+    options->connect_timeout = src->connect_timeout;
+    options->max_memory_size = src->max_memory_size;
+    options->enable_crc = src->enable_crc;
+    options->enable_md5 = src->enable_md5;
+    options->host_port = src->host_port;
+    options->proxy_host = src->proxy_host == NULL ? NULL : apr_pstrdup(p, src->proxy_host);
+    options->proxy_auth = src->proxy_auth == NULL ? NULL : apr_pstrdup(p, src->proxy_auth);
+    options->host_ip = src->host_ip == NULL ? NULL : apr_pstrdup(p, src->host_ip);
+
+    return options;
+}
+
 cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p) {
     return (cos_http_transport_options_t *)cos_pcalloc(p, sizeof(cos_http_transport_options_t));
 }
@@ -124,7 +147,7 @@ cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner) {
     ctl = (cos_http_controller_t *)cos_pcalloc(p, sizeof(cos_http_controller_ex_t));
     ctl->pool = p;
     ctl->owner = owner;
-    ctl->options = cos_default_http_request_options;
+    ctl->options = cos_http_request_options_copy(p, cos_default_http_request_options);
 
     return ctl;
 }

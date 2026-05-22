@@ -59,7 +59,7 @@ cos_status_t *ci_create_video_auditing_job(const cos_request_options_t *options,
     build_video_auditing_job_body(options->pool, job_options, &body);
     cos_write_request_body_from_buffer(options->pool, &body, req, headers);
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         *job_result = NULL;
@@ -106,7 +106,7 @@ cos_status_t *ci_get_auditing_job(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -177,7 +177,7 @@ cos_status_t *ci_describe_media_buckets(const cos_request_options_t *options,
     }
     apr_table_addn(headers, COS_CONTENT_TYPE, "application/xml");
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
@@ -244,7 +244,7 @@ cos_status_t *ci_get_snapshot_to_buffer(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_body(resp, buffer);
     cos_fill_read_response_header(resp, resp_headers);
 
@@ -284,7 +284,7 @@ cos_status_t *ci_get_snapshot_to_file(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_header(resp, resp_headers);
 
     cos_temp_file_rename(s, tmp_filename.data, filename->data, options->pool);
@@ -321,7 +321,7 @@ cos_status_t *ci_get_media_info(const cos_request_options_t *options,
         return s;
     }
 
-    s = cos_process_request(options, req, resp, 0);
+    s = cos_process_request(options, req, resp, COS_FALSE);
     cos_fill_read_response_header(resp, resp_headers);
     if (!cos_status_is_ok(s)) {
         return s;
