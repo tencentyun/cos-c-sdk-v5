@@ -5,6 +5,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 set(CMAKE_VERSION 1.0.1)
 
 option(BUILD_UNITTEST "Build unittest" OFF)
+option(COS_ENABLE_TCP_KEEPALIVE "Enable TCP keepalive for curl connections" ON)
+set(COS_TCP_KEEPIDLE 30)    # tcp keepalive idle time, 30s
+set(COS_TCP_KEEPINTVL 30)   # tcp keepalive interval, 30s
+option(COS_ENABLE_MAXAGE_CONN "Enable maxage conn for curl connections" ON)
+set(COS_MAXAGE_CONN 90)    # maxage conn time, 90s
+option(COS_ENABLE_RETRY_FRESH_CONNECT "Enable retry fresh connect for curl connections" ON)
+
 if(MOCK_IS_SHOULD_RETRY)
     # 添加-DMOCK_IS_SHOULD_RETRY
     add_definitions(-DMOCK_IS_SHOULD_RETRY)
@@ -136,4 +143,25 @@ if(BUILD_UNITTEST)
     message(STATUS "Build unittest")
 
     add_subdirectory(cos_c_sdk_ut)
+endif()
+
+if(COS_ENABLE_TCP_KEEPALIVE)
+    message(STATUS "Enable TCP keepalive for curl connections")
+    add_definitions(-DCOS_ENABLE_TCP_KEEPALIVE=1)
+    message(STATUS "Set TCP keepalive idle time to ${COS_TCP_KEEPIDLE} seconds")
+    add_definitions(-DCOS_TCP_KEEPIDLE=${COS_TCP_KEEPIDLE}L)
+    message(STATUS "Set TCP keepalive interval to ${COS_TCP_KEEPINTVL} seconds")
+    add_definitions(-DCOS_TCP_KEEPINTVL=${COS_TCP_KEEPINTVL}L)
+endif()
+
+if(COS_ENABLE_MAXAGE_CONN)
+    message(STATUS "Enable maxage conn for curl connections")
+    add_definitions(-DCOS_ENABLE_MAXAGE_CONN=1)
+    message(STATUS "Set maxage conn to ${COS_MAXAGE_CONN} seconds")
+    add_definitions(-DCOS_MAXAGE_CONN=${COS_MAXAGE_CONN}L)
+endif()
+
+if(COS_ENABLE_RETRY_FRESH_CONNECT)
+    message(STATUS "Enable retry fresh connect for curl connections")
+    add_definitions(-DCOS_ENABLE_RETRY_FRESH_CONNECT=1)
 endif()

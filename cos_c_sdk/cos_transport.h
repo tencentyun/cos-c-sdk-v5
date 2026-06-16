@@ -64,6 +64,7 @@ typedef struct cos_http_controller_ex_s {
     // private
     int error_code;
     char *reason; // can't modify
+    int need_fresh_connect;
 } cos_http_controller_ex_t;
 
 typedef enum {

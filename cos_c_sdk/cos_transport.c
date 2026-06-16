@@ -4,6 +4,7 @@
 #include "cos_http_io.h"
 #include "cos_transport.h"
 #include "cos_crc64.h"
+#include <curl/curl.h>
 
 int cos_curl_code_to_status(CURLcode code);
 static void cos_init_curl_headers(cos_curl_http_transport_t *t);
@@ -375,6 +376,7 @@ int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, vo
 }
 int cos_curl_transport_setup(cos_curl_http_transport_t *t) {
     CURLcode code;
+    int need_fresh_connect = COS_FALSE;
 
 #define curl_easy_setopt_safe(opt, val)                                 \
     if ((code = curl_easy_setopt(t->curl, opt, val)) != CURLE_OK) {    \
@@ -383,6 +385,20 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t) {
             cos_error_log("curl_easy_setopt failed, code:%d %s.", code, t->controller->reason); \
             return COSE_FAILED_INITIALIZE;                              \
     }
+
+#if COS_ENABLE_RETRY_FRESH_CONNECT
+    need_fresh_connect = t->controller->need_fresh_connect;
+    if (need_fresh_connect) {
+        curl_easy_cleanup(t->curl);
+        t->curl = curl_easy_init();
+        if (t->curl == NULL) {
+            t->controller->reason = apr_pstrdup(t->pool, "curl_easy_init failed");
+            t->controller->error_code = COSE_FAILED_INITIALIZE;
+            cos_error_log("curl_easy_init failed for fresh connect retry.");
+            return COSE_FAILED_INITIALIZE;
+        }
+    }
+#endif
 
     curl_easy_setopt_safe(CURLOPT_PRIVATE, t);
     if (cos_log_level >= COS_LOG_DEBUG) {
@@ -394,6 +410,22 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t) {
 
     curl_easy_setopt_safe(CURLOPT_READDATA, t);
     curl_easy_setopt_safe(CURLOPT_READFUNCTION, t->read_callback);
+
+#if COS_ENABLE_TCP_KEEPALIVE && LIBCURL_VERSION_NUM >= 0x071900
+    curl_easy_setopt_safe(CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt_safe(CURLOPT_TCP_KEEPIDLE, COS_TCP_KEEPIDLE);
+    curl_easy_setopt_safe(CURLOPT_TCP_KEEPINTVL, COS_TCP_KEEPINTVL);
+#endif
+#if COS_ENABLE_MAXAGE_CONN && LIBCURL_VERSION_NUM >= 0x074100
+    curl_easy_setopt_safe(CURLOPT_MAXAGE_CONN, COS_MAXAGE_CONN);
+#endif
+#if COS_ENABLE_RETRY_FRESH_CONNECT && LIBCURL_VERSION_NUM >= 0x070700
+    if (need_fresh_connect) {
+        curl_easy_setopt_safe(CURLOPT_FRESH_CONNECT, 1L);
+        curl_easy_setopt_safe(CURLOPT_FORBID_REUSE, 1L);
+        t->controller->need_fresh_connect = COS_FALSE;
+    }
+#endif
 
     curl_easy_setopt_safe(CURLOPT_WRITEDATA, t);
     curl_easy_setopt_safe(CURLOPT_WRITEFUNCTION, t->write_callback);
