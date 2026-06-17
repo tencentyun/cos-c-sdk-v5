@@ -1286,6 +1286,245 @@ void test_cos_retry_file_state_save_and_reset(CuTest *tc) {
     printf("test_cos_retry_file_state_save_and_reset ok\n");
 }
 
+typedef enum {
+    CONN_MANAGE_MOCK_IO_ERROR = 1,
+    CONN_MANAGE_MOCK_5XX = 2,
+} conn_manage_mock_scenario_e;
+
+static cos_http_transport_create_pt conn_manage_saved_transport_create = NULL;
+static cos_http_transport_perform_pt conn_manage_saved_transport_perform = NULL;
+static conn_manage_mock_scenario_e conn_manage_mock_scenario;
+static int conn_manage_mock_call_count = 0;
+static int conn_manage_mock_seen_fresh_connect = COS_FALSE;
+static int conn_manage_mock_seen_unexpected_fresh_connect = COS_FALSE;
+
+static cos_http_transport_t *conn_manage_mock_transport_create(cos_pool_t *p) {
+    return (cos_http_transport_t *)cos_pcalloc(p, sizeof(cos_http_transport_t));
+}
+
+static int conn_manage_mock_transport_perform(cos_http_transport_t *t) {
+    cos_http_controller_ex_t *ctl_ex = t->controller;
+    conn_manage_mock_call_count++;
+
+    if (conn_manage_mock_scenario == CONN_MANAGE_MOCK_IO_ERROR) {
+        if (conn_manage_mock_call_count == 1) {
+            return COSE_CONNECTION_FAILED;
+        }
+        if (ctl_ex->need_fresh_connect) {
+            conn_manage_mock_seen_fresh_connect = COS_TRUE;
+            ctl_ex->need_fresh_connect = COS_FALSE;
+        }
+        t->resp->status = 200;
+        return COSE_OK;
+    }
+
+    if (ctl_ex->need_fresh_connect) {
+        conn_manage_mock_seen_unexpected_fresh_connect = COS_TRUE;
+    }
+    t->resp->status = conn_manage_mock_call_count == 1 ? 500 : 200;
+    return COSE_OK;
+}
+
+static void conn_manage_mock_transport_enable(conn_manage_mock_scenario_e scenario) {
+    conn_manage_saved_transport_create = cos_http_transport_create;
+    conn_manage_saved_transport_perform = cos_http_transport_perform;
+    conn_manage_mock_scenario = scenario;
+    conn_manage_mock_call_count = 0;
+    conn_manage_mock_seen_fresh_connect = COS_FALSE;
+    conn_manage_mock_seen_unexpected_fresh_connect = COS_FALSE;
+    cos_http_transport_create = conn_manage_mock_transport_create;
+    cos_http_transport_perform = conn_manage_mock_transport_perform;
+}
+
+static void conn_manage_mock_transport_restore() {
+    cos_http_transport_create = conn_manage_saved_transport_create;
+    cos_http_transport_perform = conn_manage_saved_transport_perform;
+}
+
+static void conn_manage_init_request(CuTest *tc,
+                                     cos_pool_t *p,
+                                     cos_request_options_t **options,
+                                     cos_http_request_t **req,
+                                     cos_http_response_t **resp) {
+    int res;
+    char *error_msg = NULL;
+    cos_string_t bucket;
+    cos_string_t object;
+
+    *options = cos_request_options_create(p);
+    (*options)->config = cos_config_create(p);
+    cos_str_set(&(*options)->config->endpoint, "http://example.com");
+    cos_str_set(&(*options)->config->access_key_id, "test_access_key_id");
+    cos_str_set(&(*options)->config->access_key_secret, "test_access_key_secret");
+    cos_str_set(&(*options)->config->appid, "1250000000");
+    (*options)->config->is_cname = COS_TRUE;
+    (*options)->config->retry_times = 1;
+    (*options)->config->retry_interval_us = 0;
+    (*options)->ctl = cos_http_controller_create(p, 0);
+
+    cos_str_set(&bucket, "test-bucket-1250000000");
+    cos_str_set(&object, "test-object");
+    res = cos_init_object_request(*options, &bucket, &object, HTTP_GET, req,
+                                  cos_table_make(p, 1), cos_table_make(p, 1),
+                                  NULL, 0, resp, &error_msg);
+    CuAssertIntEquals(tc, COS_TRUE, res);
+}
+
+void test_cos_retry_fresh_connect_on_io_error(CuTest *tc) {
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_status_t *s = NULL;
+
+    cos_pool_create(&p, NULL);
+    conn_manage_init_request(tc, p, &options, &req, &resp);
+
+    conn_manage_mock_transport_enable(CONN_MANAGE_MOCK_IO_ERROR);
+    s = cos_process_request(options, req, resp, COS_TRUE);
+    conn_manage_mock_transport_restore();
+
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 1, options->ctl->retry_count);
+    CuAssertIntEquals(tc, 2, conn_manage_mock_call_count);
+    CuAssertIntEquals(tc, COS_TRUE, conn_manage_mock_seen_fresh_connect);
+    CuAssertIntEquals(tc, COS_FALSE, ((cos_http_controller_ex_t *)options->ctl)->need_fresh_connect);
+
+    cos_pool_destroy(p);
+    printf("test_cos_retry_fresh_connect_on_io_error ok\n");
+}
+
+void test_cos_retry_fresh_connect_not_set_on_5xx(CuTest *tc) {
+    cos_pool_t *p = NULL;
+    cos_request_options_t *options = NULL;
+    cos_http_request_t *req = NULL;
+    cos_http_response_t *resp = NULL;
+    cos_status_t *s = NULL;
+
+    cos_pool_create(&p, NULL);
+    conn_manage_init_request(tc, p, &options, &req, &resp);
+
+    conn_manage_mock_transport_enable(CONN_MANAGE_MOCK_5XX);
+    s = cos_process_request(options, req, resp, COS_TRUE);
+    conn_manage_mock_transport_restore();
+
+    CuAssertIntEquals(tc, 200, s->code);
+    CuAssertIntEquals(tc, 1, options->ctl->retry_count);
+    CuAssertIntEquals(tc, 2, conn_manage_mock_call_count);
+    CuAssertIntEquals(tc, COS_FALSE, conn_manage_mock_seen_unexpected_fresh_connect);
+    CuAssertIntEquals(tc, COS_FALSE, ((cos_http_controller_ex_t *)options->ctl)->need_fresh_connect);
+
+    cos_pool_destroy(p);
+    printf("test_cos_retry_fresh_connect_not_set_on_5xx ok\n");
+}
+
+void test_cos_request_stack_reuse_unexpired_curl(CuTest *tc) {
+    CURL *request = NULL;
+    CURL *reused_request = NULL;
+
+    request = cos_request_get();
+    CuAssertPtrNotNull(tc, request);
+    request_release(request);
+
+    reused_request = cos_request_get();
+    CuAssertPtrEquals(tc, request, reused_request);
+    curl_easy_cleanup(reused_request);
+
+    printf("test_cos_request_stack_reuse_unexpired_curl ok\n");
+}
+
+void test_cos_request_stack_release2_reuse_success_curl(CuTest *tc) {
+    CURL *request = NULL;
+    CURL *reused_request = NULL;
+    cos_curl_http_transport_t t;
+
+    memset(&t, 0, sizeof(cos_curl_http_transport_t));
+    request = cos_request_get();
+    CuAssertPtrNotNull(tc, request);
+
+    t.curl = request;
+    t.curl_code = CURLE_OK;
+    request_release2(&t);
+
+    reused_request = cos_request_get();
+    CuAssertPtrEquals(tc, request, reused_request);
+    curl_easy_cleanup(reused_request);
+
+    printf("test_cos_request_stack_release2_reuse_success_curl ok\n");
+}
+
+static cos_http_transport_t *conn_manage_create_real_transport(CuTest *tc,
+                                                              cos_pool_t *p,
+                                                              cos_http_controller_t **ctl) {
+    cos_http_transport_t *transport;
+
+    transport = cos_curl_http_transport_create(p);
+    CuAssertPtrNotNull(tc, transport);
+    transport->req = cos_http_request_create(p);
+    transport->resp = cos_http_response_create(p);
+    *ctl = cos_http_controller_create(p, 0);
+    (*ctl)->options->connect_timeout = 1;
+    (*ctl)->options->speed_time = 1;
+    transport->controller = (cos_http_controller_ex_t *)(*ctl);
+    transport->req->method = HTTP_HEAD;
+    transport->req->signed_url = "http://127.0.0.1:1/";
+
+    return transport;
+}
+
+void test_cos_curl_transport_perform_sets_conn_options(CuTest *tc) {
+    int res;
+    cos_pool_t *p = NULL;
+    cos_http_controller_t *ctl = NULL;
+    cos_http_transport_t *transport = NULL;
+
+    cos_pool_create(&p, NULL);
+    transport = conn_manage_create_real_transport(tc, p, &ctl);
+    res = cos_curl_http_transport_perform(transport);
+    CuAssertTrue(tc, res != COSE_FAILED_INITIALIZE);
+    CuAssertIntEquals(tc, COS_FALSE, ((cos_http_controller_ex_t *)ctl)->need_fresh_connect);
+
+    cos_pool_destroy(p);
+    printf("test_cos_curl_transport_perform_sets_conn_options ok\n");
+}
+
+void test_cos_curl_transport_perform_fresh_connect_clears_flag(CuTest *tc) {
+    int res;
+    cos_pool_t *p = NULL;
+    cos_http_controller_t *ctl = NULL;
+    cos_http_transport_t *transport = NULL;
+
+    cos_pool_create(&p, NULL);
+    transport = conn_manage_create_real_transport(tc, p, &ctl);
+    ((cos_http_controller_ex_t *)ctl)->need_fresh_connect = COS_TRUE;
+    res = cos_curl_http_transport_perform(transport);
+    CuAssertTrue(tc, res != COSE_FAILED_INITIALIZE);
+    CuAssertIntEquals(tc, COS_FALSE, ((cos_http_controller_ex_t *)ctl)->need_fresh_connect);
+
+    cos_pool_destroy(p);
+    printf("test_cos_curl_transport_perform_fresh_connect_clears_flag ok\n");
+}
+
+void test_cos_curl_transport_perform_with_null_curl(CuTest *tc) {
+    int res;
+    cos_pool_t *p = NULL;
+    cos_http_controller_t *ctl = NULL;
+    cos_curl_http_transport_t t;
+
+    cos_pool_create(&p, NULL);
+    memset(&t, 0, sizeof(cos_curl_http_transport_t));
+    ctl = cos_http_controller_create(p, 0);
+    t.pool = p;
+    t.controller = (cos_http_controller_ex_t *)ctl;
+
+    res = cos_curl_http_transport_perform((cos_http_transport_t *)&t);
+    CuAssertIntEquals(tc, COSE_FAILED_INITIALIZE, res);
+    CuAssertStrEquals(tc, "curl_easy_init failed", ((cos_http_controller_ex_t *)ctl)->reason);
+
+    cos_pool_destroy(p);
+    printf("test_cos_curl_transport_perform_with_null_curl ok\n");
+}
+
 CuSuite *test_cos_sys() {
     CuSuite* suite = CuSuiteNew();
 
@@ -1328,6 +1567,13 @@ CuSuite *test_cos_sys() {
     SUITE_ADD_TEST(suite, test_cos_http_controller_create_options_isolated);
     SUITE_ADD_TEST(suite, test_cos_config_copy_isolated);
     SUITE_ADD_TEST(suite, test_cos_retry_file_state_save_and_reset);
+    SUITE_ADD_TEST(suite, test_cos_retry_fresh_connect_on_io_error);
+    SUITE_ADD_TEST(suite, test_cos_retry_fresh_connect_not_set_on_5xx);
+    SUITE_ADD_TEST(suite, test_cos_request_stack_reuse_unexpired_curl);
+    SUITE_ADD_TEST(suite, test_cos_request_stack_release2_reuse_success_curl);
+    SUITE_ADD_TEST(suite, test_cos_curl_transport_perform_sets_conn_options);
+    SUITE_ADD_TEST(suite, test_cos_curl_transport_perform_fresh_connect_clears_flag);
+    SUITE_ADD_TEST(suite, test_cos_curl_transport_perform_with_null_curl);
 
     return suite;
 }
