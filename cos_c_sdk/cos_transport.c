@@ -386,6 +386,14 @@ int cos_curl_transport_setup(cos_curl_http_transport_t *t) {
             return COSE_FAILED_INITIALIZE;                              \
     }
 
+    if (t->curl == NULL) {
+        t->controller->reason = apr_pstrdup(t->pool, "curl_easy_init failed");
+        t->controller->error_code = COSE_FAILED_INITIALIZE;
+        cos_error_log("curl_easy_init failed.");
+        return COSE_FAILED_INITIALIZE;
+    }
+
+
 #if COS_ENABLE_RETRY_FRESH_CONNECT
     need_fresh_connect = t->controller->need_fresh_connect;
     if (need_fresh_connect) {

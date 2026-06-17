@@ -6,10 +6,10 @@ set(CMAKE_VERSION 1.0.1)
 
 option(BUILD_UNITTEST "Build unittest" OFF)
 option(COS_ENABLE_TCP_KEEPALIVE "Enable TCP keepalive for curl connections" ON)
-set(COS_TCP_KEEPIDLE 30)    # tcp keepalive idle time, 30s
-set(COS_TCP_KEEPINTVL 30)   # tcp keepalive interval, 30s
+set(COS_TCP_KEEPIDLE 30 CACHE STRING "tcp keepalive idle time(seconds)")
+set(COS_TCP_KEEPINTVL 30 CACHE STRING "tcp keepalive interval(seconds)")
 option(COS_ENABLE_MAXAGE_CONN "Enable maxage conn for curl connections" ON)
-set(COS_MAXAGE_CONN 90)    # maxage conn time, 90s
+set(COS_MAXAGE_CONN 90 CACHE STRING "maxage conn time(seconds)")
 option(COS_ENABLE_RETRY_FRESH_CONNECT "Enable retry fresh connect for curl connections" ON)
 
 if(MOCK_IS_SHOULD_RETRY)
