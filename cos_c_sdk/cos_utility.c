@@ -1732,10 +1732,13 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
     int res = COSE_OK;
     int retry_times = options->config->retry_times;
     int i = 0;
+    int is_io_error = COS_FALSE;
     cos_status_t *s;
     cos_retry_file_state_t retry_file_state;
+    cos_http_controller_ex_t *ctl_ex = (cos_http_controller_ex_t *)options->ctl;
 
     req->clear_body = 0;
+    ctl_ex->need_fresh_connect = COS_FALSE;
     s = cos_status_create(options->pool);
     res = cos_sign_request(req, options->config);
     if (res != COSE_OK) {
@@ -1771,7 +1774,11 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
         }
 
         s = cos_send_request(options->ctl, req, resp, need_check_2xx_body);
-        if (s->code >= 500 || check_io_error(s)) {//5xx以及超时等网络错误，始终重试
+        is_io_error = check_io_error(s);
+        if (s->code >= 500 || is_io_error) {//5xx以及超时等网络错误，始终重试
+            if (is_io_error && i < retry_times) {
+                ctl_ex->need_fresh_connect = COS_TRUE;
+            }
             //最后一次切换域名
             if (i == retry_times - 1  && is_should_switch_domain(options, req, resp)) {
                 int res = do_switch_domain(options, req);

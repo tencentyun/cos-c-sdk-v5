@@ -245,6 +245,42 @@ int main(int argc, char *argv[])
     cos_pool_destroy(p); 
 ```
 
+
+## SDK 编译选项
+
+SDK 的编译选项在仓库根目录的 `CMakeLists.txt` 中定义，可用于控制连接保活、连接复用时长以及重试时是否使用新连接等行为。
+
+| 编译选项 | 默认值 | 说明 |
+|---------|--------|------|
+| `COS_ENABLE_TCP_KEEPALIVE` | `ON` | 是否启用 libcurl TCP keepalive。启用后会设置 `CURLOPT_TCP_KEEPALIVE`，并使用 `COS_TCP_KEEPIDLE` 和 `COS_TCP_KEEPINTVL` 控制探测时间。该选项依赖 libcurl 7.25.0 及以上版本。 |
+| `COS_TCP_KEEPIDLE` | `30` | TCP keepalive 空闲探测时间，单位为秒，仅在 `COS_ENABLE_TCP_KEEPALIVE=ON` 时生效。 |
+| `COS_TCP_KEEPINTVL` | `30` | TCP keepalive 探测间隔，单位为秒，仅在 `COS_ENABLE_TCP_KEEPALIVE=ON` 时生效。 |
+| `COS_ENABLE_MAXAGE_CONN` | `ON` | 是否限制可复用连接的最大存活时间。启用后 SDK 会清理超过 `COS_MAXAGE_CONN` 的缓存连接，并在 libcurl 7.65.0 及以上版本设置 `CURLOPT_MAXAGE_CONN`。 |
+| `COS_MAXAGE_CONN` | `90` | 可复用连接的最大存活时间，单位为秒，仅在 `COS_ENABLE_MAXAGE_CONN=ON` 时生效。 |
+| `COS_ENABLE_RETRY_FRESH_CONNECT` | `ON` | 重试请求时是否强制使用新连接。启用后，部分重试场景会重新初始化 curl 连接，并在 libcurl 支持时设置 `CURLOPT_FRESH_CONNECT` 和 `CURLOPT_FORBID_REUSE`。 |
+
+布尔开关使用 `option()` 定义，时间类参数使用 `CACHE STRING` 定义，均可以在执行 `cmake` 时通过 `-D` 参数覆盖默认值，例如：
+
+```bash
+mkdir -p build
+cd build
+cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCOS_ENABLE_TCP_KEEPALIVE=ON \
+    -DCOS_TCP_KEEPIDLE=60 \
+    -DCOS_TCP_KEEPINTVL=30 \
+    -DCOS_ENABLE_MAXAGE_CONN=ON \
+    -DCOS_MAXAGE_CONN=120 \
+    -DCOS_ENABLE_RETRY_FRESH_CONNECT=ON
+make
+sudo make install
+```
+
+
+布尔开关使用 `ON` 或 `OFF`，时间类参数单位均为秒。若已在同一个构建目录执行过 `cmake`，旧值可能保存在 `CMakeCache.txt` 中；修改默认值后，建议重新执行 `cmake` 并通过 `-D` 明确覆盖，或清理构建目录后重新生成。
+
+
+
 ## SDK 使用注意事项
 
 ### 多线程场景
