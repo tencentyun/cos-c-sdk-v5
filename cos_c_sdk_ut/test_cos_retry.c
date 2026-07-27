@@ -13,8 +13,6 @@
 
 static char *ERR_TEST_ENDPOINT_NORMAL;  //*.myqcloud.com
 static char *ERR_TEST_ENDPOINT_OTHER; //*.tencentcos.cn
-static char *ERR_TEST_ACCESS_KEY_ID;
-static char *ERR_TEST_ACCESS_KEY_SECRET;
 static char *ERR_TEST_APPID;
 static char *ERR_TEST_BUCKET;
 
@@ -25,8 +23,6 @@ void init_retry_test_config(cos_config_t *config, int is_cname, int normal_domai
     } else {
         cos_str_set(&config->endpoint, ERR_TEST_ENDPOINT_OTHER);
     }
-    // cos_str_set(&config->access_key_id, ERR_TEST_ACCESS_KEY_ID);
-    // cos_str_set(&config->access_key_secret, ERR_TEST_ACCESS_KEY_SECRET);
     cos_str_set(&config->appid, ERR_TEST_APPID);
     config->is_cname = is_cname;
     config->retry_interval_us = 0;
@@ -492,10 +488,21 @@ CuSuite *test_cos_retry() {
 
     ERR_TEST_ENDPOINT_NORMAL = getenv("COS_ERR_TEST_ENDPOINT_NORMAL");
     ERR_TEST_ENDPOINT_OTHER = getenv("COS_ERR_TEST_ENDPOINT_OTHER");
-    ERR_TEST_ACCESS_KEY_ID = getenv("COS_ERR_TEST_ACCESS_KEY_ID");
-    ERR_TEST_ACCESS_KEY_SECRET = getenv("COS_ERR_TEST_ACCESS_KEY_SECRET");
     ERR_TEST_APPID = getenv("COS_ERR_TEST_APPID");
     ERR_TEST_BUCKET = getenv("COS_ERR_TEST_BUCKET");
+
+    {
+        const char *env_names[] = {
+            "COS_ERR_TEST_ENDPOINT_NORMAL", "COS_ERR_TEST_ENDPOINT_OTHER",
+            "COS_ERR_TEST_APPID", "COS_ERR_TEST_BUCKET"
+        };
+        const char *env_values[] = {
+            ERR_TEST_ENDPOINT_NORMAL, ERR_TEST_ENDPOINT_OTHER,
+            ERR_TEST_APPID, ERR_TEST_BUCKET
+        };
+        cos_test_check_env(env_names, env_values,
+                           (int)(sizeof(env_names) / sizeof(env_names[0])));
+    }
 
     SUITE_ADD_TEST(suite, test_get_retry_no_switch_normal_domain);
     SUITE_ADD_TEST(suite, test_get_retry_no_switch_other_domain);

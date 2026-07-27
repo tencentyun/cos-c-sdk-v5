@@ -776,7 +776,7 @@ char *build_lifecycle_xml(cos_pool_t *p, cos_list_t *lifecycle_rule_list) {
             mxml_node_t *days_node = mxmlNewElement(expire_node, "Days");
             apr_snprintf(value_str, sizeof(value_str), "%d", content->expire.days);
             mxmlNewText(days_node, 0, value_str);
-        } else if (content->expire.date.len != 0 && strcmp(content->expire.date.data, "") != 0) {
+        } else if (content->expire.date.data != NULL && content->expire.date.len != 0 && strcmp(content->expire.date.data, "") != 0) {
             mxml_node_t *expire_node = mxmlNewElement(rule_node, "Expiration");
             mxml_node_t *date_node = mxmlNewElement(expire_node, "Date");
             mxmlNewText(date_node, 0, content->expire.date.data);
@@ -787,12 +787,12 @@ char *build_lifecycle_xml(cos_pool_t *p, cos_list_t *lifecycle_rule_list) {
             mxml_node_t *days_node = mxmlNewElement(transition_node, "Days");
             apr_snprintf(value_str, sizeof(value_str), "%d", content->transition.days);
             mxmlNewText(days_node, 0, value_str);
-        } else if (content->transition.date.len != 0 && strcmp(content->transition.date.data, "") != 0) {
+        } else if (content->transition.date.data != NULL && content->transition.date.len != 0 && strcmp(content->transition.date.data, "") != 0) {
             transition_node = mxmlNewElement(rule_node, "Transition");
             mxml_node_t *date_node = mxmlNewElement(transition_node, "Date");
             mxmlNewText(date_node, 0, content->transition.date.data);
         }
-        if (transition_node && content->transition.storage_class.len != 0 && strcmp(content->transition.storage_class.data, "") != 0) {
+        if (transition_node && content->transition.storage_class.data != NULL && content->transition.storage_class.len != 0 && strcmp(content->transition.storage_class.data, "") != 0) {
             mxml_node_t *date_node = mxmlNewElement(transition_node, "StorageClass");
             mxmlNewText(date_node, 0, content->transition.storage_class.data);
         }

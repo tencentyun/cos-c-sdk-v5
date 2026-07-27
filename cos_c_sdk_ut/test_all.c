@@ -2,6 +2,7 @@
 #include "cos_log.h"
 #include "cos_http_io.h"
 #include "cos_config.h"
+#include "cos_test_util.h"
 
 extern CuSuite *test_xml();
 extern CuSuite *test_util();
@@ -122,6 +123,19 @@ int main(int argc, char *argv[]) {
     TEST_REGION = getenv("COS_TEST_REGION");
     TEST_UIN = getenv("COS_TEST_UIN");
     TEST_CI_ENDPOINT = getenv("COS_TEST_CI_ENDPOINT");
+
+    {
+        const char *env_names[] = {
+            "COS_TEST_ENDPOINT", "COS_TEST_ACCESS_KEY_ID", "COS_TEST_ACCESS_KEY_SECRET",
+            "COS_TEST_BUCKET", "COS_TEST_APPID"
+        };
+        const char *env_values[] = {
+            TEST_COS_ENDPOINT, TEST_ACCESS_KEY_ID, TEST_ACCESS_KEY_SECRET,
+            TEST_BUCKET_NAME, TEST_APPID
+        };
+        cos_test_check_env(env_names, env_values,
+                           (int)(sizeof(env_names) / sizeof(env_names[0])));
+    }
 
     if (cos_http_io_initialize(NULL, 0) != COSE_OK) {
         exit(1);

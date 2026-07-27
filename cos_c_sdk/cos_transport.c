@@ -212,7 +212,7 @@ size_t cos_curl_default_header_callback(char *buffer, size_t size, size_t nitems
 }
 
 static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t) {
-    int32_t http_code;
+    long http_code;
     CURLcode code;
     const char *value;
 
@@ -232,7 +232,7 @@ static void cos_curl_transport_headers_done(cos_curl_http_transport_t *t) {
         t->controller->error_code = COSE_INTERNAL_ERROR;
         return;
     } else {
-        t->resp->status = http_code;
+        t->resp->status = (int)http_code;
     }
 
     value = apr_table_get(t->resp->headers, "Content-Length");

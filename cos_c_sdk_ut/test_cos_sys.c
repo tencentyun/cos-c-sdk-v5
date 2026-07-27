@@ -179,29 +179,29 @@ void test_build_lifecycle_xml(CuTest *tc) {
     cos_pool_t *pool = NULL;
     cos_pool_create(&pool, NULL);
 
-    cos_lifecycle_rule_content_t rule1;
-    cos_str_set(&rule1.id, "rule1");
-    cos_str_set(&rule1.prefix, "prefix1");
-    cos_str_set(&rule1.status, "Enabled");
-    rule1.expire.days = 1;
-    rule1.transition.days = INT_MAX;
-    rule1.abort.days = INT_MAX;
+    cos_lifecycle_rule_content_t *rule1 = cos_create_lifecycle_rule_content(pool);
+    cos_str_set(&rule1->id, "rule1");
+    cos_str_set(&rule1->prefix, "prefix1");
+    cos_str_set(&rule1->status, "Enabled");
+    rule1->expire.days = 1;
+    rule1->transition.days = INT_MAX;
+    rule1->abort.days = INT_MAX;
 
-    cos_lifecycle_rule_content_t rule2;
-    cos_str_set(&rule2.id, "rule2");
-    cos_str_set(&rule2.prefix, "prefix2");
-    cos_str_set(&rule2.status, "Disabled");
-    rule2.expire.days = INT_MAX;
-    cos_str_set(&rule2.expire.date, "2023-01-01T00:00:00.000Z");
-    rule2.transition.days = 7;
-    cos_str_set(&rule2.transition.date, "2023-01-01T00:00:00.000Z");
-    cos_str_set(&rule2.transition.storage_class, "Standard_IA");
-    rule2.abort.days = 1111111;
+    cos_lifecycle_rule_content_t *rule2 = cos_create_lifecycle_rule_content(pool);
+    cos_str_set(&rule2->id, "rule2");
+    cos_str_set(&rule2->prefix, "prefix2");
+    cos_str_set(&rule2->status, "Disabled");
+    rule2->expire.days = INT_MAX;
+    cos_str_set(&rule2->expire.date, "2023-01-01T00:00:00.000Z");
+    rule2->transition.days = 7;
+    cos_str_set(&rule2->transition.date, "2023-01-01T00:00:00.000Z");
+    cos_str_set(&rule2->transition.storage_class, "Standard_IA");
+    rule2->abort.days = 1111111;
 
     cos_list_t lifecycle_rule_list;
     cos_list_init(&lifecycle_rule_list);
-    cos_list_add_tail(&rule1.node, &lifecycle_rule_list);
-    cos_list_add_tail(&rule2.node, &lifecycle_rule_list);
+    cos_list_add_tail(&rule1->node, &lifecycle_rule_list);
+    cos_list_add_tail(&rule2->node, &lifecycle_rule_list);
 
     char *lifecycle_xml = build_lifecycle_xml(pool, &lifecycle_rule_list);
     cos_pool_destroy(pool);
