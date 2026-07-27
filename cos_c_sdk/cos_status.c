@@ -126,6 +126,9 @@ cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code
             s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
         } else {
             cos_status_fill_error_from_xml(p, root, error_node, s);
+            if (s->error_code == NULL) {
+                s->error_code = (char *)COS_UNKNOWN_ERROR_CODE;
+            }
         }
     } else if (error_node != NULL) {
         // case 3.c

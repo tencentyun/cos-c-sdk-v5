@@ -1,7 +1,23 @@
 #include <sys/stat.h>
+#include <stdlib.h>
 #include "cos_config.h"
 #include "cos_api.h"
 #include "cos_test_util.h"
+
+void cos_test_check_env(const char *const *names, const char *const *values, int count) {
+    int i;
+    int missing = 0;
+    for (i = 0; i < count; i++) {
+        if (values[i] == NULL) {
+            fprintf(stderr, "[cos_c_sdk_ut] required environment variable '%s' is not set.\n", names[i]);
+            missing = 1;
+        }
+    }
+    if (missing) {
+        fprintf(stderr, "[cos_c_sdk_ut] please set the environment variables listed above before running the test.\n");
+        exit(1);
+    }
+}
 
 void make_rand_string(cos_pool_t *p, int len, cos_string_t *data) {
     char *str = NULL;

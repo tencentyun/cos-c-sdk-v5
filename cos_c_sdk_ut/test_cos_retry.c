@@ -497,6 +497,19 @@ CuSuite *test_cos_retry() {
     ERR_TEST_APPID = getenv("COS_ERR_TEST_APPID");
     ERR_TEST_BUCKET = getenv("COS_ERR_TEST_BUCKET");
 
+    {
+        const char *env_names[] = {
+            "COS_ERR_TEST_ENDPOINT_NORMAL", "COS_ERR_TEST_ENDPOINT_OTHER",
+            "COS_ERR_TEST_APPID", "COS_ERR_TEST_BUCKET"
+        };
+        const char *env_values[] = {
+            ERR_TEST_ENDPOINT_NORMAL, ERR_TEST_ENDPOINT_OTHER,
+            ERR_TEST_APPID, ERR_TEST_BUCKET
+        };
+        cos_test_check_env(env_names, env_values,
+                           (int)(sizeof(env_names) / sizeof(env_names[0])));
+    }
+
     SUITE_ADD_TEST(suite, test_get_retry_no_switch_normal_domain);
     SUITE_ADD_TEST(suite, test_get_retry_no_switch_other_domain);
     SUITE_ADD_TEST(suite, test_get_retry_switch_normal_domain);
