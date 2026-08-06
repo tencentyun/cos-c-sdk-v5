@@ -1,5 +1,6 @@
 #include "cos_auth.h"
 #include "cos_log.h"
+#include "cos_sys_define.h"
 #include "cos_utility.h"
 
 #if 0
@@ -194,3 +195,16 @@ int cos_sign_request(cos_http_request_t *req,
     return res;
 }
 
+int cos_resign_request(cos_http_request_t *req,
+                       const cos_config_t *config) {
+    int res = COSE_OK;
+    if (apr_table_get(req->headers, COS_HOST) != NULL) {
+        apr_table_unset(req->headers, COS_HOST);
+    }
+    if (apr_table_get(req->headers, COS_AUTHORIZATION) != NULL) {
+        apr_table_unset(req->headers, COS_AUTHORIZATION);
+    }
+
+    res = cos_sign_request(req, config);
+    return res;
+}

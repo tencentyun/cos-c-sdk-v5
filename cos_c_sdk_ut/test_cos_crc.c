@@ -164,8 +164,9 @@ void test_crc_negative(CuTest *tc) {
 
     cos_delete_object(options, &bucket, &object, NULL);
 
-    /* append object */
-    s = cos_do_append_object_from_file(options, &bucket, &object, position, 1,
+    /* append object: position 0 means appending to a brand-new object,
+       so the initial crc seed must be 0 to keep client/server crc consistent */
+    s = cos_do_append_object_from_file(options, &bucket, &object, position, 0,
         &filename, NULL, NULL, NULL, NULL, NULL);
     CuAssertIntEquals(tc, 200, s->code);
 

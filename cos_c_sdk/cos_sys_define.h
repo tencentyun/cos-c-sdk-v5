@@ -25,6 +25,18 @@
 # define COS_CPP_END
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define COS_DEPRECATED            __attribute__((deprecated))
+#  define COS_DEPRECATED_MSG(msg)   __attribute__((deprecated(msg)))
+#elif defined(_MSC_VER)
+#  define COS_DEPRECATED            __declspec(deprecated)
+#  define COS_DEPRECATED_MSG(msg)   __declspec(deprecated(msg))
+#else
+#  define COS_DEPRECATED
+#  define COS_DEPRECATED_MSG(msg)
+#endif
+
+
 typedef enum {
     HTTP_GET,
     HTTP_HEAD,
@@ -144,5 +156,29 @@ typedef apr_array_header_t cos_array_header_t;
 
 #define COS_FALSE     0
 #define COS_TRUE      1
+
+#ifndef COS_ENABLE_TCP_KEEPALIVE
+#define COS_ENABLE_TCP_KEEPALIVE COS_TRUE
+#endif
+
+#ifndef COS_TCP_KEEPIDLE
+#define COS_TCP_KEEPIDLE 30L
+#endif
+
+#ifndef COS_TCP_KEEPINTVL
+#define COS_TCP_KEEPINTVL 30L
+#endif
+
+#ifndef COS_ENABLE_MAXAGE_CONN
+#define COS_ENABLE_MAXAGE_CONN COS_TRUE
+#endif
+
+#ifndef COS_MAXAGE_CONN
+#define COS_MAXAGE_CONN 90L
+#endif
+
+#ifndef COS_ENABLE_RETRY_FRESH_CONNECT
+#define COS_ENABLE_RETRY_FRESH_CONNECT COS_TRUE
+#endif
 
 #endif  //  COS_C_SDK_V5_COS_C_SDK_COS_SYS_DEFINE_H_

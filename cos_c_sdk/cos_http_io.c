@@ -17,24 +17,46 @@ cos_http_transport_perform_pt cos_http_transport_perform = cos_curl_http_transpo
 static apr_thread_mutex_t* requestStackMutexG = NULL;
 apr_thread_mutex_t* downloadMutex = NULL;
 static CURL *requestStackG[COS_REQUEST_STACK_SIZE];
+static apr_time_t requestStackReleaseTimeG[COS_REQUEST_STACK_SIZE];
 static int requestStackCountG;
 static char cos_user_agent[256];
 
 
 static cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p);
 
+static int cos_request_stack_item_expired(apr_time_t release_time) {
+#if COS_ENABLE_MAXAGE_CONN
+    if (release_time > 0 &&
+        apr_time_now() - release_time > (apr_time_t)COS_MAXAGE_CONN * APR_USEC_PER_SEC) {
+        return COS_TRUE;
+    }
+#endif
+    return COS_FALSE;
+}
+
 CURL *cos_request_get() {
     CURL *request = NULL;
+    apr_time_t release_time = 0;
 
     apr_thread_mutex_lock(requestStackMutexG);
     if (requestStackCountG > 0) {
-        request = requestStackG[--requestStackCountG];
+        requestStackCountG--;
+        request = requestStackG[requestStackCountG];
+        release_time = requestStackReleaseTimeG[requestStackCountG];
+        requestStackG[requestStackCountG] = NULL;
+        requestStackReleaseTimeG[requestStackCountG] = 0;
     }
     apr_thread_mutex_unlock(requestStackMutexG);
 
     // If we got one, deinitialize it for re-use
     if (request) {
-        curl_easy_reset(request);
+        if (cos_request_stack_item_expired(release_time)) {
+            curl_easy_cleanup(request);
+            request = curl_easy_init();
+        }
+        else {
+            curl_easy_reset(request);
+        }
     }
     else {
         request = curl_easy_init();
@@ -56,7 +78,9 @@ void request_release(CURL *request) {
         curl_easy_cleanup(request);
     }
     else {
-        requestStackG[requestStackCountG++] = request;
+        int index = requestStackCountG++;
+        requestStackG[index] = request;
+        requestStackReleaseTimeG[index] = apr_time_now();
         apr_thread_mutex_unlock(requestStackMutexG);
     }
 }
@@ -76,7 +100,9 @@ void request_release2(cos_curl_http_transport_t* t) {
         curl_easy_cleanup(request);
     }
     else {
-        requestStackG[requestStackCountG++] = request;
+        int index = requestStackCountG++;
+        requestStackG[index] = request;
+        requestStackReleaseTimeG[index] = apr_time_now();
         apr_thread_mutex_unlock(requestStackMutexG);
     }
 }
@@ -106,6 +132,29 @@ cos_http_request_options_t *cos_http_request_options_create(cos_pool_t *p) {
     return options;
 }
 
+cos_http_request_options_t *cos_http_request_options_copy(cos_pool_t *p, const cos_http_request_options_t *src) {
+    cos_http_request_options_t *options;
+
+    options = cos_http_request_options_create(p);
+    if (src == NULL) {
+        return options;
+    }
+
+    options->speed_limit = src->speed_limit;
+    options->speed_time = src->speed_time;
+    options->dns_cache_timeout = src->dns_cache_timeout;
+    options->connect_timeout = src->connect_timeout;
+    options->max_memory_size = src->max_memory_size;
+    options->enable_crc = src->enable_crc;
+    options->enable_md5 = src->enable_md5;
+    options->host_port = src->host_port;
+    options->proxy_host = src->proxy_host == NULL ? NULL : apr_pstrdup(p, src->proxy_host);
+    options->proxy_auth = src->proxy_auth == NULL ? NULL : apr_pstrdup(p, src->proxy_auth);
+    options->host_ip = src->host_ip == NULL ? NULL : apr_pstrdup(p, src->host_ip);
+
+    return options;
+}
+
 cos_http_transport_options_t *cos_http_transport_options_create(cos_pool_t *p) {
     return (cos_http_transport_options_t *)cos_pcalloc(p, sizeof(cos_http_transport_options_t));
 }
@@ -124,7 +173,8 @@ cos_http_controller_t *cos_http_controller_create(cos_pool_t *p, int owner) {
     ctl = (cos_http_controller_t *)cos_pcalloc(p, sizeof(cos_http_controller_ex_t));
     ctl->pool = p;
     ctl->owner = owner;
-    ctl->options = cos_default_http_request_options;
+    ctl->options = cos_http_request_options_copy(p, cos_default_http_request_options);
+    ((cos_http_controller_ex_t *)ctl)->need_fresh_connect = COS_FALSE;
 
     return ctl;
 }

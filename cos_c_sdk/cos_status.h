@@ -37,7 +37,16 @@ cos_status_t *cos_status_create(cos_pool_t *p);
 
 cos_status_t *cos_status_dup(cos_pool_t *p, cos_status_t *src);
 
-cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, cos_status_t *s);
+/**
+ * @brief parse the status from the xml body, no matter the http code is ok or not
+ * @param[in]   p             the memory pool
+ * @param[in]   bc            the body content
+ * @param[in]   code          the http code
+ * @param[in]   need_check_2xx_body    whether to check the body if the http code is ok.
+ * @param[out]  s             the status to write
+ * @return      cos_status_t* the parsed status
+ */
+cos_status_t *cos_status_parse_from_body(cos_pool_t *p, cos_list_t *bc, int code, int need_check_2xx_body, cos_status_t *s);
 
 extern const char COS_XML_PARSE_ERROR_CODE[];
 extern const char COS_OPEN_FILE_ERROR_CODE[];

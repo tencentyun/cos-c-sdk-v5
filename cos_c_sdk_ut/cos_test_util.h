@@ -15,6 +15,17 @@ COS_CPP_START
         cos_str_set(&object, object_name);                              \
     } while(0)
 
+/**
+ * @brief  check that all required environment variables are set.
+ *         For any variable whose value is NULL, print a clear hint to stderr
+ *         and exit(1), so that a missing test configuration fails fast with a
+ *         readable message instead of crashing later inside cos_str_set/strlen.
+ * @param[in]  names    array of environment variable names (for the hint message)
+ * @param[in]  values   array of the corresponding values obtained via getenv
+ * @param[in]  count    number of entries in names/values
+ */
+void cos_test_check_env(const char *const *names, const char *const *values, int count);
+
 void make_rand_string(cos_pool_t *p, int len, cos_string_t *data);
 
 cos_buf_t *make_random_buf(cos_pool_t *p, int len);

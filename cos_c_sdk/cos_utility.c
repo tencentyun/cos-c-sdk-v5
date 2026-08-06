@@ -1,4 +1,5 @@
 #include "cos_string.h"
+#include "cos_sys_define.h"
 #include "cos_sys_util.h"
 #include "cos_log.h"
 #include "cos_status.h"
@@ -228,12 +229,59 @@ int is_should_switch_domain(const cos_request_options_t *options,
     return COS_FALSE;
 }
 
-int do_switch_domain_and_sign(const cos_request_options_t *options,
-                               cos_http_request_t *req) {
+static int do_switch_copy_source_domain(const cos_request_options_t *options,
+                                        cos_http_request_t *req) {
+    const char *old_suffix = "myqcloud.com";
+    const char *new_suffix = "tencentcos.cn";
+    const char *copy_source = NULL;
+    const char *path = NULL;
+    char *copy_source_host = NULL;
+    char *new_copy_source = NULL;
+    size_t host_len = 0;
+    size_t prefix_len = 0;
+    size_t new_size = 0;
+
+    if (req->headers == NULL) {
+        return COSE_OK;
+    }
+
+    copy_source = apr_table_get(req->headers, COS_COPY_SOURCE);
+    if (copy_source == NULL) {
+        return COSE_OK;
+    }
+
+    path = strchr(copy_source, '/');
+    host_len = path == NULL ? strlen(copy_source) : (size_t)(path - copy_source);
+    copy_source_host = apr_pstrndup(options->pool, copy_source, host_len);
+    if (copy_source_host == NULL) {
+        cos_error_log("Failed to allocate memory for copy source host");
+        return COSE_OVER_MEMORY;
+    }
+    if (!is_default_domain(copy_source_host)) {
+        return COSE_OK;
+    }
+
+    prefix_len = host_len - strlen(old_suffix);
+    new_size = prefix_len + strlen(new_suffix) + strlen(copy_source + host_len) + 1;
+    new_copy_source = (char *)cos_palloc(options->pool, new_size);
+    if (new_copy_source == NULL) {
+        cos_error_log("Failed to allocate memory for new copy source");
+        return COSE_OVER_MEMORY;
+    }
+
+    snprintf(new_copy_source, new_size, "%.*s%s%s", (int)prefix_len,
+             copy_source, new_suffix, copy_source + host_len);
+    apr_table_set(req->headers, COS_COPY_SOURCE, new_copy_source);
+    return COSE_OK;
+}
+
+int do_switch_domain(const cos_request_options_t *options,
+                     cos_http_request_t *req) {
     const char *old_suffix = "myqcloud.com";
     const char *new_suffix = "tencentcos.cn";
 
     char *old_host = req->host;
+    int res = COSE_OK;
 
     if (is_default_domain(old_host)) {
         size_t prefix_len = strlen(old_host) - strlen(old_suffix);
@@ -246,16 +294,13 @@ int do_switch_domain_and_sign(const cos_request_options_t *options,
         snprintf(new_host, new_size, "%.*s%s", (int)prefix_len, old_host, new_suffix);
         req->host = new_host;
     }
-    
-    if (apr_table_get(req->headers, COS_HOST) != NULL) {
-        apr_table_unset(req->headers, COS_HOST);
-    }
-    if (apr_table_get(req->headers, COS_AUTHORIZATION) != NULL) {
-        apr_table_unset(req->headers, COS_AUTHORIZATION);
-    }
 
-    int res = cos_sign_request(req, options->config);
-    return res;
+    res = do_switch_copy_source_domain(options, req);
+    if (res != COSE_OK) {
+        return res;
+    }
+    
+    return COSE_OK;
 }
 
 int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *target) {
@@ -263,19 +308,23 @@ int check_status_with_resp_body(cos_list_t *body, int64_t body_len, const char *
         return COS_FALSE;
     }
 
-    cos_list_t *current = body->next;
-    int target_len = strlen(target);
-    while (current != body) {
-        cos_buf_t *buf = (cos_buf_t *)current;
-        uint8_t *p;
-        for (p = buf->start; p < buf->last - target_len +1 ; ++p) {
-            if (memcmp(p, target, target_len) == 0) {
-                return COS_TRUE;
-            }
-        }
-        current = current->next;
+    int64_t pos = 0;
+    int64_t size = 0;
+    cos_buf_t *content;
+    char *buf = (char *)malloc(body_len + 1);
+    if (buf == NULL) {
+        return COS_FALSE;
     }
-    return COS_FALSE;
+    buf[body_len] = '\0';
+    cos_list_for_each_entry(cos_buf_t, content, body, node) {
+        size = cos_buf_size(content);
+        memcpy(buf + pos, content->pos, (size_t)(size));
+        pos += size;
+    }
+
+    int result = strstr(buf, target) != NULL ? COS_TRUE : COS_FALSE;
+    free(buf);
+    return result;
 }
 
 char ** split(const char * s, char delim, int * returnSize) {
@@ -571,7 +620,50 @@ cos_config_t *cos_config_create(cos_pool_t *p) {
     config->retry_change_domain = COS_FALSE;
     config->retry_times = COS_RETRY_TIME;
     config->retry_interval_us = COS_RETRY_INTERVAL_US;
+    config->omit_cos_sdk_retry_header = COS_FALSE;
     
+    return config;
+}
+
+cos_config_t *cos_config_copy(cos_pool_t *p, const cos_config_t *src) {
+    cos_config_t *config;
+
+    config = cos_config_create(p);
+    if (src == NULL) {
+        return config;
+    }
+
+    if (!cos_is_null_string(&src->endpoint)) {
+        cos_str_set(&config->endpoint, cos_pstrdup(p, &src->endpoint));
+    }
+    if (!cos_is_null_string(&src->access_key_id)) {
+        cos_str_set(&config->access_key_id, cos_pstrdup(p, &src->access_key_id));
+    }
+    if (!cos_is_null_string(&src->access_key_secret)) {
+        cos_str_set(&config->access_key_secret, cos_pstrdup(p, &src->access_key_secret));
+    }
+    if (!cos_is_null_string(&src->appid)) {
+        cos_str_set(&config->appid, cos_pstrdup(p, &src->appid));
+    }
+    if (!cos_is_null_string(&src->sts_token)) {
+        cos_str_set(&config->sts_token, cos_pstrdup(p, &src->sts_token));
+    }
+    if (!cos_is_null_string(&src->proxy_host)) {
+        cos_str_set(&config->proxy_host, cos_pstrdup(p, &src->proxy_host));
+    }
+    if (!cos_is_null_string(&src->proxy_user)) {
+        cos_str_set(&config->proxy_user, cos_pstrdup(p, &src->proxy_user));
+    }
+    if (!cos_is_null_string(&src->proxy_passwd)) {
+        cos_str_set(&config->proxy_passwd, cos_pstrdup(p, &src->proxy_passwd));
+    }
+    config->is_cname = src->is_cname;
+    config->proxy_port = src->proxy_port;
+    config->retry_change_domain = src->retry_change_domain;
+    config->retry_times = src->retry_times;
+    config->retry_interval_us = src->retry_interval_us;
+    config->omit_cos_sdk_retry_header = src->omit_cos_sdk_retry_header;
+
     return config;
 }
 
@@ -1450,7 +1542,8 @@ int cos_init_object_request(const cos_request_options_t *options,
 
 cos_status_t *cos_send_request(cos_http_controller_t *ctl,
                                cos_http_request_t *req,
-                               cos_http_response_t *resp) {
+                               cos_http_response_t *resp, 
+                               int need_check_2xx_body) {
     cos_status_t *s;
     const char *reason;
     int res = COSE_OK;
@@ -1461,8 +1554,8 @@ cos_status_t *cos_send_request(cos_http_controller_t *ctl,
     if (res != COSE_OK) {
         reason = cos_http_controller_get_reason(ctl);
         cos_status_set(s, res, COS_HTTP_IO_ERROR_CODE, reason);
-    } else if (!cos_http_is_ok(resp->status)) {
-        s = cos_status_parse_from_body(ctl->pool, &resp->body, resp->status, s);
+    } else if (!cos_http_is_ok(resp->status) || need_check_2xx_body) {
+        s = cos_status_parse_from_body(ctl->pool, &resp->body, resp->status, need_check_2xx_body, s);
     } else {
         s->code = resp->status;
     }
@@ -1485,16 +1578,142 @@ void reset_list_pos(cos_list_t *list) {
     }
 }
 
-int check_error_from_body(const cos_http_response_t *resp) {
-    cos_status_t *s = cos_status_create(resp->pool);
-    s = cos_status_parse_from_body(resp->pool, &resp->body, resp->status, s);
-    if (s->code == 200 && s->error_code != NULL &&
-        (strcmp(s->error_code, COS_INTERNAL_ERROR_CODE) == 0 ||
-         strcmp(s->error_code, COS_SLOW_DOWN_ERROR_CODE) == 0 ||
-         strcmp(s->error_code, COS_SERVICE_UNAVAILABLE_ERROR_CODE) == 0)) {
-        return COS_TRUE;
+void cos_retry_file_state_init(cos_retry_file_state_t *state,
+                               const cos_http_request_t *req,
+                               const cos_http_response_t *resp) {
+    state->has_req_file = COS_FALSE;
+    state->req_file_pos = 0;
+    state->req_file_last = 0;
+    state->has_resp_file = COS_FALSE;
+    state->resp_file_pos = 0;
+    state->resp_file_last = 0;
+    state->req_init_crc = req->crc64;
+
+    if (req->file_buf != NULL && req->file_path != NULL) {
+        state->has_req_file = COS_TRUE;
+        state->req_file_pos = req->file_buf->file_pos;
+        state->req_file_last = req->file_buf->file_last;
     }
-    return COS_FALSE;
+
+    if (resp->file_buf != NULL && resp->file_path != NULL) {
+        state->has_resp_file = COS_TRUE;
+        state->resp_file_pos = resp->file_buf->file_pos;
+        state->resp_file_last = resp->file_buf->file_last;
+    }
+}
+
+static int cos_retry_seek_file_buf(cos_file_buf_t *file_buf, int64_t file_pos, int64_t file_last) {
+    apr_off_t offset = (apr_off_t)file_pos;
+    int res;
+
+    if (file_buf == NULL || file_buf->file == NULL) {
+        return COSE_INVALID_ARGUMENT;
+    }
+
+    res = apr_file_seek(file_buf->file, APR_SET, &offset);
+    if (res != APR_SUCCESS) {
+        return COSE_FILE_SEEK_ERROR;
+    }
+
+    file_buf->file_pos = file_pos;
+    file_buf->file_last = file_last;
+    return COSE_OK;
+}
+
+static int cos_retry_reset_request_file(cos_pool_t *pool,
+                                        cos_http_request_t *req,
+                                        const cos_retry_file_state_t *state) {
+    if (!state->has_req_file) {
+        return COSE_OK;
+    }
+
+    if (req->file_buf == NULL) {
+        req->file_buf = cos_create_file_buf(pool);
+    }
+
+    if (req->file_buf->file == NULL) {
+        return cos_open_file_for_range_read(pool, req->file_path,
+                                            state->req_file_pos,
+                                            state->req_file_last,
+                                            req->file_buf);
+    }
+
+    return cos_retry_seek_file_buf(req->file_buf, state->req_file_pos, state->req_file_last);
+}
+
+static int cos_retry_reset_response_file(cos_pool_t *pool,
+                                         cos_http_response_t *resp,
+                                         const cos_retry_file_state_t *state) {
+    int res;
+    int is_resp_file_part = resp->write_body == cos_write_http_body_file_part;
+    int is_resp_file = resp->write_body == cos_write_http_body_file;
+
+    if (!state->has_resp_file || (!is_resp_file_part && !is_resp_file)) {
+        return COSE_OK;
+    }
+
+    if (resp->file_buf == NULL) {
+        resp->file_buf = cos_create_file_buf(pool);
+    }
+
+    if (resp->file_buf->file == NULL) {
+        if (is_resp_file) {
+            return cos_open_file_for_write(pool, resp->file_path, resp->file_buf);
+        }
+        return cos_open_file_for_range_write(pool, resp->file_path,
+                                             state->resp_file_pos,
+                                             state->resp_file_last,
+                                             resp->file_buf);
+    }
+
+    if (is_resp_file) {
+        res = apr_file_trunc(resp->file_buf->file, state->resp_file_pos);
+        if (res != APR_SUCCESS) {
+            return COSE_FILE_TRUNC_ERROR;
+        }
+    }
+
+    return cos_retry_seek_file_buf(resp->file_buf, state->resp_file_pos, state->resp_file_last);
+}
+
+int cos_retry_reset_state(cos_pool_t *pool,
+                          cos_http_controller_t *ctl,
+                          cos_http_request_t *req,
+                          cos_http_response_t *resp,
+                          const cos_retry_file_state_t *state)
+{
+    int res = COSE_OK;
+    cos_http_controller_ex_t *ctl_ex = (cos_http_controller_ex_t *)ctl;
+    ctl_ex->error_code = COSE_OK;
+    ctl_ex->reason = NULL;
+
+    resp->status = -1;
+    resp->headers = cos_table_make(pool, 10);
+    cos_list_init(&resp->body);
+    resp->body_len = 0;
+    resp->content_length = 0;
+    resp->crc64 = 0;
+
+    req->crc64 = state->req_init_crc;
+    req->consumed_bytes = 0;
+    reset_list_pos(&req->body);
+
+    res = cos_retry_reset_request_file(pool, req, state);
+    if (res != COSE_OK) {
+        return res;
+    }
+
+    return cos_retry_reset_response_file(pool, resp, state);
+}
+
+static int is_retryable_error_code(const char *error_code) {
+    if (error_code == NULL) {
+        return COS_FALSE;
+    }
+
+    return strcmp(error_code, COS_INTERNAL_ERROR_CODE) == 0 ||
+           strcmp(error_code, COS_SLOW_DOWN_ERROR_CODE) == 0 ||
+           strcmp(error_code, COS_SERVICE_UNAVAILABLE_ERROR_CODE) == 0;
 }
 
 int check_io_error(const cos_status_t *s) {
@@ -1509,11 +1728,17 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
                                   cos_http_request_t *req,
                                   cos_http_response_t *resp,
                                   const int retry,
-                                  const int check_body) {
+                                  const int need_check_2xx_body) {
     int res = COSE_OK;
+    int retry_times = options->config->retry_times;
+    int i = 0;
+    int is_io_error = COS_FALSE;
     cos_status_t *s;
+    cos_retry_file_state_t retry_file_state;
+    cos_http_controller_ex_t *ctl_ex = (cos_http_controller_ex_t *)options->ctl;
 
     req->clear_body = 0;
+    ctl_ex->need_fresh_connect = COS_FALSE;
     s = cos_status_create(options->pool);
     res = cos_sign_request(req, options->config);
     if (res != COSE_OK) {
@@ -1521,24 +1746,42 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
         return s;
     }
 
-    char *host = req->host;
+    cos_retry_file_state_init(&retry_file_state, req, resp);
 
-    int retry_times = options->config->retry_times;
     options->ctl->retry_count = 0;
-    int i = 0;
+    if (!retry) {
+        retry_times = 0;
+    }
     for (i = 0; i <= retry_times; i++) {
 
         if (i != 0) {
-            apr_table_set(req->headers, COS_SDK_RETRY, "true");
+            if (!options->config->omit_cos_sdk_retry_header) {
+                apr_table_set(req->headers, COS_SDK_RETRY, "true");
+            }
             options->ctl->retry_count++;
             apr_sleep(i * options->config->retry_interval_us);
+
+            res = cos_retry_reset_state(options->pool, options->ctl, req, resp, &retry_file_state);
+            if (res != COSE_OK) {
+                cos_file_error_status_set(s, res);
+                break;
+            }
+            res = cos_resign_request(req, options->config);
+            if (res != COSE_OK) {
+                cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
+                break;
+            }
         }
 
-        s = cos_send_request(options->ctl, req, resp);
-        if (s->code >= 500 || check_io_error(s)) {//5xx以及超时等网络错误，始终重试
+        s = cos_send_request(options->ctl, req, resp, need_check_2xx_body);
+        is_io_error = check_io_error(s);
+        if (s->code >= 500 || is_io_error) {//5xx以及超时等网络错误，始终重试
+            if (is_io_error && i < retry_times) {
+                ctl_ex->need_fresh_connect = COS_TRUE;
+            }
             //最后一次切换域名
             if (i == retry_times - 1  && is_should_switch_domain(options, req, resp)) {
-                int res = do_switch_domain_and_sign(options, req);
+                int res = do_switch_domain(options, req);
                 if (res != COSE_OK) {
                     cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
                     break;
@@ -1546,19 +1789,18 @@ cos_status_t *do_cos_process_request(const cos_request_options_t *options,
             }
         } else if ((s->code == 301 || s->code == 302 || s->code == 307) //301/302/307满足条件重试
                     && i < retry_times && is_should_switch_domain(options, req, resp)) {
-            int res = do_switch_domain_and_sign(options, req);
+            int res = do_switch_domain(options, req);
             if (res != COSE_OK) {
                 cos_status_set(s, res, COS_CLIENT_ERROR_CODE, NULL);
                 break;
             }
-        } else if (check_body && check_error_from_body(resp)) {
+        } else if (need_check_2xx_body && is_retryable_error_code(s->error_code)) {
             continue;
         } else {//2xx/4xx以及其他3xx不满足条件的不重试
             break;
         }
     }
 
-    req->host = host;
     return s;
 }
 
@@ -1579,7 +1821,7 @@ cos_status_t *cos_process_request(const cos_request_options_t *options,
 cos_status_t *cos_process_signed_request(const cos_request_options_t *options,
                                          cos_http_request_t *req,
                                          cos_http_response_t *resp) {
-    return cos_send_request(options->ctl, req, resp);
+    return cos_send_request(options->ctl, req, resp, COS_FALSE);
 }
 
 void cos_get_part_size(int64_t filesize, int64_t *part_size) {
